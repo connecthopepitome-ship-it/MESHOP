@@ -1,0 +1,22 @@
+{
+  "/account/page": "app/account/page.js",
+  "/cart/page": "app/cart/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/order-confirmation/[id]/page": "app/order-confirmation/[id]/page.js",
+  "/about/page": "app/about/page.js",
+  "/contact/page": "app/contact/page.js",
+  "/collections/[slug]/page": "app/collections/[slug]/page.js",
+  "/checkout/page": "app/checkout/page.js",
+  "/search/page": "app/search/page.js",
+  "/privacy/page": "app/privacy/page.js",
+  "/product/[slug]/page": "app/product/[slug]/page.js",
+  "/shipping-and-returns/page": "app/shipping-and-returns/page.js",
+  "/shop/page": "app/shop/page.js",
+  "/page": "app/page.js",
+  "/refund-policy/page": "app/refund-policy/page.js",
+  "/shop/[category]/page": "app/shop/[category]/page.js",
+  "/size-guide/page": "app/size-guide/page.js",
+  "/track-order/page": "app/track-order/page.js",
+  "/terms/page": "app/terms/page.js",
+  "/wishlist/page": "app/wishlist/page.js"
+}
