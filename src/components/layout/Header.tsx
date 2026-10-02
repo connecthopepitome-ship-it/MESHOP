@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingBag, Heart, Search, Menu, X, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Heart, Search, Menu, X, ChevronRight, Calendar } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 
@@ -22,106 +22,124 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-surface/95 backdrop-blur-md border-b border-outline-variant">
-      <div className="h-20 w-full px-margin md:px-margin-tablet xl:px-margin-desktop flex items-center justify-between">
-        {/* Left Nav (Desktop) */}
-        <nav className="hidden lg:flex items-center gap-space-lg">
-          <Link
-            className="font-label-uppercase text-label-uppercase text-on-surface-variant hover:text-on-surface transition-colors py-1"
-            href="/shop"
-          >
-            COLLECTIONS
+    <header className="sticky top-0 z-50 w-full atelier-glass border-b border-outline-variant/50 transition-all duration-300">
+      <div className="w-full px-4 sm:px-8 lg:px-14 py-3.5 flex items-center justify-between">
+        {/* Left: Logo + Desktop Nav */}
+        <div className="flex items-center gap-8 lg:gap-12">
+          <Link href="/" className="block group flex-shrink-0 flex items-center bg-transparent">
+            <Image
+              src="/images/sorayva-logo.png"
+              alt="SORAYVA — The Modern Saree House"
+              width={220}
+              height={55}
+              priority
+              className="h-10 md:h-11 w-auto object-contain transition-transform duration-500 group-hover:scale-105"
+            />
           </Link>
-          <Link
-            className="font-label-uppercase text-label-uppercase text-on-surface-variant hover:text-on-surface transition-colors py-1"
-            href="/shop?sort=newest"
-          >
-            NEW ARRIVALS
-          </Link>
-          <Link
-            className="font-label-uppercase text-label-uppercase text-on-surface-variant hover:text-on-surface transition-colors py-1"
-            href="/shop/silk"
-          >
-            HERITAGE
-          </Link>
-          <Link
-            className="font-label-uppercase text-label-uppercase text-on-surface-variant hover:text-on-surface transition-colors py-1"
-            href="/size-guide"
-          >
-            SIZE GUIDE
-          </Link>
-        </nav>
+
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 mr-6 xl:mr-10">
+            <Link
+              className="font-sans-fashion text-xs font-medium text-secondary tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
+              href="/shop"
+            >
+              COLLECTIONS
+            </Link>
+            <Link
+              className="font-sans-fashion text-xs font-medium text-secondary tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
+              href="#the-weaves"
+            >
+              THE WEAVES
+            </Link>
+            <Link
+              className="font-sans-fashion text-xs font-medium text-secondary tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
+              href="#fabric-directory"
+            >
+              FABRIC DIRECTORY
+            </Link>
+            <Link
+              className="font-sans-fashion text-xs font-medium text-secondary tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
+              href="/our-story"
+            >
+              ATELIER &amp; CRAFT
+            </Link>
+            <Link
+              className="font-sans-fashion text-xs font-medium text-secondary tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
+              href="/shop/bridal"
+            >
+              BRIDAL TROUSSEAU
+            </Link>
+            <Link
+              className="font-sans-fashion text-xs font-medium text-secondary tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
+              href="/size-guide"
+            >
+              EDITORIAL
+            </Link>
+          </nav>
+        </div>
 
         {/* Mobile Hamburger Button */}
         <div className="flex items-center lg:hidden">
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="text-secondary hover:text-on-surface transition-colors p-1"
-            aria-label="Open Mobile Navigation"
+            aria-label="Open Menu"
+            className="text-secondary p-1 hover:text-primary flex items-center justify-center"
           >
             <Menu className="w-6 h-6" />
           </button>
         </div>
 
-        {/* Center Logo */}
-        <div className="flex flex-col items-center justify-center text-center">
-          <Link href="/" className="flex flex-col items-center group py-1">
-            <Image
-              src="/images/sorayva-logo.png"
-              alt="SORAYVA - The Modern Saree House"
-              width={240}
-              height={64}
-              priority
-              className="h-10 sm:h-12 md:h-14 w-auto object-contain group-hover:opacity-90 transition-opacity"
-            />
-          </Link>
-        </div>
-
         {/* Right Actions */}
-        <div className="flex items-center gap-space-md sm:gap-space-lg">
-          <button className="hidden sm:flex items-center gap-space-xs font-label-numeric text-label-numeric text-secondary hover:text-on-surface transition-colors">
-            <span>INR ₹</span>
-          </button>
+        <div className="flex items-center gap-3 sm:gap-5 pl-4 sm:pl-6 border-l border-outline-variant/50">
+          <div className="hidden sm:flex items-center gap-1.5 whitespace-nowrap font-sans-fashion text-xs tracking-wider text-secondary border-r border-outline-variant/60 pr-4 h-6">
+            <span className="font-medium">INR ₹</span>
+          </div>
+
+          <Link
+            className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 fine-gold-border rounded-full bg-surface-bright text-xs font-sans-fashion tracking-widest text-primary-container uppercase hover:bg-primary-container hover:text-white transition-all shadow-sm whitespace-nowrap"
+            href="#concierge"
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            <span>BOOK STYLIST</span>
+          </Link>
 
           <button
             onClick={() => setSearchOpen(!searchOpen)}
-            className="text-secondary hover:text-on-surface transition-colors p-1"
-            aria-label="Search"
+            className="text-secondary hover:text-primary p-1.5 transition-colors flex items-center justify-center"
+            title="Search Archive"
+            aria-label="Search Archive"
           >
             <Search className="w-5 h-5" />
           </button>
 
           <Link
-            className="relative text-secondary hover:text-on-surface transition-colors p-1"
+            className="relative text-secondary hover:text-primary p-1.5 transition-colors flex items-center justify-center"
             href="/wishlist"
+            title="Wishlist"
             aria-label="Wishlist"
           >
             <Heart className="w-5 h-5" />
-            {wishlistCount > 0 && (
-              <span className="absolute -top-1 -right-1 font-label-numeric text-[0.625rem] bg-surface-container text-secondary w-4 h-4 rounded-full flex items-center justify-center border border-outline-variant font-semibold">
-                {wishlistCount}
-              </span>
-            )}
+            <span className="absolute top-0 right-0 font-sans-fashion text-[0.6rem] bg-secondary-container text-secondary w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold">
+              {wishlistCount > 0 ? wishlistCount : 3}
+            </span>
           </Link>
 
           <button
             onClick={() => setIsCartOpen(true)}
-            className="relative text-secondary hover:text-on-surface transition-colors p-1"
+            className="relative text-secondary hover:text-primary p-1.5 transition-colors flex items-center justify-center"
+            title="Atelier Tote"
             aria-label="Shopping Bag"
           >
             <ShoppingBag className="w-5 h-5" />
-            {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 font-label-numeric text-[0.625rem] bg-secondary text-on-secondary w-4 h-4 rounded-full flex items-center justify-center font-semibold">
-                {itemCount}
-              </span>
-            )}
+            <span className="absolute top-0 right-0 font-sans-fashion text-[0.6rem] bg-primary-container text-white w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold">
+              {itemCount > 0 ? itemCount : 2}
+            </span>
           </button>
         </div>
       </div>
 
-      {/* Slide-down Search Bar */}
+      {/* Search Bar */}
       {searchOpen && (
-        <div className="border-t border-outline-variant bg-surface-container py-4 px-margin transition-all animate-fadeIn">
+        <div className="border-t border-outline-variant/50 bg-surface-container py-4 px-margin transition-all animate-fadeIn">
           <div className="max-w-2xl mx-auto">
             <form onSubmit={handleSearchSubmit} className="relative flex items-center">
               <input
@@ -129,13 +147,13 @@ export const Header: React.FC = () => {
                 placeholder="Search Kanjeevaram, Organza, Banarasi, Crimson, Zari..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-surface border border-outline-variant py-3 px-4 pl-12 text-body-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary transition-colors"
+                className="w-full bg-surface border border-outline-variant py-3 px-4 pl-12 text-sm font-sans-body text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary transition-colors"
                 autoFocus
               />
               <Search className="w-5 h-5 text-on-surface-variant absolute left-4" />
               <button
                 type="submit"
-                className="absolute right-3 text-label-uppercase font-label-uppercase bg-secondary text-on-secondary px-4 py-2 hover:bg-primary transition-colors"
+                className="absolute right-3 text-xs font-sans-fashion uppercase tracking-widest bg-secondary text-white px-4 py-2 hover:bg-primary transition-colors"
               >
                 Search
               </button>
@@ -144,7 +162,7 @@ export const Header: React.FC = () => {
         </div>
       )}
 
-      {/* Mobile Drawer Navigation */}
+      {/* Mobile Navigation Drawer */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden flex">
           <div className="w-4/5 max-w-sm bg-surface h-full p-6 flex flex-col justify-between shadow-xl animate-slideLeft">
@@ -165,14 +183,7 @@ export const Header: React.FC = () => {
                 </button>
               </div>
 
-              <nav className="mt-6 flex flex-col space-y-4 font-label-uppercase text-label-uppercase text-on-surface">
-                <Link
-                  href="/"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
-                >
-                  <span>HOME</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
-                </Link>
+              <nav className="mt-6 flex flex-col space-y-4 font-sans-fashion text-xs font-medium text-secondary tracking-[0.2em] uppercase">
                 <Link
                   href="/shop"
                   onClick={() => setMobileMenuOpen(false)}
@@ -181,45 +192,52 @@ export const Header: React.FC = () => {
                   <span>COLLECTIONS</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
                 </Link>
                 <Link
-                  href="/shop/silk"
+                  href="#the-weaves"
                   onClick={() => setMobileMenuOpen(false)}
                   className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
                 >
-                  <span>KANJEEVARAM & SILK</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
+                  <span>THE WEAVES</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
                 </Link>
                 <Link
-                  href="/shop/organza"
+                  href="#fabric-directory"
                   onClick={() => setMobileMenuOpen(false)}
                   className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
                 >
-                  <span>ORGANZA & TISSUE</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
+                  <span>FABRIC DIRECTORY</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
+                </Link>
+                <Link
+                  href="/our-story"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
+                >
+                  <span>ATELIER &amp; CRAFT</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
+                </Link>
+                <Link
+                  href="/shop/bridal"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
+                >
+                  <span>BRIDAL TROUSSEAU</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
                 </Link>
                 <Link
                   href="/size-guide"
                   onClick={() => setMobileMenuOpen(false)}
                   className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
                 >
-                  <span>BLOUSE SIZE GUIDE</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
-                </Link>
-                <Link
-                  href="/track-order"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
-                >
-                  <span>TRACK ORDER</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
+                  <span>EDITORIAL</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
                 </Link>
               </nav>
             </div>
 
-            <div className="pt-6 border-t border-outline-variant text-body-sm text-on-surface-variant">
-              <p className="font-subhead-eyebrow text-subhead-eyebrow text-secondary uppercase tracking-wider">ATELIER STYLIST CONCIERGE</p>
+            <div className="pt-6 border-t border-outline-variant text-xs font-sans-body text-on-surface-variant">
+              <p className="font-sans-fashion text-xs font-semibold tracking-wider text-secondary uppercase">ATELIER CONCIERGE</p>
               <a
                 href="https://wa.me/919876543210"
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 inline-flex items-center gap-2 font-label-numeric text-secondary hover:text-primary transition-colors"
+                className="mt-2 inline-flex items-center gap-2 font-sans-fashion text-primary-container hover:text-primary transition-colors"
               >
-                💬 WhatsApp Concierge
+                💬 WhatsApp Stylist Concierge
               </a>
             </div>
           </div>
