@@ -1,6 +1,6 @@
 /**
- * SORAYVA — GOOGLE SHEETS PRODUCT CATALOGUE CMS
- * Google Apps Script API Layer & Web App Endpoint
+ * SORAYVA — GOOGLE SHEETS PRODUCT CATALOGUE CMS API
+ * Google Apps Script Backend & Public Web App Endpoint
  *
  * SPREADSHEET: SORAYVA_PRODUCT_CATALOGUE
  * SHEET: PRODUCTS
@@ -49,7 +49,7 @@ var COL = {
   RETURN_INFO: 30,
   RATING: 31,
   REVIEW_COUNT: 32,
-  // INTERNAL FIELDS (DO NOT EXPOSE IN PUBLIC API)
+  // INTERNAL PRIVATE FIELDS (NEVER EXPOSE IN PUBLIC API)
   MEESHO_REFERENCE_LINK: 33,
   SOURCE_COST: 34,
   SOURCE_STATUS: 35,
@@ -62,11 +62,33 @@ var COL = {
  */
 function doGet(e) {
   var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : 'getProducts';
+  var forceRefresh = (e && e.parameter && (e.parameter.refresh === 'true' || e.parameter.refresh === '1'));
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'sorayva_public_products_v1';
+
+  // Return cached result if available for getProducts action
+  if (action === 'getProducts' && !forceRefresh) {
+    var cachedResponse = cache.get(cacheKey);
+    if (cachedResponse) {
+      return ContentService
+        .createTextOutput(cachedResponse)
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
   var response;
 
   try {
     if (action === 'getProducts') {
       response = getPublicProducts();
+      // Store in script cache for 300 seconds (5 minutes)
+      if (response && response.success) {
+        try {
+          cache.put(cacheKey, JSON.stringify(response), 300);
+        } catch (cacheErr) {
+          Logger.log('Cache storage note: ' + cacheErr.toString());
+        }
+      }
     } else if (action === 'getCategories') {
       response = getDynamicCategoriesResponse();
     } else if (action === 'getCollections') {
@@ -74,15 +96,20 @@ function doGet(e) {
     } else if (action === 'getCatalogueHealthReport') {
       response = generateCatalogueHealthReport();
     } else if (action === 'health') {
-      response = { status: 'OK', system: 'SORAYVA Catalogue CMS', timestamp: new Date().toISOString() };
+      response = { status: 'OK', system: 'SORAYVA Catalogue CMS API', timestamp: new Date().toISOString() };
     } else {
       response = getPublicProducts();
     }
   } catch (err) {
     response = {
+      success: false,
       error: true,
       message: 'Catalogue Service Error: ' + err.toString(),
-      data: []
+      products: [],
+      meta: {
+        count: 0,
+        generatedAt: new Date().toISOString()
+      }
     };
   }
 
@@ -97,24 +124,45 @@ function doGet(e) {
  */
 function getPublicProducts() {
   var sheet = getProductsSheet();
+  var nowIso = new Date().toISOString();
+
   if (!sheet) {
-    return { success: true, count: 0, data: [] };
+    return {
+      success: true,
+      products: [],
+      data: [],
+      meta: { count: 0, generatedAt: nowIso }
+    };
   }
 
   var data = sheet.getDataRange().getValues();
   if (data.length <= 1) {
-    return { success: true, count: 0, data: [] };
+    return {
+      success: true,
+      products: [],
+      data: [],
+      meta: { count: 0, generatedAt: nowIso }
+    };
   }
 
   var publicProducts = [];
+  var seenIds = {};
 
   // Skip header row
   for (var i = 1; i < data.length; i++) {
     var row = data[i];
     var validation = validateRow(row);
 
-    // Only proceed if row has essential fields and valid status
+    // Single row validation safeguard
     if (validation.isValid) {
+      var productId = String(row[COL.PRODUCT_ID - 1] || '').trim();
+
+      // Deduplicate Product ID safely
+      if (seenIds[productId]) {
+        continue;
+      }
+      seenIds[productId] = true;
+
       var status = String(row[COL.STATUS - 1] || 'Draft').trim();
       
       // Status filtering rule: Draft, Hidden, Discontinued are NEVER returned to public website
@@ -129,8 +177,12 @@ function getPublicProducts() {
 
   return {
     success: true,
-    count: publicProducts.length,
-    data: publicProducts
+    products: publicProducts,
+    data: publicProducts, // Compatibility alias
+    meta: {
+      count: publicProducts.length,
+      generatedAt: nowIso
+    }
   };
 }
 
@@ -191,6 +243,7 @@ function parsePublicProductRow(row) {
     var occasion = parseMultiValue(row[COL.OCCASION - 1]);
     var style = parseMultiValue(row[COL.STYLE - 1]);
     var work = parseMultiValue(row[COL.WORK - 1]);
+    var pattern = parseMultiValue(row[COL.PATTERN - 1]);
     var collection = parseMultiValue(row[COL.COLLECTION - 1]);
     var blouseSize = parseMultiValue(row[COL.BLOUSE_SIZE - 1]);
 
@@ -219,7 +272,7 @@ function parsePublicProductRow(row) {
 
     var slug = slugify(productName) + '-' + productId.toLowerCase();
 
-    // Construct PUBLIC PRODUCT DTO
+    // Construct PUBLIC PRODUCT DTO (STRICTLY EXCLUDES INTERNAL SUPPLIER FIELDS)
     var dto = {
       productId: productId,
       productName: productName,
@@ -233,7 +286,7 @@ function parsePublicProductRow(row) {
       occasion: occasion,
       style: style,
       work: work,
-      pattern: String(row[COL.PATTERN - 1] || '').trim(),
+      pattern: pattern,
       colour: String(row[COL.COLOUR - 1] || 'Crimson').trim(),
       colourFamily: String(row[COL.COLOUR_FAMILY - 1] || '').trim(),
       collection: collection,
@@ -348,7 +401,7 @@ function generateCatalogueHealthReport() {
  */
 function getDynamicCategoriesResponse() {
   var publicResult = getPublicProducts();
-  var products = publicResult.data || [];
+  var products = publicResult.products || [];
   var counts = {};
 
   products.forEach(function(p) {
@@ -373,7 +426,7 @@ function getDynamicCategoriesResponse() {
  */
 function getDynamicCollectionsResponse() {
   var publicResult = getPublicProducts();
-  var products = publicResult.data || [];
+  var products = publicResult.products || [];
   var collectionsSet = {};
 
   products.forEach(function(p) {
@@ -409,11 +462,23 @@ function parseMultiValue(val) {
   if (Array.isArray(val)) return val;
   var str = String(val).trim();
   if (!str) return [];
-  return str.split(/[,\n|]/).map(function(item) {
+  var items = str.split(/[,\n|]/).map(function(item) {
     return item.trim();
   }).filter(function(item) {
     return item.length > 0;
   });
+
+  // Deduplicate array values safely
+  var uniqueItems = [];
+  var seen = {};
+  for (var i = 0; i < items.length; i++) {
+    var lower = items[i].toLowerCase();
+    if (!seen[lower]) {
+      seen[lower] = true;
+      uniqueItems.push(items[i]);
+    }
+  }
+  return uniqueItems;
 }
 
 function parseBoolean(val) {

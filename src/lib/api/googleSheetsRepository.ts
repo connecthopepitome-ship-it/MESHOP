@@ -45,9 +45,9 @@ export class GoogleSheetsRepository implements RepositoryInterface {
       }
 
       const parseArray = (val: any): string[] => {
-        if (Array.isArray(val)) return val.map((s) => String(s).trim()).filter(Boolean);
+        if (Array.isArray(val)) return Array.from(new Set(val.map((s) => String(s).trim()).filter(Boolean)));
         if (typeof val === 'string' && val.trim().length > 0) {
-          return val.split(/[\|\,\n]/).map((s) => s.trim()).filter(Boolean);
+          return Array.from(new Set(val.split(/[\|\,\n]/).map((s) => s.trim()).filter(Boolean)));
         }
         return [];
       };
@@ -176,8 +176,9 @@ export class GoogleSheetsRepository implements RepositoryInterface {
 
         if (res.ok) {
           const json = await res.json();
-          if (Array.isArray(json.data)) {
-            products = json.data
+          const rawItems = Array.isArray(json.products) ? json.products : (Array.isArray(json.data) ? json.data : []);
+          if (rawItems.length > 0) {
+            products = rawItems
               .map((r: any) => this.sanitizeProduct(r))
               .filter((p: any): p is PublicProduct => p !== null);
           }

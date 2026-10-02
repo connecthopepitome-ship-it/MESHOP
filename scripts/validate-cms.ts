@@ -22,68 +22,83 @@ function assert(condition: boolean, testName: string, failureDetail?: string) {
 
 const repo = new GoogleSheetsRepository();
 
-// TEST 1: Active product parsing
-const activeRaw = {
-  productId: 'SAR-TEST-01',
-  productName: 'Active Silk Saree',
-  category: 'Silk Sarees',
-  price: 15000,
+// TEST 1: SR001 - Active Organza Pink Festive, Party Saree
+const sr001Raw = {
+  productId: 'SR001',
+  productName: 'Rose Pink Hand-Painted Organza Saree',
+  category: 'Organza & Tissue',
+  fabric: 'Organza',
+  colour: 'Pink',
+  occasion: 'Festive, Party',
+  price: 18500,
   status: 'Active',
   mainImage: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c',
-  published: true
+  meeshoReferenceLink: 'https://meesho.com/saree/p/sr001-secret-link',
+  sourceCost: 2200,
+  supplierReference: 'SUP-MEESHO-SR001'
 };
-const activeProduct = repo.sanitizeProduct(activeRaw);
-assert(activeProduct !== null && activeProduct.status === 'Active', '1. Active product is included in public catalogue DTO');
-
-// TEST 2: Draft product filtering
-const draftRaw = { ...activeRaw, productId: 'SAR-TEST-02', status: 'Draft' };
-const draftProduct = repo.sanitizeProduct(draftRaw);
-assert(draftProduct === null, '2. Draft product is strictly EXCLUDED from public catalogue');
-
-// TEST 3: Hidden product filtering
-const hiddenRaw = { ...activeRaw, productId: 'SAR-TEST-03', status: 'Hidden' };
-const hiddenProduct = repo.sanitizeProduct(hiddenRaw);
-assert(hiddenProduct === null, '3. Hidden product is strictly EXCLUDED from public catalogue');
-
-// TEST 4: Discontinued product filtering
-const discontinuedRaw = { ...activeRaw, productId: 'SAR-TEST-04', status: 'Discontinued' };
-const discontinuedProduct = repo.sanitizeProduct(discontinuedRaw);
-assert(discontinuedProduct === null, '4. Discontinued product is strictly EXCLUDED from public catalogue');
-
-// TEST 5: Out of Stock product handling
-const outOfStockRaw = { ...activeRaw, productId: 'SAR-TEST-05', status: 'Out of Stock', stock: 0 };
-const outOfStockProduct = repo.sanitizeProduct(outOfStockRaw);
+const sr001Product = repo.sanitizeProduct(sr001Raw);
 assert(
-  outOfStockProduct !== null && outOfStockProduct.status === 'Out of Stock' && outOfStockProduct.stockStatus === 'out_of_stock',
-  '5. Out of Stock product is included in public catalogue with clear unavailable stockStatus'
+  sr001Product !== null &&
+    sr001Product.status === 'Active' &&
+    Array.isArray(sr001Product.occasion) &&
+    sr001Product.occasion.includes('Festive') &&
+    sr001Product.occasion.includes('Party') &&
+    (sr001Product as any).meeshoReferenceLink === undefined &&
+    (sr001Product as any).sourceCost === undefined &&
+    (sr001Product as any).supplierReference === undefined,
+  '1. SR001 (Active, Organza, Pink, Festive, Party) is publicly displayed with internal fields stripped'
 );
 
-// TEST 6: Missing image handling
-const missingImageRaw = { ...activeRaw, productId: 'SAR-TEST-06', mainImage: '', image: '' };
+// TEST 2: SR002 - Draft Saree (Never published)
+const sr002Raw = { ...sr001Raw, productId: 'SR002', productName: 'Draft Kanjeevaram Saree', status: 'Draft' };
+const sr002Product = repo.sanitizeProduct(sr002Raw);
+assert(sr002Product === null, '2. SR002 (Draft) is strictly EXCLUDED from public catalogue API response');
+
+// TEST 3: SR003 - Out of Stock Saree (Included with out_of_stock status)
+const sr003Raw = { ...sr001Raw, productId: 'SR003', productName: 'Out of Stock Silk Saree', status: 'Out of Stock', stock: 0 };
+const sr003Product = repo.sanitizeProduct(sr003Raw);
+assert(
+  sr003Product !== null && sr003Product.status === 'Out of Stock' && sr003Product.stockStatus === 'out_of_stock',
+  '3. SR003 (Out of Stock) is included in public catalogue with clear out_of_stock status'
+);
+
+// TEST 4: SR004 - Hidden Saree (Never published)
+const sr004Raw = { ...sr001Raw, productId: 'SR004', productName: 'Hidden Heritage Saree', status: 'Hidden' };
+const sr004Product = repo.sanitizeProduct(sr004Raw);
+assert(sr004Product === null, '4. SR004 (Hidden) is strictly EXCLUDED from public catalogue API response');
+
+// TEST 5: SR005 - Discontinued Saree (Never published)
+const sr005Raw = { ...sr001Raw, productId: 'SR005', productName: 'Discontinued Velvet Saree', status: 'Discontinued' };
+const sr005Product = repo.sanitizeProduct(sr005Raw);
+assert(sr005Product === null, '5. SR005 (Discontinued) is strictly EXCLUDED from public catalogue API response');
+
+// TEST 6: Missing image handling fallback
+const missingImageRaw = { ...sr001Raw, productId: 'SR006', mainImage: '', image: '' };
 const missingImageProduct = repo.sanitizeProduct(missingImageRaw);
 assert(
   missingImageProduct !== null && missingImageProduct.mainImage.length > 0,
   '6. Product with missing image uses resilient high-quality fallback image without breaking payload'
 );
 
-// TEST 7: Missing price handling
-const missingPriceRaw = { ...activeRaw, productId: 'SAR-TEST-07', price: undefined };
+// TEST 7: Missing price handling fallback
+const missingPriceRaw = { ...sr001Raw, productId: 'SR007', price: undefined };
 const missingPriceProduct = repo.sanitizeProduct(missingPriceRaw);
 assert(
   missingPriceProduct !== null && typeof missingPriceProduct.price === 'number',
-  '7. Product with missing price defaults to 0 safely without runtimeNaN error'
+  '7. Product with missing price defaults to 0 safely without runtime NaN error'
 );
 
-// TEST 8: Multiple occasions multi-value normalization
-const multiOccasionRaw = { ...activeRaw, productId: 'SAR-TEST-08', occasion: 'Festive, Party, Evening' };
+// TEST 8: Multiple occasions multi-value normalization & deduplication
+const multiOccasionRaw = { ...sr001Raw, productId: 'SR008', occasion: 'Festive, Party, Evening, Festive' };
 const multiOccasionProduct = repo.sanitizeProduct(multiOccasionRaw);
 assert(
   Array.isArray(multiOccasionProduct?.occasion) && multiOccasionProduct?.occasion.length === 3 && multiOccasionProduct?.occasion.includes('Festive'),
-  '8. Comma-separated multi-value Occasions are normalized to trimmed arrays'
+  '8. Comma-separated multi-value Occasions are normalized and deduplicated'
 );
 
 // TEST 9: Multiple styles multi-value normalization
-const multiStyleRaw = { ...activeRaw, productId: 'SAR-TEST-09', style: 'Traditional, Statement, Elegant' };
+const multiStyleRaw = { ...sr001Raw, productId: 'SR009', style: 'Traditional, Statement, Elegant' };
 const multiStyleProduct = repo.sanitizeProduct(multiStyleRaw);
 assert(
   Array.isArray(multiStyleProduct?.style) && multiStyleProduct?.style.length === 3 && multiStyleProduct?.style.includes('Traditional'),
@@ -92,8 +107,8 @@ assert(
 
 // TEST 10: Multiple gallery images support
 const multiImageRaw = {
-  ...activeRaw,
-  productId: 'SAR-TEST-10',
+  ...sr001Raw,
+  productId: 'SR010',
   mainImage: 'https://images.unsplash.com/img1',
   image2: 'https://images.unsplash.com/img2',
   image3: 'https://images.unsplash.com/img3',
