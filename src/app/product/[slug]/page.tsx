@@ -1,16 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Heart, ShoppingBag, Truck, ShieldCheck, Ruler, MessageCircle, Star, ChevronDown, ChevronUp, Share2 } from 'lucide-react';
+import { Heart, ShoppingBag, Truck, ShieldCheck, Ruler, MessageCircle, Star, ChevronDown, ChevronUp, Check, ArrowRight } from 'lucide-react';
 import { repository } from '@/lib/api/googleSheetsRepository';
 import { Product } from '@/types';
 import { formatPrice, calculateDiscountPercentage } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { defaultShippingProvider } from '@/lib/adapters/shippingAdapter';
+import { ProductImage } from '@/components/shared/ProductImage';
 import { BlouseSizeModal } from '@/components/size/BlouseSizeModal';
 import { trackEvent } from '@/lib/analytics';
 
@@ -43,6 +43,17 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         }
         if (prod) {
           trackEvent('view_item', { productId: prod.productId, name: prod.name, price: prod.price });
+
+          // Store product in recently viewed localStorage array
+          if (typeof window !== 'undefined') {
+            try {
+              const existing: string[] = JSON.parse(localStorage.getItem('meshop_recently_viewed') || '[]');
+              const updated = Array.from(new Set([prod.productId, ...existing])).slice(0, 10);
+              localStorage.setItem('meshop_recently_viewed', JSON.stringify(updated));
+            } catch (e) {
+              console.warn('Failed to update recently viewed products in storage:', e);
+            }
+          }
         }
       } catch (e) {
         console.error('Failed to load product detail:', e);
@@ -55,14 +66,14 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 md:px-8 py-16 space-y-8 animate-pulse">
+      <div className="max-w-[1560px] mx-auto px-4 md:px-8 py-16 space-y-8 animate-pulse">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          <div className="aspect-[3/4] bg-brand-surface border border-brand-border" />
+          <div className="aspect-[3/4] bg-surface-bright fine-gold-border rounded-xs" />
           <div className="space-y-4">
-            <div className="h-6 bg-brand-surface w-1/3" />
-            <div className="h-10 bg-brand-surface w-3/4" />
-            <div className="h-8 bg-brand-surface w-1/4" />
-            <div className="h-32 bg-brand-surface w-full" />
+            <div className="h-6 bg-surface-container w-1/3" />
+            <div className="h-10 bg-surface-container w-3/4" />
+            <div className="h-8 bg-surface-container w-1/4" />
+            <div className="h-32 bg-surface-container w-full" />
           </div>
         </div>
       </div>
@@ -109,43 +120,45 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     },
   };
 
+  const occasionLabel = Array.isArray(product.occasion) ? product.occasion.join(', ') : product.occasion || 'Festive';
+
   return (
-    <div className="container mx-auto px-4 md:px-8 py-8 md:py-12 space-y-16">
+    <div className="max-w-[1560px] mx-auto px-4 sm:px-8 md:px-12 py-8 md:py-12 space-y-12 bg-surface text-secondary">
       {/* Inject Structured Data */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* Breadcrumbs */}
-      <nav className="text-xs text-brand-muted font-sans uppercase tracking-wider flex items-center space-x-2">
-        <Link href="/" className="hover:text-brand-gold">Home</Link>
+      <nav className="font-sans-fashion text-xs text-outline uppercase tracking-wider flex items-center space-x-2">
+        <Link href="/" className="hover:text-primary transition-colors">Home</Link>
         <span>/</span>
-        <Link href="/shop" className="hover:text-brand-gold">Shop</Link>
+        <Link href="/shop" className="hover:text-primary transition-colors">Shop</Link>
         <span>/</span>
-        <Link href={`/shop/${product.category.toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-brand-gold">
+        <Link href={`/shop/${product.category.toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-primary transition-colors">
           {product.category}
         </Link>
         <span>/</span>
-        <span className="text-brand-charcoal font-medium line-clamp-1">{product.name}</span>
+        <span className="text-secondary font-medium line-clamp-1">{product.name}</span>
       </nav>
 
       {/* Main PDP Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14">
         {/* Left: Product Images Gallery (7 Cols) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="relative aspect-[3/4] w-full bg-brand-surface border border-brand-border overflow-hidden">
-            <Image
+          <div className="relative aspect-[3/4] w-full bg-surface-container fine-gold-border overflow-hidden rounded-xs">
+            <ProductImage
               src={gallery[activeImageIndex] || product.mainImage}
               alt={product.name}
               fill
               priority
-              className="object-cover object-center"
+              className="object-cover"
             />
 
             <button
               onClick={() => toggleWishlist(product)}
-              className="absolute top-4 right-4 z-10 p-3 rounded-full bg-brand-base/80 backdrop-blur-md text-brand-charcoal hover:text-brand-burgundy transition-colors shadow-md"
+              className="absolute top-4 right-4 z-10 p-3 rounded-full bg-surface-bright/90 backdrop-blur-md text-secondary hover:text-primary transition-colors shadow-sm"
               aria-label="Wishlist"
             >
-              <Heart className={`w-5 h-5 ${inWishlist ? 'fill-brand-burgundy text-brand-burgundy' : ''}`} />
+              <Heart className={`w-5 h-5 ${inWishlist ? 'fill-secondary text-secondary' : ''}`} />
             </button>
           </div>
 
@@ -156,11 +169,13 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                 <button
                   key={idx}
                   onClick={() => setActiveImageIndex(idx)}
-                  className={`relative w-20 aspect-[3/4] border transition-all flex-shrink-0 ${
-                    activeImageIndex === idx ? 'border-brand-gold ring-2 ring-brand-gold' : 'border-brand-border opacity-70 hover:opacity-100'
+                  className={`relative w-20 aspect-[3/4] border transition-all flex-shrink-0 rounded-xs ${
+                    activeImageIndex === idx
+                      ? 'border-primary-container ring-1 ring-primary-container opacity-100'
+                      : 'border-outline-variant/60 opacity-60 hover:opacity-100'
                   }`}
                 >
-                  <Image src={img} alt={`Gallery ${idx}`} fill className="object-cover object-center" />
+                  <ProductImage src={img} alt={`Gallery ${idx}`} fill className="object-cover" />
                 </button>
               ))}
             </div>
@@ -168,118 +183,120 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         </div>
 
         {/* Right: Product Info & Actions (5 Cols) */}
-        <div className="lg:col-span-5 space-y-6 text-brand-charcoal">
+        <div className="lg:col-span-5 space-y-6 text-secondary">
           <div>
-            <span className="text-xs font-semibold tracking-widest text-brand-gold uppercase block">
-              {product.fabric} • {product.category}
+            <span className="font-sans-fashion text-xs font-semibold tracking-[0.25em] text-primary-container uppercase block mb-1">
+              {product.fabric} • {occasionLabel}
             </span>
-            <h1 className="font-serif text-2xl md:text-3xl font-medium mt-1 leading-snug">
+            <h1 className="font-serif-display text-2xl sm:text-3xl md:text-4xl text-secondary font-normal leading-tight">
               {product.name}
             </h1>
-            <p className="text-xs text-brand-muted mt-1 font-sans">SKU: {product.sku}</p>
+            <p className="font-sans-fashion text-xs text-outline tracking-widest uppercase mt-1">SKU: {product.sku}</p>
           </div>
 
           {/* Price & Badges */}
-          <div className="flex items-baseline space-x-4 pt-2 border-t border-brand-border">
-            <span className="font-sans text-2xl md:text-3xl font-bold text-brand-charcoal">
+          <div className="flex items-baseline space-x-4 pt-3 border-t border-outline-variant/50">
+            <span className="font-sans-fashion text-3xl font-bold text-secondary">
               {formatPrice(product.price, product.currency)}
             </span>
             {product.compareAtPrice && product.compareAtPrice > product.price && (
-              <span className="font-sans text-base text-brand-muted line-through">
+              <span className="font-sans-fashion text-lg text-outline line-through">
                 {formatPrice(product.compareAtPrice, product.currency)}
               </span>
             )}
             {discount && (
-              <span className="bg-brand-burgundy text-white text-xs font-bold px-2.5 py-1">
-                Save {discount}%
+              <span className="bg-secondary text-white font-sans-fashion text-xs font-bold px-3 py-1 uppercase tracking-wider">
+                SAVE {discount}%
               </span>
             )}
           </div>
 
-          <p className="text-xs md:text-sm text-brand-muted leading-relaxed font-light">
+          <p className="font-sans-body text-xs sm:text-sm text-on-surface-variant font-light leading-relaxed">
             {product.shortDescription || product.description}
           </p>
 
           {/* Blouse Size Selector */}
-          {product.blouseSizesAvailable && product.blouseSizesAvailable.length > 0 && (
-            <div className="space-y-2 pt-4 border-t border-brand-border">
-              <div className="flex justify-between items-center">
-                <label className="text-xs font-semibold uppercase tracking-wider">
-                  Select Unstitched Blouse Size:
-                </label>
-                <button
-                  onClick={() => setSizeModalOpen(true)}
-                  className="text-xs text-brand-gold font-medium hover:underline flex items-center space-x-1"
-                >
-                  <Ruler className="w-3.5 h-3.5" />
-                  <span>Blouse Size Assistant</span>
-                </button>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {product.blouseSizesAvailable.map((sz) => (
-                  <button
-                    key={sz}
-                    onClick={() => setSelectedBlouseSize(sz)}
-                    className={`w-11 h-11 text-xs font-semibold uppercase border transition-all ${
-                      selectedBlouseSize === sz
-                        ? 'border-brand-gold bg-brand-gold/15 text-brand-charcoal font-bold'
-                        : 'border-brand-border bg-brand-surface text-brand-muted hover:border-brand-charcoal'
-                    }`}
-                  >
-                    {sz}
-                  </button>
-                ))}
-              </div>
+          <div className="space-y-2.5 pt-4 border-t border-outline-variant/50">
+            <div className="flex justify-between items-center">
+              <label className="font-sans-fashion text-xs font-semibold uppercase tracking-wider text-secondary">
+                Unstitched Blouse Piece Reference:
+              </label>
+              <button
+                onClick={() => setSizeModalOpen(true)}
+                className="font-sans-fashion text-xs text-primary-container hover:underline font-medium flex items-center space-x-1"
+              >
+                <Ruler className="w-3.5 h-3.5" />
+                <span>BLOUSE SIZE GUIDE</span>
+              </button>
             </div>
-          )}
+
+            <p className="font-sans-body text-xs text-outline font-light italic">
+              Includes matching 0.8m–0.9m unstitched fabric piece. Select custom size reference below:
+            </p>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              {(product.blouseSizesAvailable?.length > 0 ? product.blouseSizesAvailable : ['XS', 'S', 'M', 'L', 'XL', 'XXL']).map((sz) => (
+                <button
+                  key={sz}
+                  onClick={() => setSelectedBlouseSize(sz)}
+                  className={`w-11 h-11 font-sans-fashion text-xs font-semibold uppercase border transition-all rounded-xs ${
+                    selectedBlouseSize === sz
+                      ? 'border-primary-container bg-primary-container/15 text-secondary font-bold ring-1 ring-primary-container'
+                      : 'border-outline-variant/60 bg-surface-bright text-outline hover:border-secondary'
+                  }`}
+                >
+                  {sz}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Quantity & CTAs */}
-          <div className="space-y-4 pt-4 border-t border-brand-border">
+          <div className="space-y-4 pt-4 border-t border-outline-variant/50">
             <div className="flex items-center space-x-4">
-              <span className="text-xs font-semibold uppercase tracking-wider">Quantity:</span>
-              <div className="flex items-center border border-brand-border bg-brand-surface">
+              <span className="font-sans-fashion text-xs font-semibold uppercase tracking-wider text-secondary">Quantity:</span>
+              <div className="flex items-center border border-outline-variant bg-surface-bright rounded-xs">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-3 py-1.5 text-sm font-semibold hover:bg-brand-border transition-colors"
+                  className="px-3 py-1.5 font-sans-fashion text-sm font-semibold hover:bg-surface-container transition-colors"
                 >
                   -
                 </button>
-                <span className="px-4 text-xs font-semibold">{quantity}</span>
+                <span className="px-4 font-sans-fashion text-xs font-semibold">{quantity}</span>
                 <button
                   onClick={() => setQuantity(Math.min(product.stockQty, quantity + 1))}
-                  className="px-3 py-1.5 text-sm font-semibold hover:bg-brand-border transition-colors"
+                  className="px-3 py-1.5 font-sans-fashion text-sm font-semibold hover:bg-surface-container transition-colors"
                 >
                   +
                 </button>
               </div>
-              <span className="text-xs text-brand-gold font-medium">
-                {product.stockQty > 0 ? `In Stock (${product.stockQty} left)` : 'Out of Stock'}
+              <span className="font-sans-fashion text-xs text-primary-container font-semibold uppercase">
+                {product.stockQty > 0 ? `IN STOCK (${product.stockQty} LEFT)` : 'OUT OF STOCK'}
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 onClick={handleAddToCart}
-                className="bg-brand-gold text-brand-charcoal hover:bg-brand-gold-hover py-4 px-6 text-xs font-semibold uppercase tracking-widest flex items-center justify-center space-x-2 transition-colors shadow-md"
+                className="bg-primary-container text-white hover:bg-primary py-4 px-6 font-sans-fashion text-xs font-semibold uppercase tracking-[0.18em] flex items-center justify-center space-x-2 transition-colors rounded-full shadow-md"
               >
                 <ShoppingBag className="w-4 h-4" />
-                <span>Add to Shopping Bag</span>
+                <span>ADD TO BAG</span>
               </button>
 
               <button
                 onClick={handleBuyNow}
-                className="bg-brand-charcoal text-brand-base hover:bg-black py-4 px-6 text-xs font-semibold uppercase tracking-widest flex items-center justify-center transition-colors shadow-md"
+                className="bg-secondary text-white hover:bg-black py-4 px-6 font-sans-fashion text-xs font-semibold uppercase tracking-[0.18em] flex items-center justify-center transition-colors rounded-full shadow-md"
               >
-                Buy Now
+                BUY NOW
               </button>
             </div>
           </div>
 
-          {/* Pincode Shipping Checker */}
-          <div className="p-4 bg-brand-surface border border-brand-border/60 space-y-3 text-xs">
-            <span className="font-semibold uppercase tracking-wider block text-brand-charcoal flex items-center">
-              <Truck className="w-4 h-4 mr-1.5 text-brand-gold" /> Check Delivery & PIN Code
+          {/* Pincode Delivery Checker */}
+          <div className="p-4 bg-surface-bright fine-gold-border space-y-3 text-xs rounded-xs">
+            <span className="font-sans-fashion font-semibold uppercase tracking-wider block text-secondary flex items-center">
+              <Truck className="w-4 h-4 mr-2 text-primary-container" /> CHECK DOORSTEP DELIVERY & PIN CODE
             </span>
             <form onSubmit={handlePincodeCheck} className="flex">
               <input
@@ -288,81 +305,82 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                 value={pincode}
                 onChange={(e) => setPincode(e.target.value)}
                 maxLength={6}
-                className="w-full bg-brand-base border border-brand-border px-3 py-2 text-xs focus:outline-none focus:border-brand-gold"
+                className="w-full bg-surface border border-outline-variant px-3 py-2 text-xs font-sans-body text-secondary focus:outline-none focus:border-primary-container"
               />
               <button
                 type="submit"
-                className="bg-brand-charcoal text-brand-base px-4 text-xs uppercase font-semibold hover:bg-brand-gold hover:text-brand-charcoal transition-colors"
+                className="bg-secondary text-white px-5 text-xs font-sans-fashion uppercase tracking-wider hover:bg-primary transition-colors whitespace-nowrap"
               >
                 Check
               </button>
             </form>
 
             {shippingQuote && (
-              <div className="pt-2 text-xs">
+              <div className="pt-2 text-xs font-sans-body">
                 {shippingQuote.servicable ? (
-                  <p className="text-green-800 font-medium">
-                    ✓ Servicable! Estimated Delivery: <strong>{shippingQuote.estimatedDays}</strong> ({shippingQuote.cost === 0 ? 'Complimentary Free Shipping' : `Shipping ₹${shippingQuote.cost}`})
+                  <p className="text-green-800 font-medium flex items-center gap-1">
+                    <Check className="w-4 h-4 text-green-700" /> Servicable! Estimated Delivery: <strong>{shippingQuote.estimatedDays}</strong> ({shippingQuote.cost === 0 ? 'Complimentary Express Delivery' : `Shipping ₹${shippingQuote.cost}`})
                   </p>
                 ) : (
-                  <p className="text-brand-burgundy font-medium">
-                    ✕ Invalid PIN code format. Please check your 6-digit pincode.
+                  <p className="text-secondary font-medium">
+                    ✕ Invalid PIN code format. Please verify your 6-digit postal pincode.
                   </p>
                 )}
               </div>
             )}
           </div>
 
-          {/* WhatsApp Concierge Action */}
-          <div className="p-4 border border-brand-gold/40 bg-brand-gold/10 flex items-center justify-between">
+          {/* WhatsApp Stylist Support Action */}
+          <div className="p-4 border border-outline-variant/60 bg-surface-container flex items-center justify-between rounded-xs">
             <div className="text-xs">
-              <span className="font-semibold text-brand-charcoal block">Need Styling Assistance?</span>
-              <span className="text-brand-muted">Ask our boutique draper about video calls & fabric feel.</span>
+              <span className="font-sans-fashion font-semibold text-secondary uppercase tracking-wider block">Need Stylist Assistance?</span>
+              <span className="font-sans-body text-on-surface-variant font-light">Ask our saree drapers about fabric feel and drape details.</span>
             </div>
             <a
               href={`https://wa.me/919876543210?text=Hi!%20I%20am%20interested%20in%20${encodeURIComponent(product.name)}`}
               target="_blank"
               rel="noreferrer"
-              className="bg-green-700 text-white px-3 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-green-800 transition-colors flex items-center space-x-1"
+              className="bg-green-700 text-white px-4 py-2.5 text-xs font-sans-fashion font-semibold uppercase tracking-wider hover:bg-green-800 transition-colors flex items-center space-x-1.5 rounded-full whitespace-nowrap"
             >
               <MessageCircle className="w-3.5 h-3.5" />
-              <span>WhatsApp</span>
+              <span>WhatsApp Stylist</span>
             </a>
           </div>
 
           {/* Accordion Tabs */}
-          <div className="border-t border-brand-border pt-4 text-xs space-y-3">
-            <div className="border border-brand-border">
+          <div className="border-t border-outline-variant/60 pt-4 text-xs space-y-3 font-sans-body">
+            <div className="border border-outline-variant/60 rounded-xs">
               <button
                 onClick={() => setActiveTab(activeTab === 'details' ? ('' as any) : 'details')}
-                className="w-full p-3 font-semibold uppercase tracking-wider text-left bg-brand-surface flex justify-between items-center"
+                className="w-full p-3 font-sans-fashion font-semibold uppercase tracking-wider text-left bg-surface-bright flex justify-between items-center text-secondary"
               >
-                <span>Product Specifications & Weave</span>
+                <span>Product Specifications & Details</span>
                 {activeTab === 'details' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
               {activeTab === 'details' && (
-                <div className="p-4 space-y-2 text-brand-muted bg-brand-base">
+                <div className="p-4 space-y-2 text-on-surface-variant bg-surface font-light leading-relaxed border-t border-outline-variant/40">
                   <p><strong>Fabric:</strong> {product.fabric}</p>
-                  <p><strong>Saree Length:</strong> {product.sareeLength}</p>
-                  <p><strong>Blouse Piece:</strong> {product.blousePieceLength} ({product.blouseIncluded ? 'Included' : 'Not included'})</p>
-                  <p><strong>Occasion:</strong> {product.occasion}</p>
-                  <p><strong>Craft Work:</strong> {product.workType}</p>
-                  <p><strong>Pattern:</strong> {product.pattern}</p>
+                  <p><strong>Saree Length:</strong> {product.sareeLength || '5.5 meters'}</p>
+                  <p><strong>Blouse Piece:</strong> {product.blousePieceLength || '0.8 meters'} ({product.blouseIncluded ? 'Unstitched Included' : 'Not included'})</p>
+                  <p><strong>Occasion:</strong> {occasionLabel}</p>
+                  {product.workType && <p><strong>Work / Craft:</strong> {product.workType}</p>}
+                  {product.pattern && <p><strong>Pattern:</strong> {product.pattern}</p>}
+                  {product.colour && <p><strong>Colour:</strong> {product.colour}</p>}
                 </div>
               )}
             </div>
 
-            <div className="border border-brand-border">
+            <div className="border border-outline-variant/60 rounded-xs">
               <button
                 onClick={() => setActiveTab(activeTab === 'care' ? ('' as any) : 'care')}
-                className="w-full p-3 font-semibold uppercase tracking-wider text-left bg-brand-surface flex justify-between items-center"
+                className="w-full p-3 font-sans-fashion font-semibold uppercase tracking-wider text-left bg-surface-bright flex justify-between items-center text-secondary"
               >
-                <span>Silk Preservation & Care Instructions</span>
+                <span>Preservation & Care Instructions</span>
                 {activeTab === 'care' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
               {activeTab === 'care' && (
-                <div className="p-4 text-brand-muted bg-brand-base leading-relaxed">
-                  {product.careInstructions || 'Dry clean only. Store wrapped in pure white cotton cloth in a cool, dry place. Avoid direct sunlight and perfume contact.'}
+                <div className="p-4 text-on-surface-variant bg-surface font-light leading-relaxed border-t border-outline-variant/40">
+                  {product.careInstructions || 'Dry clean only. Store wrapped in pure unbleached muslin cloth away from direct heat and sunlight.'}
                 </div>
               )}
             </div>
@@ -371,17 +389,17 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
       </div>
 
       {/* Sticky Mobile Purchase Bar */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-brand-base border-t border-brand-border p-3 shadow-lg flex items-center justify-between">
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-surface-bright border-t border-outline-variant p-3 shadow-lg flex items-center justify-between">
         <div>
-          <span className="text-[10px] text-brand-muted uppercase block">Total Price</span>
-          <span className="font-serif text-base font-bold text-brand-charcoal">{formatPrice(product.price)}</span>
+          <span className="font-sans-fashion text-[10px] text-outline uppercase block">Total Price</span>
+          <span className="font-sans-fashion text-base font-bold text-secondary">{formatPrice(product.price)}</span>
         </div>
 
         <button
           onClick={handleAddToCart}
-          className="bg-brand-gold text-brand-charcoal hover:bg-brand-gold-hover px-6 py-3 text-xs uppercase tracking-widest font-semibold"
+          className="bg-primary-container text-white px-6 py-3 text-xs font-sans-fashion uppercase tracking-widest font-semibold rounded-full"
         >
-          Add to Bag
+          ADD TO BAG
         </button>
       </div>
 
@@ -394,3 +412,4 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     </div>
   );
 }
+

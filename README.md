@@ -1,63 +1,103 @@
-# Royal Silks Boutique — Premium Saree E-Commerce Storefront (`MESHOP`)
+# SORAYVA — The Modern Saree House (`MESHOP`)
 
-A production-quality, mobile-first saree-only storefront designed for **Royal Silks Boutique**. Built with **Next.js (App Router), React, TypeScript, and Tailwind CSS**. 
+A production-quality, mobile-first saree-only e-commerce storefront for **SORAYVA**. Built with **Next.js 14 (App Router), React 18, TypeScript 5, and Tailwind CSS**.
 
-The architecture features a clean repository layer (`GoogleSheetsRepository`) backed by Google Sheets & Google Apps Script for catalogue and order management, while maintaining pluggable provider interfaces (`PaymentProvider`, `ShippingProvider`, `FulfillmentProvider`) for seamless future migration to Firebase/Firestore, Razorpay, Shiprocket, and approved fulfilment connectors.
+The architecture features a clean repository abstraction layer (`GoogleSheetsRepository`) backed by Google Sheets for catalogue control, while maintaining pluggable provider interfaces (`PaymentProvider`, `ShippingProvider`, `FulfillmentProvider`) for future migration to Firebase/Firestore, Razorpay, and approved fulfilment connectors.
 
 ---
 
 ## 1. Customer Shopping Flow
 
 ```text
-Instagram / Social / Direct Traffic
+Direct / Organic / Social Traffic
              ↓
-Editorial Storefront (Warm Ivory & Champagne Gold Aesthetics)
+SORAYVA Haute Couture Storefront (Ivory, Champagne & Bronze Aesthetics)
              ↓
-Category / Collection / Multi-Filter & Search
+Header Navigation: SHOP | NEW ARRIVALS | COLLECTIONS | SHOP BY OCCASION | SHOP BY FABRIC | SALE
              ↓
-Product Detail Page (Gallery, Pincode Checker, WhatsApp Stylist)
+Dynamic Category System & Multi-Attribute Filters (Price, Fabric, Color, Occasion, Style, Work)
              ↓
-Blouse Size Identifier (XS–3XL Tailoring Algorithm)
+Product Detail Page (Gallery, Product Image Fallbacks, Pincode Delivery Checker, WhatsApp Stylist)
+             ↓
+BLOUSE SIZE GUIDE (XS–XXL Measurements & Tailoring Calculator)
              ↓
 Slide-over Cart & Wishlist Drawers
              ↓
-Address-Validated Checkout (Promo Coupons, SSL Security)
+Address-Validated Checkout (COD & Online Payment)
              ↓
-Order Confirmation & Live Shipment Tracking Timeline
+Order Confirmation & Live Order Tracking Timeline
 ```
 
 ---
 
 ## 2. Technology Stack
 
-* **Frontend**: Next.js 14 (App Router), React 18, TypeScript 5
-* **Styling**: Tailwind CSS (custom luxury design tokens: Warm Ivory `#FAF9F5`, Deep Charcoal `#1A1A1A`, Champagne Gold `#C5A059`, Burgundy `#671E2E`, Playfair Display & Plus Jakarta Sans typography)
-* **Icons**: Lucide React
+* **Framework**: Next.js 14 (App Router), React 18, TypeScript 5
+* **Styling**: Tailwind CSS (custom luxury tokens: Ivory `#fbf9f5`, Secondary `#4a2e2b`, Bronze Taupe `#ede6dc`, Champagne Gold `#c89b67`, `Bodoni Moda`, `Cormorant Garamond`, `Jost`, `Manrope` fonts)
+* **Icons**: Lucide React & Google Material Symbols
 * **Data Abstraction**: Repository Pattern (`GoogleSheetsRepository` with local mock fallback)
 * **Pluggable Adapters**:
-  * `PaymentProvider` (`MockRazorpayPaymentAdapter` / COD)
-  * `ShippingProvider` (`MockShiprocketShippingAdapter`)
-  * `FulfillmentProvider` (`ManualFulfillmentAdapter` - Meesho Integration Boundary)
-* **Persistence**: Browser `localStorage` for guest wishlist, cart items, promo coupons, order history, and saved blouse measurements.
+  * `PaymentProvider` (Razorpay / COD)
+  * `ShippingProvider` (Air Courier)
+  * `FulfillmentProvider` (Internal Supplier Mapping Boundary)
+* **Persistence**: Browser `localStorage` for wishlist, cart, recently viewed products, order history, and saved blouse size preferences.
 
 ---
 
-## 3. Local Development Setup
+## 3. Google Sheets Catalogue Schema
 
-### Prerequisites
-* Node.js v18.0.0 or higher
-* npm v9.0.0 or higher
+Create a Google Spreadsheet with the following column structure:
 
-### Installation Commands
+| Column Name | Type | Description |
+| :--- | :--- | :--- |
+| `Product ID` | String | Unique product code (e.g. `SAR-001`) |
+| `Product Name` | String | Saree title |
+| `Description` | String | Product details |
+| `Category` | String | Saree category (e.g. `Organza`, `Silk`, `Georgette`) |
+| `Subcategory` | String | Sub-type |
+| `Collection` | String | Collection name |
+| `Fabric` | String | Textile fabric |
+| `Occasion` | String / Array | Occasion tags (`Everyday`, `Festive`, `Party`, `Wedding Guest`, `Celebration`) |
+| `Style` | String / Array | Style tags (`Elegant`, `Minimal`, `Traditional`, `Contemporary`, `Statement`) |
+| `Work` | String / Array | Weave & embroidery craft |
+| `Pattern` | String | Motifs / pattern |
+| `Colour` | String | Color name |
+| `Colour Family` | String | Color family |
+| `Price` | Number | Customer selling price |
+| `Compare At Price` | Number | Original price (struck through) |
+| `Stock` | Number | Available stock quantity |
+| `Status` | String | `Active`, `Draft`, `Out of Stock`, `Hidden`, `Discontinued` |
+| `Featured` | Boolean | `TRUE` / `FALSE` |
+| `New Arrival` | Boolean | `TRUE` / `FALSE` |
+| `Trending` | Boolean | `TRUE` / `FALSE` |
+| `Publish Date` | String | Date published |
+| `Main Image` | String | Primary image URL |
+| `Image 2` | String | Secondary image URL |
+| `Image 3` | String | Gallery image URL |
+| `Image 4` | String | Gallery image URL |
+| **Internal Fields** | | *(Never rendered on customer storefront)* |
+| `Source URL` | String | Internal supplier URL |
+| `Source Cost` | Number | Internal cost price |
+| `Source Status` | String | Internal supplier stock state |
+| `Supplier Reference` | String | Internal supplier code |
+
+> **Security Note**: `GoogleSheetsRepository` automatically sanitizes and strips internal supplier fields (`sourceUrl`, `sourceCost`, `sourceStatus`, `supplierReference`) before serving product payloads to client components.
+
+---
+
+## 4. Local Development Commands
 
 ```bash
 # Install dependencies
 npm install
 
+# Run TypeScript type validation
+npx tsc --noEmit
+
 # Start local development server
 npm run dev
 
-# Run production build & type validation
+# Run production build
 npm run build
 
 # Start production server
@@ -68,102 +108,3 @@ npm run lint
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## 4. Environment Configuration
-
-Create a `.env.local` file at the root of the project:
-
-```env
-# Storefront Base URL
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-
-# Google Apps Script Web App Endpoint URL for Google Sheets Backend
-NEXT_PUBLIC_CATALOG_API_URL=https://script.google.com/macros/s/YOUR_APPS_SCRIPT_DEPLOYMENT_ID/exec
-
-# WhatsApp Stylist Concierge Number
-NEXT_PUBLIC_WHATSAPP_NUMBER=919876543210
-
-# Currency Configuration
-NEXT_PUBLIC_CURRENCY=INR
-NEXT_PUBLIC_ENABLE_COD=true
-NEXT_PUBLIC_FREE_SHIPPING_THRESHOLD=10000
-```
-
-> **Security Note**: Never expose private Google service account keys or supplier secrets in `NEXT_PUBLIC_` prefixed environment variables. Internal supplier metadata (`meeshoProductUrl`, `supplierReference`) is automatically sanitized and stripped by `GoogleSheetsRepository` before reaching client UI components.
-
----
-
-## 5. Google Sheets MVP Backend Setup
-
-Create a Google Spreadsheet containing the following 6 tabs:
-1. `Products`
-2. `Categories`
-3. `Collections`
-4. `Orders`
-5. `Coupons`
-6. `Reviews`
-
-### Header Schema for `Products`
-
-```text
-productId | sku | name | slug | category | subcategory | collection | tags | shortDescription | description | price | compareAtPrice | currency | fabric | colour | pattern | occasion | workType | sareeLength | blousePieceLength | blouseIncluded | blouseSizesAvailable | careInstructions | fitNotes | stockQty | stockStatus | featured | bestseller | newArrival | rating | reviewCount | mainImage | galleryImages | videoUrl | meeshoProductUrl | published | sortOrder | createdAt | updatedAt
-```
-
-### Parsing & Publishing Rules
-* **Published State**: Set `published = TRUE` for a row to render on the storefront.
-* **Delimiters**: Pipe (`|`) or newline delimited strings for `galleryImages` and `tags`. Comma-delimited for `blouseSizesAvailable`.
-* **Private Boundaries**: `meeshoProductUrl` is stored in the sheet for internal backend fulfilment reference only and is never served to client browsers.
-
----
-
-## 6. Project Structure
-
-```text
-MESHOP/
-├── src/
-│   ├── app/
-│   │   ├── page.tsx                     # Luxury Editorial Homepage
-│   │   ├── shop/                        # Catalogue Page & Category Landing
-│   │   ├── collections/[slug]/          # Collection Spotlight
-│   │   ├── product/[slug]/              # Product Detail Page (PDP)
-│   │   ├── search/                      # Instant Search & Filter Results
-│   │   ├── wishlist/                    # Saved Items
-│   │   ├── cart/                        # Shopping Bag
-│   │   ├── checkout/                    # Address & Payment Checkout
-│   │   ├── order-confirmation/[id]/     # Order Receipt
-│   │   ├── track-order/                 # Live Order Status Timeline
-│   │   ├── size-guide/                  # Blouse Size Assistant & Table
-│   │   ├── shipping-and-returns/        # Delivery Policies
-│   │   ├── contact/                     # WhatsApp & Concierge Contact
-│   │   ├── about/                       # Brand Heritage Story
-│   │   ├── privacy/                     # Privacy Policy
-│   │   ├── terms/                       # Terms of Service
-│   │   └── refund-policy/               # Refund Policy
-│   ├── components/
-│   │   ├── layout/                      # Header, Footer, AnnouncementBar
-│   │   ├── catalog/                     # ProductCard, FilterSidebar, MobileFilterDrawer, CatalogView
-│   │   ├── cart/                        # CartDrawer
-│   │   ├── size/                        # BlouseSizeModal
-│   │   └── shared/                      # QuickViewModal
-│   ├── context/                         # CartContext, WishlistContext
-│   ├── data/                            # sizeChart algorithm, fallback mockData
-│   ├── lib/
-│   │   ├── api/                         # GoogleSheetsRepository
-│   │   ├── adapters/                    # Payment, Shipping, & Fulfilment Adapters
-│   │   ├── analytics.ts                 # Privacy-focused Event Tracker
-│   │   └── utils.ts                     # Currency & Slug Helpers
-│   └── types/                           # TypeScript Domain Definitions
-├── tailwind.config.js                   # Luxury Design Tokens
-├── tsconfig.json                        # TypeScript Configuration
-└── package.json
-```
-
----
-
-## 7. Verification & Production Quality
-
-* **TypeScript Validation**: Passed cleanly (`tsc --noEmit`).
-* **ESLint Validation**: Passed cleanly (`next lint`).
-* **Next.js Production Build**: Built optimized static & dynamic pages cleanly (`next build`).

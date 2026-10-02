@@ -43,37 +43,37 @@ export const Header: React.FC = () => {
               className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
               href="/shop"
             >
+              SHOP
+            </Link>
+            <Link
+              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
+              href="/shop?filter=newArrival"
+            >
+              NEW ARRIVALS
+            </Link>
+            <Link
+              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
+              href="#collections"
+            >
               COLLECTIONS
             </Link>
             <Link
               className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
-              href="#the-weaves"
+              href="#shop-by-occasion"
             >
-              THE WEAVES
+              SHOP BY OCCASION
             </Link>
             <Link
               className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
-              href="#fabric-directory"
+              href="#explore-by-fabric"
             >
-              FABRIC DIRECTORY
+              SHOP BY FABRIC
             </Link>
             <Link
               className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
-              href="/our-story"
+              href="/shop?filter=sale"
             >
-              ATELIER &amp; CRAFT
-            </Link>
-            <Link
-              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
-              href="/shop/bridal"
-            >
-              BRIDAL TROUSSEAU
-            </Link>
-            <Link
-              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
-              href="/size-guide"
-            >
-              EDITORIAL
+              SALE
             </Link>
           </nav>
         </div>
@@ -183,42 +183,42 @@ export const Header: React.FC = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
                 >
+                  <span>SHOP</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
+                </Link>
+                <Link
+                  href="/shop?filter=newArrival"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
+                >
+                  <span>NEW ARRIVALS</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
+                </Link>
+                <Link
+                  href="#collections"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
+                >
                   <span>COLLECTIONS</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
                 </Link>
                 <Link
-                  href="#the-weaves"
+                  href="#shop-by-occasion"
                   onClick={() => setMobileMenuOpen(false)}
                   className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
                 >
-                  <span>THE WEAVES</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
+                  <span>SHOP BY OCCASION</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
                 </Link>
                 <Link
-                  href="#fabric-directory"
+                  href="#explore-by-fabric"
                   onClick={() => setMobileMenuOpen(false)}
                   className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
                 >
-                  <span>FABRIC DIRECTORY</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
+                  <span>SHOP BY FABRIC</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
                 </Link>
                 <Link
-                  href="/our-story"
+                  href="/shop?filter=sale"
                   onClick={() => setMobileMenuOpen(false)}
                   className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
                 >
-                  <span>ATELIER &amp; CRAFT</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
-                </Link>
-                <Link
-                  href="/shop/bridal"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
-                >
-                  <span>BRIDAL TROUSSEAU</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
-                </Link>
-                <Link
-                  href="/size-guide"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
-                >
-                  <span>EDITORIAL</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
+                  <span>SALE</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
                 </Link>
               </nav>
             </div>

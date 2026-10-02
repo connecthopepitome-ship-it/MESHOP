@@ -5,7 +5,7 @@ export interface Product {
   slug: string;
   category: string;
   subcategory?: string;
-  collection?: string;
+  collection?: string | string[];
   tags: string[];
   shortDescription?: string;
   description?: string;
@@ -19,16 +19,21 @@ export interface Product {
   blouseSizesAvailable: string[];
   colour: string;
   colourHex?: string;
+  colourFamily?: string;
   pattern?: string;
-  occasion?: string;
+  occasion?: string | string[];
+  style?: string | string[];
+  work?: string | string[];
   workType?: string;
   careInstructions?: string;
   fitNotes?: string;
   stockQty: number;
   stockStatus: 'in_stock' | 'low_stock' | 'out_of_stock';
+  status?: 'Active' | 'Draft' | 'Out of Stock' | 'Hidden' | 'Discontinued';
   featured: boolean;
   bestseller: boolean;
   newArrival: boolean;
+  trending?: boolean;
   rating: number;
   reviewCount: number;
   mainImage: string;
@@ -36,9 +41,14 @@ export interface Product {
   videoUrl?: string;
   published: boolean;
   sortOrder: number;
+  publishDate?: string;
   createdAt?: string;
   updatedAt?: string;
-  // Private supplier links like meeshoProductUrl & supplierReference are explicitly excluded from public client types
+  // Internal fields (never rendered on customer storefront)
+  sourceUrl?: string;
+  sourceCost?: number;
+  sourceStatus?: string;
+  supplierReference?: string;
 }
 
 export interface Category {
@@ -144,6 +154,9 @@ export interface FilterState {
   fabrics: string[];
   colours: string[];
   occasions: string[];
+  styles?: string[];
+  works?: string[];
+  patterns?: string[];
   minPrice: number;
   maxPrice: number;
   inStockOnly: boolean;

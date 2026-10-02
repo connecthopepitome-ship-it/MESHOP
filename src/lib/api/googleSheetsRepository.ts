@@ -130,7 +130,13 @@ export class GoogleSheetsRepository implements RepositoryInterface {
 
       if (filters.collection && filters.collection !== 'all') {
         const colSlug = filters.collection.toLowerCase();
-        products = products.filter((p) => p.collection?.toLowerCase().includes(colSlug));
+        products = products.filter((p) => {
+          if (!p.collection) return false;
+          if (Array.isArray(p.collection)) {
+            return p.collection.some((c) => c.toLowerCase().includes(colSlug));
+          }
+          return p.collection.toLowerCase().includes(colSlug);
+        });
       }
 
       if (filters.fabrics && filters.fabrics.length > 0) {
