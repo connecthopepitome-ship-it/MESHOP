@@ -55,8 +55,11 @@ export default function HomePage() {
         <section className="relative w-full min-h-[82vh] lg:min-h-[88vh] flex items-center overflow-hidden bg-surface">
           {/* Cinematic Visual Background with Atmospheric Scrim */}
           <div className="absolute inset-0 z-0">
-            <img
+            <Image
               alt="Sorayva Autumn Heritage 2026 Collection"
+              fill
+              priority
+              unoptimized
               className="w-full h-full object-cover object-top filter brightness-[0.96] contrast-[1.02]"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuDl1D7FkDn2nacnNMlh7_vbfY6PoghKNIDjZ9znUYuyk7S8FM9P4NYpn_VLPKVa1zG2eJxY0j1OQSScmWjx46Fa2ZhXARG8fhVTOLcJMLXlvLqTPRx1EaJvgp7MuIz70f2SXf-1hIit1hFjFJrdxcZ34sGQul5jKIh-OMeYrl6GCGtmL9d7AviaiEeAF0DwOLzvbExMvFh8IndhUiNiKHGMwYcPSUaC10ywKIQwDYCcZ86ya80VF1yRIA"
             />
