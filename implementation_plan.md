@@ -4,10 +4,10 @@
 **SORAYVA** — Haute Couture & Premium Saree E-Commerce Storefront
 
 ## Business Model & Objective
-SORAYVA operates as an independent premium saree e-commerce brand. Product data is managed centrally via a Google Sheets catalogue and served dynamically to the storefront.
+SORAYVA operates as an independent premium saree e-commerce brand. Product data is managed centrally via a Google Sheets catalogue control centre (`SORAYVA_PRODUCT_CATALOGUE`) and served dynamically to the storefront via Google Apps Script.
 
-Customer-facing presentation is 100% independent and clean:
-- Internal supplier details (`sourceUrl`, `sourceCost`, `sourceStatus`, `supplierReference`) are strictly isolated in internal data structures and never rendered to customers.
+Customer-facing presentation is 100% independent, clean, and secure:
+- Internal supplier details (`meeshoReferenceLink`, `sourceCost`, `sourceStatus`, `supplierReference`, `lastSourceCheck`) are strictly isolated in internal data structures and **NEVER** returned by the public product API.
 - Category buttons, navigation, and product filters adapt dynamically based on active products in the catalogue.
 
 ---
@@ -28,90 +28,75 @@ Right side actions: Search Drawer, Wishlist Count, Cart Drawer, Currency (`INR �
 
 ## 2. Product Taxonomy & Data Schema
 
-### Customer-Safe Fields
+### Public Product DTO (`PublicProduct`)
 - `productId`: Unique SKU/ID string
-- `name` / `productName`: Title of saree
+- `productName` / `name`: Title of saree
 - `slug`: URL slug
 - `category`: Primary saree category
 - `subcategory`: Optional sub-type
-- `fabric`: Textile warp/weft material
-- `occasion`: Occasion tags (`Everyday`, `Festive`, `Party`, `Wedding Guest`, `Celebration`)
-- `style`: Style tags (`Elegant`, `Minimal`, `Traditional`, `Contemporary`, `Statement`)
-- `work` / `workType`: Weave & embroidery craft
-- `pattern`: Motifs / design patterns
+- `fabric`: Textile warp/weft material (`Silk`, `Organza`, `Georgette`, `Chiffon`, `Cotton`, `Linen`, `Satin`, `Silk Blend`, `Other`)
+- `occasion`: Multi-value Occasion tags (`Everyday`, `Festive`, `Party`, `Wedding Guest`, `Celebration`, `Evening`)
+- `style`: Multi-value Style tags (`Elegant`, `Minimal`, `Traditional`, `Contemporary`, `Statement`, `Classic`)
+- `work`: Multi-value Weave & craft (`Printed`, `Embroidered`, `Zari`, `Sequins`, `Woven`, `Stone Work`, `Plain`, `Other`)
+- `pattern`: Motifs / design patterns (`Floral`, `Paisley`, `Geometric`, `Abstract`, `Traditional`, `Printed`, `Solid`, `Other`)
 - `colour` / `colourFamily`: Color name & family grouping
 - `collection`: Collection name
 - `price`: Customer selling price
 - `compareAtPrice`: Struck-through original price
-- `stockQty` & `stockStatus`: Inventory levels
-- `status`: `Active`, `Draft`, `Out of Stock`, `Hidden`, `Discontinued`
+- `discountPercentage`: Safely computed positive discount %
+- `stock` / `stockQty` & `stockStatus`: Inventory levels (`in_stock`, `low_stock`, `out_of_stock`)
+- `status`: `Draft`, `Active`, `Out of Stock`, `Hidden`, `Discontinued`
 - `featured`, `newArrival`, `trending`: Merchandising flags
-- `mainImage` & `galleryImages`: Image URLs array (with `ProductImage` error fallback)
+- `mainImage`, `galleryImages`, `images[]`: Image URLs array
+- `sizeType`, `blouseSize`: Saree & blouse sizing info
 - `rating` & `reviewCount`: Customer ratings
 
-### Internal Private Fields (Excluded from Customer APIs)
-- `sourceUrl`: Supplier item page
-- `sourceCost`: Supplier cost price
-- `sourceStatus`: Supplier stock state
+### Internal Private Fields (`InternalProduct` — Excluded from Customer APIs)
+- `meeshoReferenceLink`: Internal supplier URL
+- `sourceCost`: Internal cost price
+- `sourceStatus`: Internal supplier stock state
 - `supplierReference`: Internal supplier SKU/code
+- `lastSourceCheck`: Internal last audit timestamp
 
 ---
 
 ## 3. Smart Category Logic & Dynamic Filters
 
 ### Smart Category Algorithm (`getDynamicCategories`)
-1. **ACTIVE PRODUCTS ONLY**: Filter for products where `published == true` and `status == 'Active' | 'Out of Stock'`.
+1. **ACTIVE PRODUCTS ONLY**: Filter for products where `status == 'Active' | 'Out of Stock'`.
 2. **COUNT VALUES**: Aggregate frequency of category values across active catalogue items.
 3. **REMOVE EMPTY VALUES**: Automatically hide empty categories.
 4. **MINIMUM THRESHOLD**: Apply `minimumCategoryDisplayCount` (default `1`).
-5. **DISPLAY**: Render `NEW IN`, active categories, `SHOP ALL`.
+5. **DISPLAY**: Render dynamic category pills on storefront.
 
 ### Dynamic Filters & Sorting
 - Dynamic extraction via `getDynamicFilterOptions`.
-- Multi-select filters: Price, Fabric, Colour, Occasion, Style, Work, Availability.
+- Multi-select filters: Price, Fabric, Colour, Occasion, Style, Work, Pattern, Collection, Availability.
 - Normalized search matching with alias expansion (`pink` -> `Blush`/`Rose`, `party` -> `Festive`/`Evening`).
 - Sorting options: Featured, Newest First, Price Low-to-High, Price High-to-Low, Highest Rated.
 
 ---
 
-## 4. Homepage Structure (10 Sections)
+## 4. Google Apps Script CMS API Architecture
 
-1. **SECTION 1 — HERO**: *SORAYVA | For Moments That Matter | "Discover your next signature drape."* | CTA: `SHOP SAREES`.
-2. **SECTION 2 — DYNAMIC CATEGORY BAR**: Auto-generated dynamic pills.
-3. **SECTION 3 — NEW ARRIVALS**: Newest active sarees.
-4. **SECTION 4 — SHOP BY OCCASION**: Occasion cards (`Everyday`, `Festive`, `Party`, `Wedding Guest`).
-5. **SECTION 5 — EXPLORE BY FABRIC**: Tactile fabric cards with image, description, active saree count.
-6. **SECTION 6 — THE SORAYVA EDIT**: *Curated sarees for everyday elegance, celebrations and unforgettable moments.*
-7. **SECTION 7 — BEST SELLERS**: Top rated/featured sarees.
-8. **SECTION 8 — RECENTLY VIEWED**: LocalStorage-persisted recently viewed sarees.
-9. **SECTION 9 — TRUST & VALUE PROPOSITION**: Shipping, Returns, COD / Payment security, WhatsApp Support, Order Tracking.
-10. **SECTION 10 — FOOTER**: Luxury footer with newsletter dispatch.
+- File: [`google-apps-script/Code.gs`](file:///c:/Users/AU001AW7/OneDrive%20-%20WSA/Documents/Playwrite/MESHOP/google-apps-script/Code.gs)
+- Reads `PRODUCTS` sheet.
+- Validates rows (`VALID`, `MISSING_IMAGE`, `MISSING_PRICE`, `MISSING_CATEGORY`, `INVALID_STATUS`, `INVALID_PRODUCT_ID`).
+- Converts rows to normalized public product objects.
+- Strips internal source fields completely before returning JSON.
+- Ignores invalid rows without crashing catalogue.
+- Implements `getCatalogueHealthReport` for internal store health audits.
 
 ---
 
-## 5. Blouse Size Guide
+## 5. Security & Verification Suite
 
-- Title: **BLOUSE SIZE GUIDE**
-- Sizes: `XS`, `S`, `M`, `L`, `XL`, `XXL`.
-- Input measurements: `Bust`, `Underbust`, `Waist` (Inches / CM toggle).
-- Size recommendation calculator & size chart reference.
-- Unstitched blouse piece notice: *"Unstitched Blouse Piece Included — Fits All Sizes"*.
-- Fit disclaimer: Standard tailoring reference without guaranteed fit claims.
+- Verification script: [`scripts/validate-cms.ts`](file:///c:/Users/AU001AW7/OneDrive%20-%20WSA/Documents/Playwrite/MESHOP/scripts/validate-cms.ts)
+- Executes 14 automated tests covering active/draft/hidden/out of stock status filtering, multi-value field parsing, gallery image aggregation, and explicit verification that public product payloads contain ZERO supplier/source fields.
 
 ---
 
-## 6. Fulfilment Integration Boundary
+## 6. Future Architecture Paths
 
-```text
-Storefront Order Created (Order Payload)
-          ↓
-Google Sheets / Database Repository (Order Recorded)
-          ↓
-[Internal Admin Mapping Layer]
-SORAYVA Product ID → sourceUrl, sourceCost, supplierReference
-          ↓
-[Separated Fulfilment Process]
-(Manual dispatch or future approved connector)
-```
-
-No automated login, CAPTCHA bypass, or automated payment submission is included on the customer storefront.
+- **Firebase/Firestore Migration**: `GoogleSheetsRepository` implements `RepositoryInterface`, allowing a drop-in `FirestoreProductRepository` swap in the future.
+- **Fulfilment Automation**: Internal product mapping (`productId` -> `meeshoReferenceLink`, `sourceCost`, `supplierReference`) resides in backend/admin infrastructure for future automated ordering pipelines without exposing supplier details to customers.

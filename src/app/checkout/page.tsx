@@ -102,7 +102,7 @@ export default function CheckoutPage() {
         },
         items: cart.map((c) => ({
           productId: c.product.productId,
-          sku: c.product.sku,
+          sku: c.product.sku || c.product.productId,
           name: c.product.name,
           price: c.product.price,
           selectedBlouseSize: c.selectedBlouseSize,

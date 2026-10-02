@@ -1,54 +1,113 @@
-export interface Product {
+export type ProductStatus = 'Draft' | 'Active' | 'Out of Stock' | 'Hidden' | 'Discontinued';
+
+export type ProductValidationState =
+  | 'VALID'
+  | 'MISSING_IMAGE'
+  | 'MISSING_PRICE'
+  | 'MISSING_CATEGORY'
+  | 'INVALID_STATUS'
+  | 'INVALID_PRODUCT_ID'
+  | 'INVALID_PRICE';
+
+/**
+ * PUBLIC PRODUCT DTO
+ * STRICT SECURITY BOUNDARY:
+ * This interface contains ONLY customer-facing product information.
+ * Internal source details (Meesho URL, source cost, supplier reference, etc.)
+ * MUST NEVER BE ADDED TO THIS TYPE.
+ */
+export interface PublicProduct {
   productId: string;
-  sku: string;
-  name: string;
+  productName?: string;
+  name: string; // Compatibility alias for productName
   slug: string;
-  category: string;
-  subcategory?: string;
-  collection?: string | string[];
-  tags: string[];
   shortDescription?: string;
   description?: string;
-  price: number;
-  compareAtPrice?: number;
-  currency: string;
+  category: string;
+  subcategory?: string;
   fabric: string;
-  sareeLength?: string;
-  blousePieceLength?: string;
-  blouseIncluded: boolean;
-  blouseSizesAvailable: string[];
-  colour: string;
-  colourHex?: string;
-  colourFamily?: string;
-  pattern?: string;
   occasion?: string | string[];
   style?: string | string[];
   work?: string | string[];
-  workType?: string;
-  careInstructions?: string;
-  fitNotes?: string;
-  stockQty: number;
+  pattern?: string;
+  colour: string;
+  colourHex?: string;
+  colourFamily?: string;
+  collection?: string | string[];
+  price: number;
+  compareAtPrice?: number;
+  discountPercentage?: number;
+  stock?: number;
+  stockQty: number; // Compatibility alias for stock
   stockStatus: 'in_stock' | 'low_stock' | 'out_of_stock';
-  status?: 'Active' | 'Draft' | 'Out of Stock' | 'Hidden' | 'Discontinued';
+  status?: ProductStatus;
   featured: boolean;
-  bestseller: boolean;
   newArrival: boolean;
   trending?: boolean;
-  rating: number;
-  reviewCount: number;
+  bestseller: boolean;
+  publishDate?: string;
   mainImage: string;
   galleryImages: string[];
-  videoUrl?: string;
+  images?: string[]; // Standardized images array [mainImage, image2, image3, image4]
+  sizeType?: string;
+  blouseSize?: string | string[];
+  blouseIncluded?: boolean;
+  blouseSizesAvailable?: string[];
+  sizeChart?: string;
+  shippingInfo?: string;
+  returnInfo?: string;
+  rating: number;
+  reviewCount: number;
+  currency: string;
   published: boolean;
-  sortOrder: number;
-  publishDate?: string;
+  sortOrder?: number;
+  sku?: string;
+  tags: string[];
+  sareeLength?: string;
+  blousePieceLength?: string;
+  careInstructions?: string;
+  fitNotes?: string;
+  workType?: string;
   createdAt?: string;
   updatedAt?: string;
-  // Internal fields (never rendered on customer storefront)
-  sourceUrl?: string;
+}
+
+/**
+ * INTERNAL PRODUCT DTO
+ * Strictly for backend/admin internal inventory and fulfillment operations.
+ * NEVER return this type from public APIs or expose to browser client.
+ */
+export interface InternalProduct extends PublicProduct {
+  meeshoReferenceLink?: string;
   sourceCost?: number;
   sourceStatus?: string;
   supplierReference?: string;
+  lastSourceCheck?: string;
+}
+
+/**
+ * Legacy Product Alias maps strictly to PublicProduct for safety
+ */
+export type Product = PublicProduct;
+
+export interface ProductHealthIssue {
+  productId: string;
+  productName: string;
+  issueType: ProductValidationState;
+  message: string;
+  severity: 'ERROR' | 'WARNING';
+}
+
+export interface CatalogueHealthReport {
+  totalRows: number;
+  validCount: number;
+  activeCount: number;
+  draftCount: number;
+  outOfStockCount: number;
+  hiddenCount: number;
+  discontinuedCount: number;
+  issues: ProductHealthIssue[];
+  healthScore: number;
 }
 
 export interface Category {

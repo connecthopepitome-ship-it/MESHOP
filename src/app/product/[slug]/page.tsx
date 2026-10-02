@@ -38,8 +38,8 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
       try {
         const prod = await repository.getProductBySlug(params.slug);
         setProduct(prod);
-        if (prod && prod.blouseSizesAvailable?.length > 0) {
-          setSelectedBlouseSize(prod.blouseSizesAvailable[0]);
+        if (prod && (prod.blouseSizesAvailable?.length ?? 0) > 0) {
+          setSelectedBlouseSize(prod.blouseSizesAvailable![0]);
         }
         if (prod) {
           trackEvent('view_item', { productId: prod.productId, name: prod.name, price: prod.price });
@@ -235,7 +235,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
             </p>
 
             <div className="flex flex-wrap gap-2 pt-1">
-              {(product.blouseSizesAvailable?.length > 0 ? product.blouseSizesAvailable : ['XS', 'S', 'M', 'L', 'XL', 'XXL']).map((sz) => (
+              {((product.blouseSizesAvailable?.length ?? 0) > 0 ? product.blouseSizesAvailable! : ['XS', 'S', 'M', 'L', 'XL', 'XXL']).map((sz) => (
                 <button
                   key={sz}
                   onClick={() => setSelectedBlouseSize(sz)}

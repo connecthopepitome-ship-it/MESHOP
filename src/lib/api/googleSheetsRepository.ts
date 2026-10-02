@@ -1,14 +1,16 @@
-import { Product, Category, Collection, Order, Review, FilterState } from '@/types';
+import { Product, PublicProduct, InternalProduct, Category, Collection, Order, Review, FilterState, CatalogueHealthReport, ProductHealthIssue, ProductStatus } from '@/types';
 import { MOCK_PRODUCTS, MOCK_CATEGORIES, MOCK_COLLECTIONS, MOCK_REVIEWS } from '@/data/mockData';
+import { calculateDiscountPercentage, slugify } from '@/lib/utils';
 
 export interface RepositoryInterface {
-  getProducts(filters?: Partial<FilterState>): Promise<Product[]>;
-  getProductBySlug(slug: string): Promise<Product | null>;
+  getProducts(filters?: Partial<FilterState>): Promise<PublicProduct[]>;
+  getProductBySlug(slug: string): Promise<PublicProduct | null>;
   getCategories(): Promise<Category[]>;
   getCollections(): Promise<Collection[]>;
   getReviews(productId: string): Promise<Review[]>;
   createOrder(order: Omit<Order, 'orderId' | 'createdAt'>): Promise<{ success: boolean; orderId: string; error?: string }>;
   lookupOrder(orderId: string, phoneOrEmail: string): Promise<Order | null>;
+  getCatalogueHealthReport(): Promise<CatalogueHealthReport>;
 }
 
 export class GoogleSheetsRepository implements RepositoryInterface {
@@ -18,95 +20,177 @@ export class GoogleSheetsRepository implements RepositoryInterface {
     this.apiUrl = process.env.NEXT_PUBLIC_CATALOG_API_URL || '';
   }
 
-  private sanitizeProduct(raw: any): Product | null {
+  /**
+   * CRITICAL SECURITY METHOD:
+   * Converts any raw payload or sheet row object into a sanitized PublicProduct.
+   * Explicitly strips all internal source/supplier fields before returning.
+   */
+  public sanitizeProduct(raw: any): PublicProduct | null {
     try {
       if (!raw || (!raw.productId && !raw.id)) return null;
 
-      const isPublished = raw.published === true || raw.published === 'TRUE' || raw.published === 'true' || raw.published === 1;
-      if (!isPublished) return null;
+      const productId = String(raw.productId || raw.id).trim();
+      const productName = String(raw.productName || raw.name || 'Unnamed Saree').trim();
+      const category = String(raw.category || 'Silk Sarees').trim();
+      const status: ProductStatus = (raw.status as ProductStatus) || 'Active';
+
+      // Status rule: Draft, Hidden, Discontinued are NEVER returned to public website
+      if (status === 'Draft' || status === 'Hidden' || status === 'Discontinued') {
+        return null;
+      }
+
+      // Check mandatory published flag if present
+      if (raw.published === false || raw.published === 'FALSE' || raw.published === 'false') {
+        return null;
+      }
 
       const parseArray = (val: any): string[] => {
-        if (Array.isArray(val)) return val;
+        if (Array.isArray(val)) return val.map((s) => String(s).trim()).filter(Boolean);
         if (typeof val === 'string' && val.trim().length > 0) {
           return val.split(/[\|\,\n]/).map((s) => s.trim()).filter(Boolean);
         }
         return [];
       };
 
-      const mainImage = raw.mainImage || raw.image || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80';
-      const gallery = parseArray(raw.galleryImages);
-      if (gallery.length === 0) gallery.push(mainImage);
+      const mainImage = String(raw.mainImage || raw.image || raw['Main Image URL'] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80').trim();
+
+      const imagesFromFields = [
+        mainImage,
+        raw.image2 || raw['Image 2 URL'],
+        raw.image3 || raw['Image 3 URL'],
+        raw.image4 || raw['Image 4 URL'],
+      ].filter((img) => typeof img === 'string' && img.trim().length > 0);
+
+      const galleryImages = parseArray(raw.galleryImages);
+      const imagesList = Array.from(new Set([...imagesFromFields, ...galleryImages]));
+      if (imagesList.length === 0) {
+        imagesList.push(mainImage);
+      }
 
       const price = typeof raw.price === 'number' ? raw.price : parseFloat(raw.price) || 0;
-      const compareAtPrice = raw.compareAtPrice ? (typeof raw.compareAtPrice === 'number' ? raw.compareAtPrice : parseFloat(raw.compareAtPrice)) : undefined;
+      let compareAtPrice = raw.compareAtPrice ? (typeof raw.compareAtPrice === 'number' ? raw.compareAtPrice : parseFloat(raw.compareAtPrice)) : undefined;
+      
+      // Ensure compareAtPrice > price safely to avoid negative discounts
+      if (compareAtPrice !== undefined && compareAtPrice <= price) {
+        compareAtPrice = undefined;
+      }
 
-      const stockQty = typeof raw.stockQty === 'number' ? raw.stockQty : parseInt(raw.stockQty, 10) || 10;
-      const stockStatus = stockQty <= 0 ? 'out_of_stock' : stockQty <= 3 ? 'low_stock' : 'in_stock';
+      const discountPercentage = calculateDiscountPercentage(price, compareAtPrice) ?? undefined;
 
-      return {
-        productId: String(raw.productId || raw.id),
-        sku: String(raw.sku || `SKU-${raw.productId}`),
-        name: String(raw.name || 'Unnamed Saree'),
-        slug: String(raw.slug || raw.name?.toLowerCase().replace(/\s+/g, '-') || `saree-${raw.productId}`),
-        category: String(raw.category || 'Silk Sarees'),
-        subcategory: raw.subcategory ? String(raw.subcategory) : undefined,
-        collection: raw.collection ? String(raw.collection) : undefined,
-        tags: parseArray(raw.tags),
+      const stock = typeof raw.stock === 'number' ? raw.stock : (typeof raw.stockQty === 'number' ? raw.stockQty : parseInt(raw.stock || raw.stockQty, 10) || 5);
+      const stockStatus = (status === 'Out of Stock' || stock <= 0) ? 'out_of_stock' : stock <= 3 ? 'low_stock' : 'in_stock';
+
+      const occasion = parseArray(raw.occasion);
+      const style = parseArray(raw.style);
+      const work = parseArray(raw.work || raw.workType);
+      const collection = parseArray(raw.collection);
+      const blouseSize = parseArray(raw.blouseSize || raw.blouseSizesAvailable);
+
+      const slug = raw.slug ? String(raw.slug) : `${slugify(productName)}-${productId.toLowerCase()}`;
+
+      // Construct PUBLIC PRODUCT DTO
+      const publicProduct: PublicProduct = {
+        productId,
+        productName,
+        name: productName,
+        slug,
         shortDescription: raw.shortDescription ? String(raw.shortDescription) : undefined,
-        description: raw.description ? String(raw.description) : 'Curated premium saree.',
+        description: raw.description ? String(raw.description) : 'Handcrafted luxury saree from SORAYVA.',
+        category,
+        subcategory: raw.subcategory ? String(raw.subcategory) : undefined,
+        fabric: String(raw.fabric || 'Silk'),
+        occasion: occasion.length > 0 ? occasion : undefined,
+        style: style.length > 0 ? style : undefined,
+        work: work.length > 0 ? work : undefined,
+        pattern: raw.pattern ? String(raw.pattern) : undefined,
+        colour: String(raw.colour || 'Crimson'),
+        colourFamily: raw.colourFamily ? String(raw.colourFamily) : undefined,
+        collection: collection.length > 0 ? collection : undefined,
         price,
         compareAtPrice,
-        currency: String(raw.currency || 'INR'),
-        fabric: String(raw.fabric || 'Silk'),
-        sareeLength: raw.sareeLength ? String(raw.sareeLength) : '5.5 meters',
-        blousePieceLength: raw.blousePieceLength ? String(raw.blousePieceLength) : '0.8 meters',
-        blouseIncluded: raw.blouseIncluded === true || raw.blouseIncluded === 'TRUE' || raw.blouseIncluded === 'true',
-        blouseSizesAvailable: parseArray(raw.blouseSizesAvailable).length > 0 ? parseArray(raw.blouseSizesAvailable) : ['S', 'M', 'L', 'XL'],
-        colour: String(raw.colour || 'Crimson'),
-        colourHex: raw.colourHex ? String(raw.colourHex) : undefined,
-        pattern: raw.pattern ? String(raw.pattern) : undefined,
-        occasion: raw.occasion ? String(raw.occasion) : 'Festive',
-        workType: raw.workType ? String(raw.workType) : 'Handloom',
-        careInstructions: raw.careInstructions ? String(raw.careInstructions) : 'Dry clean only.',
-        fitNotes: raw.fitNotes ? String(raw.fitNotes) : 'Standard drape.',
-        stockQty,
+        discountPercentage,
+        stock,
+        stockQty: stock,
         stockStatus,
+        status,
         featured: raw.featured === true || raw.featured === 'TRUE' || raw.featured === 'true',
-        bestseller: raw.bestseller === true || raw.bestseller === 'TRUE' || raw.bestseller === 'true',
         newArrival: raw.newArrival === true || raw.newArrival === 'TRUE' || raw.newArrival === 'true',
+        trending: raw.trending === true || raw.trending === 'TRUE' || raw.trending === 'true',
+        bestseller: raw.bestseller === true || raw.bestseller === 'TRUE' || raw.bestseller === 'true',
+        publishDate: raw.publishDate ? String(raw.publishDate) : undefined,
+        mainImage,
+        galleryImages: imagesList,
+        images: imagesList,
+        sizeType: raw.sizeType ? String(raw.sizeType) : 'Standard Saree (5.5m)',
+        blouseSize: blouseSize.length > 0 ? blouseSize : undefined,
+        blouseIncluded: raw.blouseIncluded === true || raw.blouseIncluded === 'TRUE' || raw.blouseIncluded === 'true',
+        blouseSizesAvailable: blouseSize.length > 0 ? blouseSize : ['S', 'M', 'L', 'XL'],
+        sizeChart: raw.sizeChart ? String(raw.sizeChart) : undefined,
+        shippingInfo: raw.shippingInfo ? String(raw.shippingInfo) : 'Complimentary insured shipping across India.',
+        returnInfo: raw.returnInfo ? String(raw.returnInfo) : '7 days easy return & exchange.',
         rating: typeof raw.rating === 'number' ? raw.rating : parseFloat(raw.rating) || 4.8,
         reviewCount: typeof raw.reviewCount === 'number' ? raw.reviewCount : parseInt(raw.reviewCount, 10) || 12,
-        mainImage,
-        galleryImages: gallery,
-        videoUrl: raw.videoUrl ? String(raw.videoUrl) : undefined,
+        currency: String(raw.currency || 'INR'),
         published: true,
         sortOrder: typeof raw.sortOrder === 'number' ? raw.sortOrder : parseInt(raw.sortOrder, 10) || 1,
+        sku: String(raw.sku || `SKU-${productId}`),
+        tags: parseArray(raw.tags),
+        sareeLength: raw.sareeLength ? String(raw.sareeLength) : '5.5 meters',
+        blousePieceLength: raw.blousePieceLength ? String(raw.blousePieceLength) : '0.8 meters',
+        careInstructions: raw.careInstructions ? String(raw.careInstructions) : 'Dry clean only.',
+        fitNotes: raw.fitNotes ? String(raw.fitNotes) : 'Standard drape.',
+        workType: raw.workType ? String(raw.workType) : undefined,
+        createdAt: raw.createdAt ? String(raw.createdAt) : undefined,
+        updatedAt: raw.updatedAt ? String(raw.updatedAt) : undefined,
       };
+
+      // SECURITY SANITIZATION GUARANTEE:
+      // Explicitly delete any internal fields if present in input object
+      delete (publicProduct as any).meeshoReferenceLink;
+      delete (publicProduct as any).sourceCost;
+      delete (publicProduct as any).sourceStatus;
+      delete (publicProduct as any).supplierReference;
+      delete (publicProduct as any).lastSourceCheck;
+      delete (publicProduct as any).sourceUrl;
+
+      return publicProduct;
     } catch (e) {
-      console.warn('Failed to parse raw product row:', raw, e);
+      console.warn('Failed to parse product row:', raw, e);
       return null;
     }
   }
 
-  async getProducts(filters?: Partial<FilterState>): Promise<Product[]> {
-    let products: Product[] = [];
+  async getProducts(filters?: Partial<FilterState>): Promise<PublicProduct[]> {
+    let products: PublicProduct[] = [];
 
     if (this.apiUrl) {
       try {
-        const res = await fetch(`${this.apiUrl}?action=getProducts`, { next: { revalidate: 60 } });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        const res = await fetch(`${this.apiUrl}?action=getProducts`, {
+          signal: controller.signal,
+          next: { revalidate: 60 }
+        });
+        clearTimeout(timeoutId);
+
         if (res.ok) {
           const json = await res.json();
           if (Array.isArray(json.data)) {
-            products = json.data.map((r: any) => this.sanitizeProduct(r)).filter((p: any): p is Product => p !== null);
+            products = json.data
+              .map((r: any) => this.sanitizeProduct(r))
+              .filter((p: any): p is PublicProduct => p !== null);
           }
         }
       } catch (e) {
-        console.warn('Google Sheets API unavailable, serving local fallback data:', e);
+        console.warn('Google Sheets API unavailable or timed out, serving local fallback data:', e);
       }
     }
 
     if (products.length === 0) {
-      products = [...MOCK_PRODUCTS];
+      products = MOCK_PRODUCTS
+        .map((p) => this.sanitizeProduct(p))
+        .filter((p): p is PublicProduct => p !== null);
     }
 
     // Apply client filter predicates
@@ -115,7 +199,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         const q = filters.searchQuery.toLowerCase();
         products = products.filter(
           (p) =>
-            p.name.toLowerCase().includes(q) ||
+            (p.productName || p.name).toLowerCase().includes(q) ||
             p.category.toLowerCase().includes(q) ||
             p.fabric.toLowerCase().includes(q) ||
             p.colour.toLowerCase().includes(q) ||
@@ -135,7 +219,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
           if (Array.isArray(p.collection)) {
             return p.collection.some((c) => c.toLowerCase().includes(colSlug));
           }
-          return p.collection.toLowerCase().includes(colSlug);
+          return String(p.collection).toLowerCase().includes(colSlug);
         });
       }
 
@@ -147,12 +231,36 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         products = products.filter((p) => filters.colours!.some((c) => p.colour.toLowerCase().includes(c.toLowerCase())));
       }
 
+      if (filters.occasions && filters.occasions.length > 0) {
+        products = products.filter((p) => {
+          if (!p.occasion) return false;
+          const occs = Array.isArray(p.occasion) ? p.occasion : [p.occasion];
+          return filters.occasions!.some((o) => occs.some((po) => po.toLowerCase().includes(o.toLowerCase())));
+        });
+      }
+
+      if (filters.styles && filters.styles.length > 0) {
+        products = products.filter((p) => {
+          if (!p.style) return false;
+          const stys = Array.isArray(p.style) ? p.style : [p.style];
+          return filters.styles!.some((s) => stys.some((ps) => ps.toLowerCase().includes(s.toLowerCase())));
+        });
+      }
+
+      if (filters.works && filters.works.length > 0) {
+        products = products.filter((p) => {
+          if (!p.work) return false;
+          const wrks = Array.isArray(p.work) ? p.work : [p.work];
+          return filters.works!.some((w) => wrks.some((pw) => pw.toLowerCase().includes(w.toLowerCase())));
+        });
+      }
+
       if (filters.minPrice !== undefined && filters.maxPrice !== undefined && filters.maxPrice > 0) {
         products = products.filter((p) => p.price >= filters.minPrice! && p.price <= filters.maxPrice!);
       }
 
       if (filters.inStockOnly) {
-        products = products.filter((p) => p.stockQty > 0);
+        products = products.filter((p) => (p.stock ?? p.stockQty) > 0 && p.stockStatus !== 'out_of_stock');
       }
 
       if (filters.featuredOnly) {
@@ -173,7 +281,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
       } else if (filters.sortBy === 'price_high_low') {
         products.sort((a, b) => b.price - a.price);
       } else if (filters.sortBy === 'newest') {
-        products.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+        products.sort((a, b) => (b.publishDate || b.createdAt || '').localeCompare(a.publishDate || a.createdAt || ''));
       } else if (filters.sortBy === 'rating') {
         products.sort((a, b) => b.rating - a.rating);
       }
@@ -182,9 +290,9 @@ export class GoogleSheetsRepository implements RepositoryInterface {
     return products;
   }
 
-  async getProductBySlug(slug: string): Promise<Product | null> {
+  async getProductBySlug(slug: string): Promise<PublicProduct | null> {
     const products = await this.getProducts();
-    const found = products.find((p) => p.slug === slug || p.productId === slug);
+    const found = products.find((p) => p.slug === slug || p.productId.toLowerCase() === slug.toLowerCase());
     return found || null;
   }
 
@@ -246,7 +354,6 @@ export class GoogleSheetsRepository implements RepositoryInterface {
       }
     }
 
-    // Save order in browser local storage as fallback order database
     if (typeof window !== 'undefined') {
       const existing = JSON.parse(localStorage.getItem('meshop_orders') || '[]');
       existing.push(fullOrder);
@@ -268,7 +375,6 @@ export class GoogleSheetsRepository implements RepositoryInterface {
       if (match) return match;
     }
 
-    // Sample mock fallback order if orderId matches test format
     if (orderId.startsWith('ORD-') || orderId === 'TEST-123') {
       return {
         orderId: orderId,
@@ -310,6 +416,50 @@ export class GoogleSheetsRepository implements RepositoryInterface {
     }
 
     return null;
+  }
+
+  async getCatalogueHealthReport(): Promise<CatalogueHealthReport> {
+    if (this.apiUrl) {
+      try {
+        const res = await fetch(`${this.apiUrl}?action=getCatalogueHealthReport`);
+        if (res.ok) {
+          const json = await res.json();
+          return json;
+        }
+      } catch (e) {
+        console.warn('Catalogue health report API call failed:', e);
+      }
+    }
+
+    // Fallback static calculation for local catalogue
+    const issues: ProductHealthIssue[] = [];
+    let active = 0, draft = 0, outOfStock = 0, hidden = 0, discontinued = 0;
+
+    MOCK_PRODUCTS.forEach((p) => {
+      const st = p.status || 'Active';
+      if (st === 'Active') active++;
+      else if (st === 'Draft') draft++;
+      else if (st === 'Out of Stock') outOfStock++;
+      else if (st === 'Hidden') hidden++;
+      else if (st === 'Discontinued') discontinued++;
+
+      if (!p.productId) issues.push({ productId: p.productId, productName: p.name, issueType: 'INVALID_PRODUCT_ID', message: 'Missing Product ID', severity: 'ERROR' });
+      if (!p.mainImage) issues.push({ productId: p.productId, productName: p.name, issueType: 'MISSING_IMAGE', message: 'Missing Main Image', severity: 'ERROR' });
+      if (!p.price || p.price <= 0) issues.push({ productId: p.productId, productName: p.name, issueType: 'MISSING_PRICE', message: 'Missing or non-positive price', severity: 'ERROR' });
+      if (!p.category) issues.push({ productId: p.productId, productName: p.name, issueType: 'MISSING_CATEGORY', message: 'Missing category', severity: 'ERROR' });
+    });
+
+    return {
+      totalRows: MOCK_PRODUCTS.length,
+      validCount: MOCK_PRODUCTS.length - issues.length,
+      activeCount: active,
+      draftCount: draft,
+      outOfStockCount: outOfStock,
+      hiddenCount: hidden,
+      discontinuedCount: discontinued,
+      issues,
+      healthScore: Math.round(((MOCK_PRODUCTS.length - issues.length) / MOCK_PRODUCTS.length) * 100),
+    };
   }
 }
 
