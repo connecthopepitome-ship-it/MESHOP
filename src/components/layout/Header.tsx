@@ -23,53 +23,54 @@ export const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full atelier-glass border-b border-outline-variant/50 transition-all duration-300">
-      <div className="w-full px-4 sm:px-8 lg:px-14 py-3.5 flex items-center justify-between">
-        {/* Left: Logo + Desktop Nav */}
-        <div className="flex items-center gap-8 lg:gap-12">
-          <Link href="/" className="block group flex-shrink-0 flex items-center bg-transparent">
+      <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-8 lg:px-12 py-3 flex items-center justify-between gap-4">
+        {/* Left & Center: Logo + Desktop Nav */}
+        <div className="flex items-center gap-6 xl:gap-10 min-w-0">
+          <Link href="/" className="block group flex-shrink-0 flex items-center bg-transparent py-1">
             <Image
               src="/images/sorayva-logo.png"
               alt="SORAYVA — The Modern Saree House"
               width={220}
               height={55}
               priority
-              className="h-10 md:h-11 w-auto object-contain transition-transform duration-500 group-hover:scale-105"
+              className="h-8 sm:h-9 md:h-10 w-auto object-contain transition-transform duration-500 group-hover:scale-105"
+              style={{ mixBlendMode: 'multiply' }}
             />
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 mr-6 xl:mr-10">
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-7 whitespace-nowrap">
             <Link
-              className="font-sans-fashion text-xs font-medium text-secondary tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
+              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
               href="/shop"
             >
               COLLECTIONS
             </Link>
             <Link
-              className="font-sans-fashion text-xs font-medium text-secondary tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
+              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
               href="#the-weaves"
             >
               THE WEAVES
             </Link>
             <Link
-              className="font-sans-fashion text-xs font-medium text-secondary tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
+              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
               href="#fabric-directory"
             >
               FABRIC DIRECTORY
             </Link>
             <Link
-              className="font-sans-fashion text-xs font-medium text-secondary tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
+              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
               href="/our-story"
             >
               ATELIER &amp; CRAFT
             </Link>
             <Link
-              className="font-sans-fashion text-xs font-medium text-secondary tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
+              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
               href="/shop/bridal"
             >
               BRIDAL TROUSSEAU
             </Link>
             <Link
-              className="font-sans-fashion text-xs font-medium text-secondary tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
+              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
               href="/size-guide"
             >
               EDITORIAL
@@ -89,18 +90,10 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-3 sm:gap-5 pl-4 sm:pl-6 border-l border-outline-variant/50">
-          <div className="hidden sm:flex items-center gap-1.5 whitespace-nowrap font-sans-fashion text-xs tracking-wider text-secondary border-r border-outline-variant/60 pr-4 h-6">
+        <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+          <div className="hidden sm:flex items-center gap-1.5 whitespace-nowrap font-sans-fashion text-xs tracking-wider text-secondary border-r border-outline-variant/60 pr-4 h-5">
             <span className="font-medium">INR ₹</span>
           </div>
-
-          <Link
-            className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 fine-gold-border rounded-full bg-surface-bright text-xs font-sans-fashion tracking-widest text-primary-container uppercase hover:bg-primary-container hover:text-white transition-all shadow-sm whitespace-nowrap"
-            href="#concierge"
-          >
-            <Calendar className="w-3.5 h-3.5" />
-            <span>BOOK STYLIST</span>
-          </Link>
 
           <button
             onClick={() => setSearchOpen(!searchOpen)}
@@ -174,6 +167,7 @@ export const Header: React.FC = () => {
                   width={160}
                   height={48}
                   className="h-9 w-auto object-contain"
+                  style={{ mixBlendMode: 'multiply' }}
                 />
                 <button
                   onClick={() => setMobileMenuOpen(false)}
