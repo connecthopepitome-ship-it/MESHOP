@@ -17,7 +17,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
   private apiUrl: string;
 
   constructor() {
-    this.apiUrl = process.env.NEXT_PUBLIC_CATALOG_API_URL || '';
+    this.apiUrl = process.env.GOOGLE_SHEETS_API_URL || process.env.NEXT_PUBLIC_CATALOG_API_URL || '';
   }
 
   /**
@@ -175,12 +175,15 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         clearTimeout(timeoutId);
 
         if (res.ok) {
-          const json = await res.json();
-          const rawItems = Array.isArray(json.products) ? json.products : (Array.isArray(json.data) ? json.data : []);
-          if (rawItems.length > 0) {
-            products = rawItems
-              .map((r: any) => this.sanitizeProduct(r))
-              .filter((p: any): p is PublicProduct => p !== null);
+          const text = await res.text();
+          if (text && text.trim().startsWith('{')) {
+            const json = JSON.parse(text);
+            const rawItems = Array.isArray(json.products) ? json.products : (Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []));
+            if (rawItems.length > 0) {
+              products = rawItems
+                .map((r: any) => this.sanitizeProduct(r))
+                .filter((p: any): p is PublicProduct => p !== null);
+            }
           }
         }
       } catch (e) {
