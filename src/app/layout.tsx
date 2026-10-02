@@ -8,17 +8,17 @@ import { WishlistProvider } from '@/context/WishlistContext';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 
 export const metadata: Metadata = {
-  title: 'Royal Silks Boutique | Premium Handloom & Designer Sarees',
+  title: 'SORAYVA | The Modern Saree House',
   description:
-    'Curated luxury saree storefront featuring authentic Kanjeevaram pure silk, Banarasi organza, chiffon, and handblock printed heritage drapes.',
-  keywords: ['saree', 'kanjeevaram silk', 'banarasi saree', 'organza saree', 'bridal saree', 'handloom saree'],
-  authors: [{ name: 'Royal Silks Boutique' }],
+    'Discover handloom Kanjeevarams, Banarasi Katan silks, and romantic tissue organzas meticulously woven for celebrations of rare distinction.',
+  keywords: ['sorayva', 'saree', 'kanjeevaram silk', 'banarasi saree', 'organza saree', 'bridal saree', 'handloom saree', 'the modern saree house'],
+  authors: [{ name: 'SORAYVA Luxury Textiles' }],
   openGraph: {
-    title: 'Royal Silks Boutique | Luxury Saree Storefront',
+    title: 'SORAYVA | The Modern Saree House',
     description: 'Timeless drapes. Modern elegance.',
     type: 'website',
     locale: 'en_IN',
-    siteName: 'Royal Silks Boutique',
+    siteName: 'SORAYVA',
   },
 };
 

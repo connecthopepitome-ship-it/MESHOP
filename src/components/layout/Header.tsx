@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ShoppingBag, Heart, Search, Menu, X, ChevronRight } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -21,66 +22,83 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-brand-base/95 backdrop-blur-md border-b border-brand-border transition-all duration-200">
-      <div className="container mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
-        {/* Left: Mobile Menu & Desktop Navigation */}
-        <div className="flex items-center space-x-6">
+    <header className="sticky top-0 z-50 w-full bg-surface/95 backdrop-blur-md border-b border-outline-variant">
+      <div className="h-20 w-full px-margin md:px-margin-tablet xl:px-margin-desktop flex items-center justify-between">
+        {/* Left Nav (Desktop) */}
+        <nav className="hidden lg:flex items-center gap-space-lg">
+          <Link
+            className="font-label-uppercase text-label-uppercase text-on-surface-variant hover:text-on-surface transition-colors py-1"
+            href="/shop"
+          >
+            COLLECTIONS
+          </Link>
+          <Link
+            className="font-label-uppercase text-label-uppercase text-on-surface-variant hover:text-on-surface transition-colors py-1"
+            href="/shop?sort=newest"
+          >
+            NEW ARRIVALS
+          </Link>
+          <Link
+            className="font-label-uppercase text-label-uppercase text-on-surface-variant hover:text-on-surface transition-colors py-1"
+            href="/shop/silk"
+          >
+            HERITAGE
+          </Link>
+          <Link
+            className="font-label-uppercase text-label-uppercase text-on-surface-variant hover:text-on-surface transition-colors py-1"
+            href="/size-guide"
+          >
+            SIZE GUIDE
+          </Link>
+        </nav>
+
+        {/* Mobile Hamburger Button */}
+        <div className="flex items-center lg:hidden">
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="lg:hidden text-brand-charcoal p-1 focus:outline-none"
-            aria-label="Open Mobile Menu"
+            className="text-secondary hover:text-on-surface transition-colors p-1"
+            aria-label="Open Mobile Navigation"
           >
             <Menu className="w-6 h-6" />
           </button>
-
-          <nav className="hidden lg:flex items-center space-x-8 text-sm font-sans tracking-wider text-brand-charcoal uppercase">
-            <Link href="/" className="hover:text-brand-gold transition-colors">
-              Home
-            </Link>
-            <Link href="/shop" className="hover:text-brand-gold transition-colors">
-              Shop All
-            </Link>
-            <Link href="/shop/silk" className="hover:text-brand-gold transition-colors">
-              Silk Sarees
-            </Link>
-            <Link href="/shop/organza" className="hover:text-brand-gold transition-colors">
-              Organza
-            </Link>
-            <Link href="/collections/signature-edit" className="hover:text-brand-gold transition-colors">
-              Heritage Edit
-            </Link>
-            <Link href="/size-guide" className="hover:text-brand-gold transition-colors">
-              Size Guide
-            </Link>
-          </nav>
         </div>
 
-        {/* Center: Brand Logo */}
-        <div className="text-center">
-          <Link href="/" className="group inline-block">
-            <span className="font-serif text-2xl md:text-3xl tracking-widest text-brand-charcoal font-semibold uppercase group-hover:text-brand-gold transition-colors">
-              ROYAL SILKS
-            </span>
-            <span className="block text-[10px] tracking-[0.3em] font-sans text-brand-muted uppercase -mt-1">
-              Boutique Storefront
-            </span>
+        {/* Center Logo */}
+        <div className="flex flex-col items-center justify-center text-center">
+          <Link href="/" className="flex flex-col items-center group py-1">
+            <Image
+              src="/images/sorayva-logo.png"
+              alt="SORAYVA - The Modern Saree House"
+              width={240}
+              height={64}
+              priority
+              className="h-10 sm:h-12 md:h-14 w-auto object-contain group-hover:opacity-90 transition-opacity"
+            />
           </Link>
         </div>
 
-        {/* Right: Actions (Search, Wishlist, Cart, Account) */}
-        <div className="flex items-center space-x-4 md:space-x-6 text-brand-charcoal">
+        {/* Right Actions */}
+        <div className="flex items-center gap-space-md sm:gap-space-lg">
+          <button className="hidden sm:flex items-center gap-space-xs font-label-numeric text-label-numeric text-secondary hover:text-on-surface transition-colors">
+            <span>INR ₹</span>
+          </button>
+
           <button
             onClick={() => setSearchOpen(!searchOpen)}
-            className="p-2 hover:text-brand-gold transition-colors focus:outline-none"
+            className="text-secondary hover:text-on-surface transition-colors p-1"
             aria-label="Search"
           >
             <Search className="w-5 h-5" />
           </button>
 
-          <Link href="/wishlist" className="relative p-2 hover:text-brand-gold transition-colors">
+          <Link
+            className="relative text-secondary hover:text-on-surface transition-colors p-1"
+            href="/wishlist"
+            aria-label="Wishlist"
+          >
             <Heart className="w-5 h-5" />
             {wishlistCount > 0 && (
-              <span className="absolute top-1 right-1 bg-brand-burgundy text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 font-label-numeric text-[0.625rem] bg-surface-container text-secondary w-4 h-4 rounded-full flex items-center justify-center border border-outline-variant font-semibold">
                 {wishlistCount}
               </span>
             )}
@@ -88,12 +106,12 @@ export const Header: React.FC = () => {
 
           <button
             onClick={() => setIsCartOpen(true)}
-            className="relative p-2 hover:text-brand-gold transition-colors focus:outline-none"
-            aria-label="Shopping Cart"
+            className="relative text-secondary hover:text-on-surface transition-colors p-1"
+            aria-label="Shopping Bag"
           >
             <ShoppingBag className="w-5 h-5" />
             {itemCount > 0 && (
-              <span className="absolute top-1 right-1 bg-brand-gold text-brand-charcoal text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 font-label-numeric text-[0.625rem] bg-secondary text-on-secondary w-4 h-4 rounded-full flex items-center justify-center font-semibold">
                 {itemCount}
               </span>
             )}
@@ -103,21 +121,21 @@ export const Header: React.FC = () => {
 
       {/* Slide-down Search Bar */}
       {searchOpen && (
-        <div className="border-t border-brand-border bg-brand-surface py-4 px-4 md:px-8 transition-all animate-fadeIn">
-          <div className="container mx-auto max-w-2xl">
+        <div className="border-t border-outline-variant bg-surface-container py-4 px-margin transition-all animate-fadeIn">
+          <div className="max-w-2xl mx-auto">
             <form onSubmit={handleSearchSubmit} className="relative flex items-center">
               <input
                 type="text"
                 placeholder="Search Kanjeevaram, Organza, Banarasi, Crimson, Zari..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-brand-base border border-brand-border rounded-none py-3 px-4 pl-12 text-sm text-brand-charcoal focus:outline-none focus:border-brand-gold"
+                className="w-full bg-surface border border-outline-variant py-3 px-4 pl-12 text-body-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary transition-colors"
                 autoFocus
               />
-              <Search className="w-5 h-5 text-brand-muted absolute left-4" />
+              <Search className="w-5 h-5 text-on-surface-variant absolute left-4" />
               <button
                 type="submit"
-                className="absolute right-3 text-xs uppercase tracking-wider bg-brand-charcoal text-brand-base px-4 py-2 hover:bg-brand-gold hover:text-brand-charcoal transition-colors"
+                className="absolute right-3 text-label-uppercase font-label-uppercase bg-secondary text-on-secondary px-4 py-2 hover:bg-primary transition-colors"
               >
                 Search
               </button>
@@ -129,77 +147,79 @@ export const Header: React.FC = () => {
       {/* Mobile Drawer Navigation */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden flex">
-          <div className="w-4/5 max-w-sm bg-brand-base h-full p-6 flex flex-col justify-between shadow-drawer animate-slideLeft">
+          <div className="w-4/5 max-w-sm bg-surface h-full p-6 flex flex-col justify-between shadow-xl animate-slideLeft">
             <div>
-              <div className="flex items-center justify-between pb-6 border-b border-brand-border">
-                <span className="font-serif text-xl tracking-wider text-brand-charcoal">ROYAL SILKS</span>
-                <button onClick={() => setMobileMenuOpen(false)} className="p-1 text-brand-charcoal">
+              <div className="flex items-center justify-between pb-6 border-b border-outline-variant">
+                <Image
+                  src="/images/sorayva-logo.png"
+                  alt="SORAYVA"
+                  width={160}
+                  height={48}
+                  className="h-9 w-auto object-contain"
+                />
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-1 text-secondary hover:text-on-surface"
+                >
                   <X className="w-6 h-6" />
                 </button>
               </div>
 
-              <nav className="mt-6 flex flex-col space-y-4 text-sm font-sans uppercase tracking-wider text-brand-charcoal">
+              <nav className="mt-6 flex flex-col space-y-4 font-label-uppercase text-label-uppercase text-on-surface">
                 <Link
                   href="/"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2 border-b border-brand-border/40 flex items-center justify-between"
+                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
                 >
-                  <span>Home</span> <ChevronRight className="w-4 h-4 text-brand-muted" />
+                  <span>HOME</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
                 </Link>
                 <Link
                   href="/shop"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2 border-b border-brand-border/40 flex items-center justify-between"
+                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
                 >
-                  <span>Shop All Sarees</span> <ChevronRight className="w-4 h-4 text-brand-muted" />
+                  <span>COLLECTIONS</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
                 </Link>
                 <Link
                   href="/shop/silk"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2 border-b border-brand-border/40 flex items-center justify-between"
+                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
                 >
-                  <span>Silk Sarees</span> <ChevronRight className="w-4 h-4 text-brand-muted" />
+                  <span>KANJEEVARAM & SILK</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
                 </Link>
                 <Link
                   href="/shop/organza"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2 border-b border-brand-border/40 flex items-center justify-between"
+                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
                 >
-                  <span>Organza & Tissue</span> <ChevronRight className="w-4 h-4 text-brand-muted" />
-                </Link>
-                <Link
-                  href="/collections/signature-edit"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-2 border-b border-brand-border/40 flex items-center justify-between"
-                >
-                  <span>Heritage Collection</span> <ChevronRight className="w-4 h-4 text-brand-muted" />
+                  <span>ORGANZA & TISSUE</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
                 </Link>
                 <Link
                   href="/size-guide"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2 border-b border-brand-border/40 flex items-center justify-between"
+                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
                 >
-                  <span>Blouse Size Guide</span> <ChevronRight className="w-4 h-4 text-brand-muted" />
+                  <span>BLOUSE SIZE GUIDE</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
                 </Link>
                 <Link
                   href="/track-order"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2 border-b border-brand-border/40 flex items-center justify-between"
+                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
                 >
-                  <span>Track Order</span> <ChevronRight className="w-4 h-4 text-brand-muted" />
+                  <span>TRACK ORDER</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
                 </Link>
               </nav>
             </div>
 
-            <div className="pt-6 border-t border-brand-border text-xs text-brand-muted">
-              <p>Boutique Assistance</p>
+            <div className="pt-6 border-t border-outline-variant text-body-sm text-on-surface-variant">
+              <p className="font-subhead-eyebrow text-subhead-eyebrow text-secondary uppercase tracking-wider">ATELIER STYLIST CONCIERGE</p>
               <a
                 href="https://wa.me/919876543210"
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 inline-block font-medium text-brand-charcoal hover:text-brand-gold"
+                className="mt-2 inline-flex items-center gap-2 font-label-numeric text-secondary hover:text-primary transition-colors"
               >
-                💬 WhatsApp Stylist Concierge
+                💬 WhatsApp Concierge
               </a>
             </div>
           </div>
