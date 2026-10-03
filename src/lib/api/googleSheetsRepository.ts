@@ -207,16 +207,24 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-        const res = await fetch(`${this.apiUrl}?action=getProducts`, {
+        let res = await fetch(`${this.apiUrl}?action=getProducts`, {
           signal: controller.signal,
           next: { revalidate: 60 }
         });
-        clearTimeout(timeoutId);
 
         if (res.ok) {
-          const text = await res.text();
+          let text = await res.text();
           if (text && text.trim().startsWith('{')) {
-            const json = JSON.parse(text);
+            let json = JSON.parse(text);
+            if (json.error === 'Invalid action' || (!json.success && !json.products)) {
+              const fallbackRes = await fetch(`${this.apiUrl}?action=products`, { signal: controller.signal });
+              if (fallbackRes.ok) {
+                const fallbackText = await fallbackRes.text();
+                if (fallbackText && fallbackText.trim().startsWith('{')) {
+                  json = JSON.parse(fallbackText);
+                }
+              }
+            }
             const rawItems = Array.isArray(json.products) ? json.products : (Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []));
             if (rawItems.length > 0) {
               products = rawItems
@@ -225,6 +233,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
             }
           }
         }
+        clearTimeout(timeoutId);
       } catch (e) {
         console.warn('Google Sheets API unavailable or timed out, serving local fallback data:', e);
       }

@@ -8,6 +8,10 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "vars": {
+    "GOOGLE_SHEETS_API_URL": "https://script.google.com/macros/s/AKfycby5hikFkv1__CQlkwSLoAFhnHM3SGesvHI84uIl9hlExn-6WX7WPVRe0nOD_kjbeoQOtw/exec",
+    "NEXT_PUBLIC_CATALOG_API_URL": "https://script.google.com/macros/s/AKfycby5hikFkv1__CQlkwSLoAFhnHM3SGesvHI84uIl9hlExn-6WX7WPVRe0nOD_kjbeoQOtw/exec"
+  },
   "build": {
     "command": "npx opennextjs-cloudflare"
   },
@@ -15,3 +19,4 @@
     "enabled": true
   }
 }
+
