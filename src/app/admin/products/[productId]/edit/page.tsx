@@ -40,13 +40,33 @@ export default function EditProductPage() {
   }, [productId]);
 
   const handleSave = async (updatedProduct: InternalProduct) => {
-    const res = await repository.saveOrUpdateProduct(updatedProduct);
-    if (res.success) {
+    try {
+      const res = await fetch('/api/admin/products/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product: updatedProduct })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success) {
+          setTimeout(() => {
+            router.push('/admin/products');
+          }, 1500);
+          return json;
+        }
+        return { success: false, error: json.error || 'Server error updating product.' };
+      }
+    } catch (e) {
+      console.warn('API route call fallback to repository:', e);
+    }
+
+    const fallbackRes = await repository.saveOrUpdateProduct(updatedProduct);
+    if (fallbackRes.success) {
       setTimeout(() => {
         router.push('/admin/products');
       }, 1500);
     }
-    return res;
+    return fallbackRes;
   };
 
   return (

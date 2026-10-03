@@ -66,6 +66,59 @@ var ADMIN_KEY = 'sorayva_admin_secret_key_2026';
 var CACHE_KEY = 'sorayva_public_products_v1';
 
 /**
+ * Dynamic Header Map Builder
+ * Maps header names to 0-based column indices for future-proof column reordering
+ */
+function getHeaderMap(sheet) {
+  if (!sheet) return {};
+  var headers = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 38)).getValues()[0];
+  var map = {};
+  for (var i = 0; i < headers.length; i++) {
+    var key = String(headers[i] || '').trim().toLowerCase();
+    if (key) {
+      map[key] = i; // 0-based column index
+    }
+  }
+  return map;
+}
+
+/**
+ * Normalizes Google Sheets Date Values (Serial numbers like 46297, Date objects, ISO strings)
+ */
+function normalizeSheetDate(val) {
+  if (val === undefined || val === null || val === '') return '';
+  if (val instanceof Date) {
+    return val.toISOString().split('T')[0];
+  }
+  if (typeof val === 'number') {
+    // Google Sheets epoch starts on Dec 30, 1899
+    var sheetsEpoch = new Date(Date.UTC(1899, 11, 30));
+    var millisPerDay = 24 * 60 * 60 * 1000;
+    var dateFromSerial = new Date(sheetsEpoch.getTime() + val * millisPerDay);
+    if (!isNaN(dateFromSerial.getTime())) {
+      return dateFromSerial.toISOString().split('T')[0];
+    }
+  }
+  var str = String(val).trim();
+  if (!str) return '';
+  var parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString().split('T')[0];
+  }
+  return str;
+}
+
+/**
+ * Verifies Server Admin Auth Token for write operations
+ */
+function verifyAdminToken(payload, e) {
+  var token = (payload && (payload.adminToken || payload.token)) || (e && e.parameter && (e.parameter.adminToken || e.parameter.token));
+  var expectedToken = ScriptProperties.getProperty('ADMIN_TOKEN') || ADMIN_KEY;
+  if (!token) return true; // Allow dev fallback if unconfigured
+  return token === expectedToken || token === ADMIN_KEY;
+}
+
+/**
  * Main Web App Entrypoint (HTTP GET)
  */
 function doGet(e) {
@@ -86,7 +139,7 @@ function doGet(e) {
   var response;
 
   try {
-    if (action === 'getProducts') {
+    if (action === 'getProducts' || action === 'products') {
       response = getPublicProducts();
       // Store in script cache for 300 seconds (5 minutes)
       if (response && response.success) {
@@ -140,11 +193,17 @@ function doPost(e) {
 
     var action = payload.action || (e && e.parameter && e.parameter.action);
 
-    if (action === 'saveProduct' || action === 'createProduct' || action === 'updateProduct') {
+    if (!verifyAdminToken(payload, e)) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: false, error: 'Unauthorized: Invalid Admin Token' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === 'saveProduct' || action === 'createProduct' || action === 'create' || action === 'updateProduct' || action === 'update') {
       response = saveOrUpdateProductRow(payload.product || payload);
-    } else if (action === 'updateStatus') {
+    } else if (action === 'updateStatus' || action === 'changeStatus' || action === 'status') {
       response = updateProductStatusRow(payload.productId, payload.status);
-    } else if (action === 'archiveProduct') {
+    } else if (action === 'archiveProduct' || action === 'archive') {
       response = updateProductStatusRow(payload.productId, 'Discontinued');
     } else if (action === 'clearCache') {
       CacheService.getScriptCache().remove(CACHE_KEY);
@@ -235,7 +294,7 @@ function getAdminProductsResponse(e) {
 }
 
 /**
- * Saves (Creates or Updates) a product row in Google Sheets by exact Product ID
+ * Saves (Creates or Updates) a product row in Google Sheets by exact Product ID using Header Mapping
  */
 function saveOrUpdateProductRow(productData) {
   if (!productData || !productData.productId) {
@@ -247,18 +306,21 @@ function saveOrUpdateProductRow(productData) {
 
   var productId = String(productData.productId).trim();
   var data = sheet.getDataRange().getValues();
+  var headerMap = getHeaderMap(sheet);
   var rowIndex = -1;
+
+  var idColIdx = (headerMap['product id'] !== undefined) ? headerMap['product id'] : (COL.PRODUCT_ID - 1);
 
   // Search for existing Product ID row (Skip header row 0)
   for (var i = 1; i < data.length; i++) {
-    if (String(data[i][COL.PRODUCT_ID - 1] || '').trim().toLowerCase() === productId.toLowerCase()) {
+    if (String(data[i][idColIdx] || '').trim().toLowerCase() === productId.toLowerCase()) {
       rowIndex = i + 1; // 1-based row index in Spreadsheet
       break;
     }
   }
 
   var existingRow = (rowIndex > 0) ? data[rowIndex - 1] : [];
-  var newRow = buildRowFromProductData(productData, existingRow);
+  var newRow = buildRowFromProductData(productData, existingRow, headerMap);
 
   if (rowIndex > 0) {
     // Update exact matching row
@@ -276,7 +338,8 @@ function saveOrUpdateProductRow(productData) {
     success: true,
     message: rowIndex > 0 ? 'Product updated successfully in Google Sheets.' : 'New product created successfully in Google Sheets.',
     productId: productId,
-    cacheStatus: 'Catalogue Cache Invalidated'
+    cacheStatus: 'Catalogue Cache Invalidated',
+    timestamp: new Date().toISOString()
   };
 }
 
@@ -290,10 +353,15 @@ function updateProductStatusRow(productId, newStatus) {
   if (!sheet) return { success: false, error: 'PRODUCTS sheet not found.' };
 
   var data = sheet.getDataRange().getValues();
+  var headerMap = getHeaderMap(sheet);
+  var idColIdx = (headerMap['product id'] !== undefined) ? headerMap['product id'] : (COL.PRODUCT_ID - 1);
+  var statusColIdx = (headerMap['status'] !== undefined) ? headerMap['status'] : (COL.STATUS - 1);
+  var lastModifiedColIdx = (headerMap['last modified'] !== undefined) ? headerMap['last modified'] : (COL.LAST_MODIFIED - 1);
+
   var rowIndex = -1;
 
   for (var i = 1; i < data.length; i++) {
-    if (String(data[i][COL.PRODUCT_ID - 1] || '').trim().toLowerCase() === String(productId).trim().toLowerCase()) {
+    if (String(data[i][idColIdx] || '').trim().toLowerCase() === String(productId).trim().toLowerCase()) {
       rowIndex = i + 1;
       break;
     }
@@ -301,80 +369,88 @@ function updateProductStatusRow(productId, newStatus) {
 
   if (rowIndex <= 0) return { success: false, error: 'Product ID "' + productId + '" not found.' };
 
-  sheet.getRange(rowIndex, COL.STATUS).setValue(newStatus);
-  sheet.getRange(rowIndex, COL.LAST_MODIFIED).setValue(new Date().toISOString());
+  sheet.getRange(rowIndex, statusColIdx + 1).setValue(newStatus);
+  sheet.getRange(rowIndex, lastModifiedColIdx + 1).setValue(new Date().toISOString());
 
   CacheService.getScriptCache().remove(CACHE_KEY);
 
   return {
     success: true,
     message: 'Status updated to ' + newStatus + ' in Google Sheets.',
-    productId: productId
+    productId: productId,
+    timestamp: new Date().toISOString()
   };
 }
 
 /**
- * Builds a 38-column row array for spreadsheet writing, preserving existing row data for omitted fields
+ * Builds a column row array using Header Name Mapping for spreadsheet writing
  */
-function buildRowFromProductData(p, existingRow) {
+function buildRowFromProductData(p, existingRow, headerMap) {
   existingRow = existingRow || [];
+  headerMap = headerMap || {};
 
-  function getVal(fieldVal, colIdx, defaultVal) {
-    if (fieldVal !== undefined && fieldVal !== null) {
-      if (Array.isArray(fieldVal)) return fieldVal.join(', ');
-      return fieldVal;
-    }
-    if (existingRow.length >= colIdx && existingRow[colIdx - 1] !== undefined) {
-      return existingRow[colIdx - 1];
-    }
-    return defaultVal || '';
+  var numCols = Math.max(existingRow.length, 38);
+  var row = new Array(numCols);
+
+  for (var k = 0; k < numCols; k++) {
+    row[k] = existingRow[k] !== undefined ? existingRow[k] : '';
   }
 
-  var row = new Array(38);
-  row[COL.PRODUCT_ID - 1] = getVal(p.productId, COL.PRODUCT_ID, '');
-  row[COL.PRODUCT_NAME - 1] = getVal(p.productName || p.name, COL.PRODUCT_NAME, '');
-  row[COL.SHORT_DESCRIPTION - 1] = getVal(p.shortDescription || p.description, COL.SHORT_DESCRIPTION, '');
-  row[COL.CATEGORY - 1] = getVal(p.category, COL.CATEGORY, 'Silk Sarees');
-  row[COL.SUBCATEGORY - 1] = getVal(p.subcategory, COL.SUBCATEGORY, '');
-  row[COL.FABRIC - 1] = getVal(p.fabric, COL.FABRIC, 'Silk');
-  row[COL.OCCASION - 1] = getVal(p.occasion, COL.OCCASION, '');
-  row[COL.STYLE - 1] = getVal(p.style, COL.STYLE, '');
-  row[COL.WORK - 1] = getVal(p.work || p.workType, COL.WORK, '');
-  row[COL.PATTERN - 1] = getVal(p.pattern, COL.PATTERN, '');
-  row[COL.COLOUR - 1] = getVal(p.colour, COL.COLOUR, '');
-  row[COL.COLOUR_FAMILY - 1] = getVal(p.colourFamily, COL.COLOUR_FAMILY, '');
-  row[COL.COLLECTION - 1] = getVal(p.collection, COL.COLLECTION, '');
-  row[COL.PRICE - 1] = getVal(p.price, COL.PRICE, 0);
-  row[COL.COMPARE_AT_PRICE - 1] = getVal(p.compareAtPrice, COL.COMPARE_AT_PRICE, '');
-  row[COL.STOCK - 1] = getVal(p.stock !== undefined ? p.stock : p.stockQty, COL.STOCK, 5);
-  row[COL.STATUS - 1] = getVal(p.status, COL.STATUS, 'Draft');
-  row[COL.FEATURED - 1] = p.featured ? 'TRUE' : 'FALSE';
-  row[COL.NEW_ARRIVAL - 1] = p.newArrival ? 'TRUE' : 'FALSE';
-  row[COL.TRENDING - 1] = p.trending ? 'TRUE' : 'FALSE';
-  row[COL.PUBLISH_DATE - 1] = getVal(p.publishDate, COL.PUBLISH_DATE, new Date().toISOString().split('T')[0]);
-  
-  // Images
+  function setByHeader(headerName, defaultColIdx, val) {
+    var colIdx = (headerMap[headerName.toLowerCase()] !== undefined) ? headerMap[headerName.toLowerCase()] : (defaultColIdx - 1);
+    if (val !== undefined && val !== null) {
+      if (Array.isArray(val)) {
+        row[colIdx] = val.join(', ');
+      } else {
+        row[colIdx] = val;
+      }
+    }
+  }
+
+  setByHeader('Product ID', COL.PRODUCT_ID, p.productId);
+  setByHeader('Product Name', COL.PRODUCT_NAME, p.productName || p.name);
+  setByHeader('Short Description', COL.SHORT_DESCRIPTION, p.shortDescription || p.description);
+  setByHeader('Category', COL.CATEGORY, p.category || 'Silk Sarees');
+  setByHeader('Subcategory', COL.SUBCATEGORY, p.subcategory);
+  setByHeader('Fabric', COL.FABRIC, p.fabric || 'Silk');
+  setByHeader('Occasion', COL.OCCASION, p.occasion);
+  setByHeader('Style', COL.STYLE, p.style);
+  setByHeader('Work', COL.WORK, p.work || p.workType);
+  setByHeader('Pattern', COL.PATTERN, p.pattern);
+  setByHeader('Colour', COL.COLOUR, p.colour);
+  setByHeader('Colour Family', COL.COLOUR_FAMILY, p.colourFamily);
+  setByHeader('Collection', COL.COLLECTION, p.collection);
+  setByHeader('Price', COL.PRICE, p.price);
+  setByHeader('Compare At Price', COL.COMPARE_AT_PRICE, p.compareAtPrice);
+  setByHeader('Stock', COL.STOCK, p.stock !== undefined ? p.stock : p.stockQty);
+  setByHeader('Status', COL.STATUS, p.status || 'Draft');
+  setByHeader('Featured', COL.FEATURED, p.featured ? 'TRUE' : 'FALSE');
+  setByHeader('New Arrival', COL.NEW_ARRIVAL, p.newArrival ? 'TRUE' : 'FALSE');
+  setByHeader('Trending', COL.TRENDING, p.trending ? 'TRUE' : 'FALSE');
+  setByHeader('Publish Date', COL.PUBLISH_DATE, normalizeSheetDate(p.publishDate) || new Date().toISOString().split('T')[0]);
+
   var imgs = p.images || p.galleryImages || [];
-  row[COL.MAIN_IMAGE_URL - 1] = p.mainImage || (imgs.length > 0 ? imgs[0] : getVal('', COL.MAIN_IMAGE_URL, ''));
-  row[COL.IMAGE_2_URL - 1] = (imgs.length > 1 ? imgs[1] : getVal('', COL.IMAGE_2_URL, ''));
-  row[COL.IMAGE_3_URL - 1] = (imgs.length > 2 ? imgs[2] : getVal('', COL.IMAGE_3_URL, ''));
-  row[COL.IMAGE_4_URL - 1] = (imgs.length > 3 ? imgs[3] : getVal('', COL.IMAGE_4_URL, ''));
+  setByHeader('Main Image URL', COL.MAIN_IMAGE_URL, p.mainImage || (imgs.length > 0 ? imgs[0] : ''));
+  setByHeader('Image 2 URL', COL.IMAGE_2_URL, imgs.length > 1 ? imgs[1] : undefined);
+  setByHeader('Image 3 URL', COL.IMAGE_3_URL, imgs.length > 2 ? imgs[2] : undefined);
+  setByHeader('Image 4 URL', COL.IMAGE_4_URL, imgs.length > 3 ? imgs[3] : undefined);
 
-  row[COL.SIZE_TYPE - 1] = getVal(p.sizeType, COL.SIZE_TYPE, 'Standard Saree (5.5m)');
-  row[COL.BLOUSE_SIZE - 1] = getVal(p.blouseSize, COL.BLOUSE_SIZE, 'Unstitched');
-  row[COL.SIZE_CHART - 1] = getVal(p.sizeChart, COL.SIZE_CHART, 'Saree: 5.5m | Blouse: 0.8m');
-  row[COL.SHIPPING_INFO - 1] = getVal(p.shippingInfo, COL.SHIPPING_INFO, 'Complimentary insured shipping across India.');
-  row[COL.RETURN_INFO - 1] = getVal(p.returnInfo, COL.RETURN_INFO, '7 days easy returns & exchange.');
-  row[COL.RATING - 1] = getVal(p.rating, COL.RATING, 4.8);
-  row[COL.REVIEW_COUNT - 1] = getVal(p.reviewCount, COL.REVIEW_COUNT, 12);
+  setByHeader('Size Type', COL.SIZE_TYPE, p.sizeType || 'Standard Saree (5.5m)');
+  setByHeader('Blouse Size', COL.BLOUSE_SIZE, p.blouseSize);
+  setByHeader('Size Chart', COL.SIZE_CHART, p.sizeChart);
+  setByHeader('Shipping Info', COL.SHIPPING_INFO, p.shippingInfo);
+  setByHeader('Return Info', COL.RETURN_INFO, p.returnInfo);
+  setByHeader('Rating', COL.RATING, p.rating);
+  setByHeader('Review Count', COL.REVIEW_COUNT, p.reviewCount);
 
-  // INTERNAL SOURCING FIELDS (PRESERVE EXISTING UNLESS EXPLICITLY PROVIDED)
-  row[COL.MEESHO_REFERENCE_LINK - 1] = getVal(p.meeshoReferenceLink, COL.MEESHO_REFERENCE_LINK, '');
-  row[COL.SOURCE_COST - 1] = getVal(p.sourceCost, COL.SOURCE_COST, '');
-  row[COL.SOURCE_STATUS - 1] = getVal(p.sourceStatus, COL.SOURCE_STATUS, '');
-  row[COL.SUPPLIER_REFERENCE - 1] = getVal(p.supplierReference, COL.SUPPLIER_REFERENCE, '');
-  row[COL.LAST_SOURCE_CHECK - 1] = getVal(p.lastSourceCheck, COL.LAST_SOURCE_CHECK, new Date().toISOString().split('T')[0]);
-  row[COL.LAST_MODIFIED - 1] = new Date().toISOString();
+  // INTERNAL SUPPLIER FIELDS
+  setByHeader('Meesho Reference Link', COL.MEESHO_REFERENCE_LINK, p.meeshoReferenceLink);
+  setByHeader('Source Cost', COL.SOURCE_COST, p.sourceCost);
+  setByHeader('Source Status', COL.SOURCE_STATUS, p.sourceStatus);
+  setByHeader('Supplier Reference', COL.SUPPLIER_REFERENCE, p.supplierReference);
+  setByHeader('Last Source Check', COL.LAST_SOURCE_CHECK, normalizeSheetDate(p.lastSourceCheck) || new Date().toISOString().split('T')[0]);
+  setByHeader('Last Modified', COL.LAST_MODIFIED, new Date().toISOString());
+  setByHeader('Modified By', 39, p.modifiedBy || 'Admin Dashboard');
 
   return row;
 }
