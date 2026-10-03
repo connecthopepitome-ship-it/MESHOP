@@ -13,7 +13,7 @@
     "NEXT_PUBLIC_CATALOG_API_URL": "https://script.google.com/macros/s/AKfycby5hikFkv1__CQlkwSLoAFhnHM3SGesvHI84uIl9hlExn-6WX7WPVRe0nOD_kjbeoQOtw/exec"
   },
   "build": {
-    "command": "npx opennextjs-cloudflare"
+    "command": "npm install && npx opennextjs-cloudflare"
   },
   "observability": {
     "enabled": true
