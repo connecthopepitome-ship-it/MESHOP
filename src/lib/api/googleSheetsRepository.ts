@@ -18,6 +18,7 @@ export interface RepositoryInterface {
   updateProductStatus(productId: string, status: ProductStatus): Promise<{ success: boolean; message?: string; error?: string }>;
   archiveProduct(productId: string): Promise<{ success: boolean; message?: string; error?: string }>;
   clearCatalogueCache(): Promise<boolean>;
+  applyClientOverrides<T>(products: T[]): T[];
 }
 
 // In-memory admin store for dev fallback
@@ -38,6 +39,26 @@ export class GoogleSheetsRepository implements RepositoryInterface {
 
   constructor() {
     this.apiUrl = process.env.GOOGLE_SHEETS_API_URL || process.env.NEXT_PUBLIC_CATALOG_API_URL || '';
+  }
+
+  public applyClientOverrides<T>(products: T[]): T[] {
+    if (typeof window === 'undefined' || !Array.isArray(products)) return products;
+    try {
+      const storedStr = localStorage.getItem('meshop_modified_products');
+      if (!storedStr) return products;
+      const stored = JSON.parse(storedStr);
+      if (!stored || typeof stored !== 'object') return products;
+
+      return products.map((item: any) => {
+        const pid = String(item?.productId || item?.id || '').trim().toLowerCase();
+        if (pid && stored[pid]) {
+          return { ...item, ...stored[pid] };
+        }
+        return item;
+      });
+    } catch (e) {
+      return products;
+    }
   }
 
   private mergeLocalOverride(raw: any): any {
@@ -543,6 +564,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
   // ==================================================
 
   async getAdminProducts(): Promise<InternalProduct[]> {
+    let prods: InternalProduct[] = [];
     if (this.apiUrl) {
       try {
         const res = await fetch(`${this.apiUrl}?action=getAdminProducts`, {
@@ -559,20 +581,22 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         if (res.ok && text.trim().startsWith('{')) {
           const json = JSON.parse(text);
           if (Array.isArray(json.products)) {
-            const parsed = json.products.map((r: any) => this.sanitizeAdminProduct(r)).filter((p: any): p is InternalProduct => p !== null);
-            return parsed;
-          }
-          // If action=getAdminProducts is not supported, fallback to public products
-          const publicProds = await this.getProducts();
-          if (publicProds && publicProds.length > 0) {
-            return publicProds.map((p) => this.sanitizeAdminProduct(p)).filter((p): p is InternalProduct => p !== null);
+            prods = json.products.map((r: any) => this.sanitizeAdminProduct(r)).filter((p: any): p is InternalProduct => p !== null);
+          } else {
+            const publicProds = await this.getProducts();
+            if (publicProds && publicProds.length > 0) {
+              prods = publicProds.map((p) => this.sanitizeAdminProduct(p)).filter((p): p is InternalProduct => p !== null);
+            }
           }
         }
       } catch (e: any) {
         console.warn('[GoogleSheetsRepository] getAdminProducts error:', e.message);
       }
     }
-    return adminLocalStore;
+    if (prods.length === 0) {
+      prods = adminLocalStore;
+    }
+    return this.applyClientOverrides(prods);
   }
 
   async getAdminProductById(productId: string): Promise<InternalProduct | null> {

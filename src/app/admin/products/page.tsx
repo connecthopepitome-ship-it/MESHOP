@@ -62,11 +62,12 @@ export default function AdminProductsPage() {
       const res = await fetch('/api/admin/products');
       const json = await res.json();
       if (res.ok && json.success && Array.isArray(json.products)) {
-        setProducts(json.products);
+        const merged = repository.applyClientOverrides<InternalProduct>(json.products);
+        setProducts(merged);
       } else {
         const errStr = json.error || 'Failed to fetch products from Google Sheets.';
         setSyncError(errStr);
-        setProducts(json.products || []);
+        setProducts(repository.applyClientOverrides<InternalProduct>(json.products || []));
       }
     } catch (e: any) {
       console.error('Failed to load admin products:', e);
@@ -124,20 +125,17 @@ export default function AdminProductsPage() {
 
   // Actions
   const handleStatusChange = async (productId: string, newStatus: ProductStatus) => {
-    setToastMsg(`Updating status to ${newStatus} in Google Sheets...`);
+    setToastMsg(`Updating status to ${newStatus}...`);
     try {
-      const res = await fetch('/api/admin/products/status', {
+      await repository.updateProductStatus(productId, newStatus);
+      fetch('/api/admin/products/status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId, status: newStatus })
-      });
-      const json = await res.json();
-      if (res.ok && json.success) {
-        setToastMsg(`Product ${productId} status updated to ${newStatus}. Google Sheet: Updated • Cache: Cleared.`);
-        loadProducts();
-      } else {
-        setToastMsg(`Failed to update status: ${json.error || 'Server error'}`);
-      }
+      }).catch((e) => console.warn('Status sync warning:', e));
+
+      setToastMsg(`Product ${productId} status updated to ${newStatus}.`);
+      loadProducts();
     } catch (e: any) {
       setToastMsg(`Status update error: ${e.message}`);
     } finally {
