@@ -174,6 +174,11 @@ export const Footer: React.FC = () => {
             </span>
             <span className="hidden sm:inline">•</span>
             <span className="hidden sm:inline tracking-wider">AUTHENTIC HANDLOOM SILK MARK</span>
+            <span className="hidden sm:inline">•</span>
+            <Link href="/admin/login" className="tracking-wider text-[#d3c4b6]/60 hover:text-amber-400 transition-colors inline-flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px]">admin_panel_settings</span>
+              <span>ADMIN PORTAL</span>
+            </Link>
           </div>
           <p className="tracking-wider">
             © {new Date().getFullYear()} SORAYVA LUXURY TEXTILES &amp; ATELIER HOUSE. ALL RIGHTS RESERVED.
