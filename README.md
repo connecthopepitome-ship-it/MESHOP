@@ -166,3 +166,62 @@ npm run build
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## 9. SORAYVA Admin Catalogue Dashboard Architecture
+
+The Admin Catalogue Dashboard is an authenticated management interface accessible at `/admin`.
+
+### Admin Routes & Protection
+- `/admin/login`: Admin authentication portal (Passcode protected).
+- `/admin`: Dashboard overview with KPI stats, stock alerts, and Catalogue Health Auditor.
+- `/admin/products`: Product Management table with search, filters, pagination, bulk actions, and live customer preview modal.
+- `/admin/products/new`: Product Creation interface with validation, image previews, and private sourcing fields.
+- `/admin/products/[productId]/edit`: Product Editor pre-filled with existing data.
+
+All `/admin` routes (except `/admin/login`) are wrapped in `AdminGuard` which checks `AdminAuthContext` session state. Unauthorized users or customers are redirected immediately to `/admin/login`.
+
+### Two-Way Google Sheets Sync Data Flow
+```text
+  ┌───────────────────────────┐
+  │   Admin UI (React Form)   │
+  └─────────────┬─────────────┘
+                │
+                ▼ (Action: createProduct / updateProduct / updateStatus / archiveProduct)
+  ┌───────────────────────────┐
+  │    Admin API / Repo       │
+  └─────────────┬─────────────┘
+                │
+                ▼ POST Payload (JSON / x-www-form-urlencoded)
+  ┌───────────────────────────┐
+  │ Google Apps Script doPost │
+  └─────────────┬─────────────┘
+                │
+                ▼ Row Match by Product ID (Preserves unedited columns & other rows)
+  ┌───────────────────────────┐
+  │      Google Sheets        │
+  │ (SORAYVA_PRODUCT_CATALOGUE)│
+  └─────────────┬─────────────┘
+                │
+                ▼ doGet (Cache Invalidation & Fresh Fetch)
+  ┌───────────────────────────┐
+  │   Public Catalogue API    │
+  └─────────────┬─────────────┘
+                │
+                ▼ (Sanitized DTO: Strips internal source fields)
+  ┌───────────────────────────┐
+  │  SORAYVA Storefront UI    │
+  └───────────────────────────┘
+```
+
+### Internal / Private Sourcing Fields Isolation
+The Admin Dashboard allows viewing and editing private sourcing fields:
+- `Meesho Reference Link` (`meeshoReferenceLink`)
+- `Source Cost` (`sourceCost`)
+- `Source Status` (`sourceStatus`)
+- `Supplier Reference` (`supplierReference`)
+- `Last Source Check` (`lastSourceCheck`)
+
+These fields are strictly confined to the Admin UI & Google Sheets. `sanitizeProduct()` strips these fields before returning any public payload, ensuring zero exposure to customers, browser bundles, JSON-LD, or search indexing.
+

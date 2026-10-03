@@ -1,11 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { AnnouncementBar } from '@/components/layout/AnnouncementBar';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { CartProvider } from '@/context/CartContext';
-import { WishlistProvider } from '@/context/WishlistContext';
-import { CartDrawer } from '@/components/cart/CartDrawer';
+import { AppShell } from '@/components/layout/AppShell';
 
 export const metadata: Metadata = {
   title: 'SORAYVA | The Modern Saree House',
@@ -30,15 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className="min-h-screen flex flex-col justify-between bg-brand-base text-brand-charcoal font-sans antialiased">
-        <CartProvider>
-          <WishlistProvider>
-            <AnnouncementBar />
-            <Header />
-            <main className="flex-1">{children}</main>
-            <CartDrawer />
-            <Footer />
-          </WishlistProvider>
-        </CartProvider>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

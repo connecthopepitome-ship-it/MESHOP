@@ -96,7 +96,24 @@ Right side actions: Search Drawer, Wishlist Count, Cart Drawer, Currency (`INR â
 
 ---
 
-## 6. Future Architecture Paths
+## 7. Admin Catalogue Dashboard & Two-Way Sync Implementation
 
-- **Firebase/Firestore Migration**: `GoogleSheetsRepository` implements `RepositoryInterface`, allowing a drop-in `FirestoreProductRepository` swap in the future.
-- **Fulfilment Automation**: Internal product mapping (`productId` -> `meeshoReferenceLink`, `sourceCost`, `supplierReference`) resides in backend/admin infrastructure for future automated ordering pipelines without exposing supplier details to customers.
+### Completed Components & Routes
+1. **Authentication & Access Control**:
+   - [`src/context/AdminAuthContext.tsx`](file:///c:/Users/AU001AW7/OneDrive%20-%20WSA/Documents/Playwrite/MESHOP/src/context/AdminAuthContext.tsx): Admin authentication state management with persistent session storage.
+   - [`src/components/admin/AdminGuard.tsx`](file:///c:/Users/AU001AW7/OneDrive%20-%20WSA/Documents/Playwrite/MESHOP/src/components/admin/AdminGuard.tsx): Access control guard for all `/admin/*` routes.
+   - [`src/app/admin/login/page.tsx`](file:///c:/Users/AU001AW7/OneDrive%20-%20WSA/Documents/Playwrite/MESHOP/src/app/admin/login/page.tsx): Professional SaaS admin login screen.
+2. **Admin UI Layout**:
+   - [`src/components/admin/AdminHeader.tsx`](file:///c:/Users/AU001AW7/OneDrive%20-%20WSA/Documents/Playwrite/MESHOP/src/components/admin/AdminHeader.tsx) & [`AdminLayout.tsx`](file:///c:/Users/AU001AW7/OneDrive%20-%20WSA/Documents/Playwrite/MESHOP/src/components/admin/AdminLayout.tsx): Dark-themed SaaS admin layout with live storefront link and instant cache refresh.
+   - Isolated from customer storefront header/footer via [`AppShell.tsx`](file:///c:/Users/AU001AW7/OneDrive%20-%20WSA/Documents/Playwrite/MESHOP/src/components/layout/AppShell.tsx).
+3. **Dashboard Overview & Health Auditor**:
+   - [`src/app/admin/page.tsx`](file:///c:/Users/AU001AW7/OneDrive%20-%20WSA/Documents/Playwrite/MESHOP/src/app/admin/page.tsx): Stat cards (Total, Active, Draft, Out of Stock, Low Stock, New Arrivals, Featured, Health Score) and direct audit issue resolution panel.
+4. **Product Table & Management**:
+   - [`src/app/admin/products/page.tsx`](file:///c:/Users/AU001AW7/OneDrive%20-%20WSA/Documents/Playwrite/MESHOP/src/app/admin/products/page.tsx): Data table with search, status/fabric/category filters, sorting, bulk actions, and live customer preview modal.
+5. **Product Editor & Form**:
+   - [`src/components/admin/ProductForm.tsx`](file:///c:/Users/AU001AW7/OneDrive%20-%20WSA/Documents/Playwrite/MESHOP/src/components/admin/ProductForm.tsx): Tabbed product editor covering all customer-facing product attributes + **ðŸ”’ Source / Internal Information** section.
+   - Routes: [`src/app/admin/products/new/page.tsx`](file:///c:/Users/AU001AW7/OneDrive%20-%20WSA/Documents/Playwrite/MESHOP/src/app/admin/products/new/page.tsx) & [`src/app/admin/products/[productId]/edit/page.tsx`](file:///c:/Users/AU001AW7/OneDrive%20-%20WSA/Documents/Playwrite/MESHOP/src/app/admin/products/%5BproductId%5D/edit/page.tsx).
+6. **Backend & Apps Script Two-Way Write API**:
+   - [`google-apps-script/Code.gs`](file:///c:/Users/AU001AW7/OneDrive%20-%20WSA/Documents/Playwrite/MESHOP/google-apps-script/Code.gs): Added `doPost` handler for `saveProduct`, `createProduct`, `updateProduct`, `updateStatus`, `archiveProduct`, and `clearCache`. Matches rows by exact `Product ID` and preserves unedited columns and other products.
+   - [`src/lib/api/googleSheetsRepository.ts`](file:///c:/Users/AU001AW7/OneDrive%20-%20WSA/Documents/Playwrite/MESHOP/src/lib/api/googleSheetsRepository.ts): Repository method extensions for mutations and cache invalidation.
+

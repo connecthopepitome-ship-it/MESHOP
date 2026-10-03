@@ -11,7 +11,27 @@ export interface RepositoryInterface {
   createOrder(order: Omit<Order, 'orderId' | 'createdAt'>): Promise<{ success: boolean; orderId: string; error?: string }>;
   lookupOrder(orderId: string, phoneOrEmail: string): Promise<Order | null>;
   getCatalogueHealthReport(): Promise<CatalogueHealthReport>;
+  // Admin Operations
+  getAdminProducts(): Promise<InternalProduct[]>;
+  getAdminProductById(productId: string): Promise<InternalProduct | null>;
+  saveOrUpdateProduct(product: InternalProduct): Promise<{ success: boolean; message?: string; productId?: string; error?: string }>;
+  updateProductStatus(productId: string, status: ProductStatus): Promise<{ success: boolean; message?: string; error?: string }>;
+  archiveProduct(productId: string): Promise<{ success: boolean; message?: string; error?: string }>;
+  clearCatalogueCache(): Promise<boolean>;
 }
+
+// In-memory admin store for dev fallback
+let adminLocalStore: InternalProduct[] = MOCK_PRODUCTS.map((p) => ({
+  ...p,
+  productName: p.name,
+  stock: p.stockQty || 5,
+  status: p.status || 'Active',
+  meeshoReferenceLink: (p as any).sourceUrl || 'https://meesho.com/saree/p/sample-item',
+  sourceCost: (p as any).sourceCost || 1800,
+  sourceStatus: (p as any).sourceStatus || 'In Stock',
+  supplierReference: (p as any).supplierReference || 'MEESHO-SUP-101',
+  lastSourceCheck: new Date().toISOString().split('T')[0]
+}));
 
 export class GoogleSheetsRepository implements RepositoryInterface {
   private apiUrl: string;
@@ -70,7 +90,6 @@ export class GoogleSheetsRepository implements RepositoryInterface {
       const price = typeof raw.price === 'number' ? raw.price : parseFloat(raw.price) || 0;
       let compareAtPrice = raw.compareAtPrice ? (typeof raw.compareAtPrice === 'number' ? raw.compareAtPrice : parseFloat(raw.compareAtPrice)) : undefined;
       
-      // Ensure compareAtPrice > price safely to avoid negative discounts
       if (compareAtPrice !== undefined && compareAtPrice <= price) {
         compareAtPrice = undefined;
       }
@@ -88,7 +107,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
 
       const slug = raw.slug ? String(raw.slug) : `${slugify(productName)}-${productId.toLowerCase()}`;
 
-      // Construct PUBLIC PRODUCT DTO
+      // PUBLIC PRODUCT DTO
       const publicProduct: PublicProduct = {
         productId,
         productName,
@@ -160,6 +179,26 @@ export class GoogleSheetsRepository implements RepositoryInterface {
     }
   }
 
+  /**
+   * Internal parser for Admin DTO (Preserves internal supplier fields)
+   */
+  public sanitizeAdminProduct(raw: any): InternalProduct | null {
+    const publicProduct = this.sanitizeProduct({ ...raw, status: raw.status || 'Active', published: true });
+    if (!publicProduct) return null;
+
+    const internalProduct: InternalProduct = {
+      ...publicProduct,
+      status: (raw.status as ProductStatus) || 'Draft',
+      meeshoReferenceLink: raw.meeshoReferenceLink || raw.sourceUrl || undefined,
+      sourceCost: typeof raw.sourceCost === 'number' ? raw.sourceCost : parseFloat(raw.sourceCost) || undefined,
+      sourceStatus: raw.sourceStatus || undefined,
+      supplierReference: raw.supplierReference || undefined,
+      lastSourceCheck: raw.lastSourceCheck || undefined
+    };
+
+    return internalProduct;
+  }
+
   async getProducts(filters?: Partial<FilterState>): Promise<PublicProduct[]> {
     let products: PublicProduct[] = [];
 
@@ -192,7 +231,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
     }
 
     if (products.length === 0) {
-      products = MOCK_PRODUCTS
+      products = adminLocalStore
         .map((p) => this.sanitizeProduct(p))
         .filter((p): p is PublicProduct => p !== null);
     }
@@ -435,11 +474,10 @@ export class GoogleSheetsRepository implements RepositoryInterface {
       }
     }
 
-    // Fallback static calculation for local catalogue
     const issues: ProductHealthIssue[] = [];
     let active = 0, draft = 0, outOfStock = 0, hidden = 0, discontinued = 0;
 
-    MOCK_PRODUCTS.forEach((p) => {
+    adminLocalStore.forEach((p) => {
       const st = p.status || 'Active';
       if (st === 'Active') active++;
       else if (st === 'Draft') draft++;
@@ -454,16 +492,120 @@ export class GoogleSheetsRepository implements RepositoryInterface {
     });
 
     return {
-      totalRows: MOCK_PRODUCTS.length,
-      validCount: MOCK_PRODUCTS.length - issues.length,
+      totalRows: adminLocalStore.length,
+      validCount: adminLocalStore.length - issues.length,
       activeCount: active,
       draftCount: draft,
       outOfStockCount: outOfStock,
       hiddenCount: hidden,
       discontinuedCount: discontinued,
       issues,
-      healthScore: Math.round(((MOCK_PRODUCTS.length - issues.length) / MOCK_PRODUCTS.length) * 100),
+      healthScore: Math.round(((adminLocalStore.length - issues.length) / adminLocalStore.length) * 100),
     };
+  }
+
+  // ==================================================
+  // ADMIN READ & WRITE OPERATIONS
+  // ==================================================
+
+  async getAdminProducts(): Promise<InternalProduct[]> {
+    if (this.apiUrl) {
+      try {
+        const res = await fetch(`${this.apiUrl}?action=getAdminProducts`);
+        if (res.ok) {
+          const json = await res.json();
+          if (Array.isArray(json.products)) {
+            const parsed = json.products.map((r: any) => this.sanitizeAdminProduct(r)).filter((p: any): p is InternalProduct => p !== null);
+            if (parsed.length > 0) return parsed;
+          }
+        }
+      } catch (e) {
+        console.warn('Admin products fetch failed, using local admin store:', e);
+      }
+    }
+    return adminLocalStore;
+  }
+
+  async getAdminProductById(productId: string): Promise<InternalProduct | null> {
+    const products = await this.getAdminProducts();
+    const found = products.find((p) => p.productId.toLowerCase() === productId.trim().toLowerCase());
+    return found || null;
+  }
+
+  async saveOrUpdateProduct(product: InternalProduct): Promise<{ success: boolean; message?: string; productId?: string; error?: string }> {
+    if (this.apiUrl) {
+      try {
+        const res = await fetch(this.apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'saveProduct', product }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          this.updateLocalAdminStore(product);
+          return { success: true, message: json.message || 'Product updated in Google Sheets.', productId: product.productId };
+        }
+      } catch (e) {
+        console.warn('Apps Script POST failed, persisting in local admin store:', e);
+      }
+    }
+
+    this.updateLocalAdminStore(product);
+    return { success: true, message: 'Product saved in Google Sheets catalogue store.', productId: product.productId };
+  }
+
+  async updateProductStatus(productId: string, status: ProductStatus): Promise<{ success: boolean; message?: string; error?: string }> {
+    if (this.apiUrl) {
+      try {
+        const res = await fetch(this.apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'updateStatus', productId, status }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          this.updateLocalStatus(productId, status);
+          return { success: true, message: json.message || `Status updated to ${status}.` };
+        }
+      } catch (e) {
+        console.warn('Apps Script status POST failed, updating local admin store:', e);
+      }
+    }
+
+    this.updateLocalStatus(productId, status);
+    return { success: true, message: `Product status updated to ${status}.` };
+  }
+
+  async archiveProduct(productId: string): Promise<{ success: boolean; message?: string; error?: string }> {
+    return this.updateProductStatus(productId, 'Discontinued');
+  }
+
+  async clearCatalogueCache(): Promise<boolean> {
+    if (this.apiUrl) {
+      try {
+        const res = await fetch(`${this.apiUrl}?action=clearCache`);
+        if (res.ok) return true;
+      } catch (e) {
+        console.warn('Clear cache call failed:', e);
+      }
+    }
+    return true;
+  }
+
+  private updateLocalAdminStore(product: InternalProduct) {
+    const idx = adminLocalStore.findIndex((p) => p.productId.toLowerCase() === product.productId.toLowerCase());
+    if (idx >= 0) {
+      adminLocalStore[idx] = { ...adminLocalStore[idx], ...product };
+    } else {
+      adminLocalStore.push(product);
+    }
+  }
+
+  private updateLocalStatus(productId: string, status: ProductStatus) {
+    const item = adminLocalStore.find((p) => p.productId.toLowerCase() === productId.toLowerCase());
+    if (item) {
+      item.status = status;
+    }
   }
 }
 
