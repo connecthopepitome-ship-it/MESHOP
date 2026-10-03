@@ -35,7 +35,13 @@ export const ProductImage: React.FC<ProductImageProps> = ({
       setHasError(true);
       setImgSrc(fallbackSrc);
     }
+    setIsLoading(false);
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 2000);
+    return () => clearTimeout(timer);
+  }, [src]);
 
   return (
     <div className={`relative overflow-hidden bg-surface-container ${className}`}>
@@ -46,6 +52,7 @@ export const ProductImage: React.FC<ProductImageProps> = ({
       )}
       <Image
         {...props}
+        unoptimized
         src={imgSrc || fallbackSrc}
         alt={alt || 'SORAYVA Premium Saree'}
         onError={handleError}

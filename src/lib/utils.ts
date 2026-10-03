@@ -37,16 +37,16 @@ export function formatImageUrl(url: string): string {
   if (!url || typeof url !== 'string') return '';
   url = url.trim();
 
-  // Match Google Drive file ID from /file/d/FILE_ID/view
-  const driveFileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  // Match Google Drive file ID from /file/d/FILE_ID or /d/FILE_ID
+  const driveFileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/\/d\/([a-zA-Z0-9_-]+)/);
   if (driveFileMatch && driveFileMatch[1]) {
-    return `https://drive.google.com/thumbnail?id=${driveFileMatch[1]}&sz=w1600`;
+    return `https://lh3.googleusercontent.com/d/${driveFileMatch[1]}=s1600`;
   }
 
   // Match Google Drive id query param ?id=FILE_ID
   const driveIdMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
   if (url.includes('drive.google.com') && driveIdMatch && driveIdMatch[1]) {
-    return `https://drive.google.com/thumbnail?id=${driveIdMatch[1]}&sz=w1600`;
+    return `https://lh3.googleusercontent.com/d/${driveIdMatch[1]}=s1600`;
   }
 
   return url;

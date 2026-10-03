@@ -3,6 +3,7 @@ const nextConfig = {
   cleanDistDir: false,
   reactStrictMode: true,
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
