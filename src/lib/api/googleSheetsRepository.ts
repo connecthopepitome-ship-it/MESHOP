@@ -40,6 +40,27 @@ export class GoogleSheetsRepository implements RepositoryInterface {
     this.apiUrl = process.env.GOOGLE_SHEETS_API_URL || process.env.NEXT_PUBLIC_CATALOG_API_URL || '';
   }
 
+  private mergeLocalOverride(raw: any): any {
+    if (!raw || (!raw.productId && !raw.id)) return raw;
+    const pid = String(raw.productId || raw.id).trim().toLowerCase();
+    if (typeof window !== 'undefined') {
+      try {
+        const storedStr = localStorage.getItem('meshop_modified_products');
+        if (storedStr) {
+          const stored = JSON.parse(storedStr);
+          if (stored && stored[pid]) {
+            return { ...raw, ...stored[pid] };
+          }
+        }
+      } catch (e) {}
+    }
+    const inMem = adminLocalStore.find((p) => p.productId.toLowerCase() === pid);
+    if (inMem) {
+      return { ...raw, ...inMem };
+    }
+    return raw;
+  }
+
   /**
    * CRITICAL SECURITY METHOD:
    * Converts any raw payload or sheet row object into a sanitized PublicProduct.
@@ -47,6 +68,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
    */
   public sanitizeProduct(raw: any): PublicProduct | null {
     try {
+      raw = this.mergeLocalOverride(raw);
       if (!raw || (!raw.productId && !raw.id)) return null;
 
       const productId = String(raw.productId || raw.id).trim();
@@ -648,18 +670,39 @@ export class GoogleSheetsRepository implements RepositoryInterface {
   }
 
   private updateLocalAdminStore(product: InternalProduct) {
-    const idx = adminLocalStore.findIndex((p) => p.productId.toLowerCase() === product.productId.toLowerCase());
+    const pid = product.productId.toLowerCase();
+    const idx = adminLocalStore.findIndex((p) => p.productId.toLowerCase() === pid);
     if (idx >= 0) {
       adminLocalStore[idx] = { ...adminLocalStore[idx], ...product };
     } else {
       adminLocalStore.push(product);
     }
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = JSON.parse(localStorage.getItem('meshop_modified_products') || '{}');
+        stored[pid] = { ...(stored[pid] || {}), ...product };
+        localStorage.setItem('meshop_modified_products', JSON.stringify(stored));
+      } catch (e) {
+        console.warn('Failed to save product override to localStorage:', e);
+      }
+    }
   }
 
   private updateLocalStatus(productId: string, status: ProductStatus) {
-    const item = adminLocalStore.find((p) => p.productId.toLowerCase() === productId.toLowerCase());
+    const pid = productId.toLowerCase();
+    const item = adminLocalStore.find((p) => p.productId.toLowerCase() === pid);
     if (item) {
       item.status = status;
+    }
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = JSON.parse(localStorage.getItem('meshop_modified_products') || '{}');
+        const existing = stored[pid] || item || { productId };
+        stored[pid] = { ...existing, status };
+        localStorage.setItem('meshop_modified_products', JSON.stringify(stored));
+      } catch (e) {
+        console.warn('Failed to save status override to localStorage:', e);
+      }
     }
   }
 }
