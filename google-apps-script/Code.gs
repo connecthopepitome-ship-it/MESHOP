@@ -157,6 +157,8 @@ function doGet(e) {
       response = getDynamicCollectionsResponse();
     } else if (action === 'getCatalogueHealthReport') {
       response = generateCatalogueHealthReport();
+    } else if (action === 'test') {
+      response = testAppsScriptReadWrite();
     } else if (action === 'clearCache') {
       cache.remove(CACHE_KEY);
       response = { success: true, message: 'Catalogue cache invalidated successfully.' };
@@ -735,7 +737,11 @@ function getDynamicCollectionsResponse() {
 function getProductsSheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   if (!ss) return null;
-  return ss.getSheetByName('PRODUCTS') || ss.getSheets()[0];
+  return ss.getSheetByName('PRODUCTS') || 
+         ss.getSheetByName('ProductsTable') || 
+         ss.getSheetByName('Products') || 
+         ss.getSheetByName('Sheet1') || 
+         ss.getSheets()[0];
 }
 
 function parseMultiValue(val) {
@@ -782,4 +788,45 @@ function slugify(text) {
     .replace(/\s+/g, '-')
     .replace(/[^\w\-]+/g, '')
     .replace(/\-\-+/g, '-');
+}
+
+/**
+ * Diagnostic test function for Section 8 direct validation
+ */
+function testAppsScriptReadWrite() {
+  var sheet = getProductsSheet();
+  if (!sheet) return { success: false, error: 'PRODUCTS sheet not found' };
+
+  var data = sheet.getDataRange().getValues();
+  var headerMap = getHeaderMap(sheet);
+  var idColIdx = (headerMap['product id'] !== undefined) ? headerMap['product id'] : (COL.PRODUCT_ID - 1);
+  var priceColIdx = (headerMap['price'] !== undefined) ? headerMap['price'] : (COL.PRICE - 1);
+
+  var sar003RowIndex = -1;
+  var sar003Data = null;
+
+  for (var i = 1; i < data.length; i++) {
+    var pid = String(data[i][idColIdx] || '').trim().toUpperCase();
+    if (pid === 'SAR-003') {
+      sar003RowIndex = i + 1;
+      sar003Data = {
+        productId: data[i][idColIdx],
+        productName: data[i][headerMap['product name'] || 1],
+        price: data[i][priceColIdx],
+        status: data[i][headerMap['status'] || 16]
+      };
+      break;
+    }
+  }
+
+  return {
+    success: true,
+    sheetName: sheet.getName(),
+    totalRows: data.length,
+    headerCount: Object.keys(headerMap).length,
+    sar003Found: sar003RowIndex > 0,
+    sar003RowIndex: sar003RowIndex,
+    sar003Data: sar003Data,
+    timestamp: new Date().toISOString()
+  };
 }

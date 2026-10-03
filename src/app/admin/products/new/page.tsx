@@ -17,27 +17,17 @@ export default function NewProductPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ product })
       });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success) {
-          setTimeout(() => {
-            router.push('/admin/products');
-          }, 1500);
-          return json;
-        }
-        return { success: false, error: json.error || 'Server error creating product.' };
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setTimeout(() => {
+          router.push('/admin/products');
+        }, 1200);
+        return json;
       }
-    } catch (e) {
-      console.warn('API route call fallback to repository:', e);
+      return { success: false, error: json.error || 'Server error creating product in Google Sheets.' };
+    } catch (e: any) {
+      return { success: false, error: `Connection error: ${e.message}` };
     }
-
-    const fallbackRes = await repository.saveOrUpdateProduct(product);
-    if (fallbackRes.success) {
-      setTimeout(() => {
-        router.push('/admin/products');
-      }, 1500);
-    }
-    return fallbackRes;
   };
 
   return (

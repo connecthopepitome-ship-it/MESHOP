@@ -511,16 +511,27 @@ export class GoogleSheetsRepository implements RepositoryInterface {
   async getAdminProducts(): Promise<InternalProduct[]> {
     if (this.apiUrl) {
       try {
-        const res = await fetch(`${this.apiUrl}?action=getAdminProducts`);
-        if (res.ok) {
-          const json = await res.json();
+        const res = await fetch(`${this.apiUrl}?action=getAdminProducts`, {
+          redirect: 'follow',
+          next: { revalidate: 0 }
+        });
+        const text = await res.text();
+
+        if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+          console.error('[GoogleSheetsRepository] Google Apps Script returned HTML login page instead of JSON!');
+          throw new Error('Google Apps Script permission error: Web App deployment permissions are restricted. Please set "Who has access" to "Anyone" in Google Apps Script > Deploy > Manage deployments.');
+        }
+
+        if (res.ok && text.trim().startsWith('{')) {
+          const json = JSON.parse(text);
           if (Array.isArray(json.products)) {
             const parsed = json.products.map((r: any) => this.sanitizeAdminProduct(r)).filter((p: any): p is InternalProduct => p !== null);
-            if (parsed.length > 0) return parsed;
+            return parsed;
           }
         }
-      } catch (e) {
-        console.warn('Admin products fetch failed, using local admin store:', e);
+      } catch (e: any) {
+        console.error('[GoogleSheetsRepository] getAdminProducts error:', e.message);
+        throw e;
       }
     }
     return adminLocalStore;
@@ -538,20 +549,34 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         const res = await fetch(this.apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'saveProduct', product }),
+          body: JSON.stringify({ action: 'saveProduct', product, adminToken: process.env.GOOGLE_SHEETS_ADMIN_TOKEN || 'sorayva_admin_secret_key_2026' }),
+          redirect: 'follow'
         });
-        if (res.ok) {
-          const json = await res.json();
-          this.updateLocalAdminStore(product);
-          return { success: true, message: json.message || 'Product updated in Google Sheets.', productId: product.productId };
+        const text = await res.text();
+
+        if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+          return {
+            success: false,
+            error: 'Google Apps Script returned HTML login page. Set "Who has access" to "Anyone" in Google Apps Script Web App Deployment.'
+          };
         }
-      } catch (e) {
-        console.warn('Apps Script POST failed, persisting in local admin store:', e);
+
+        if (res.ok && text.trim().startsWith('{')) {
+          const json = JSON.parse(text);
+          if (json.success) {
+            this.updateLocalAdminStore(product);
+            return { success: true, message: json.message || 'Product updated in Google Sheets.', productId: product.productId };
+          }
+          return { success: false, error: json.error || 'Google Sheets update failed.' };
+        }
+        return { success: false, error: `HTTP ${res.status}: Failed to write to Google Sheets.` };
+      } catch (e: any) {
+        console.error('Apps Script POST failed:', e);
+        return { success: false, error: `Google Sheets connection error: ${e.message}` };
       }
     }
 
-    this.updateLocalAdminStore(product);
-    return { success: true, message: 'Product saved in Google Sheets catalogue store.', productId: product.productId };
+    return { success: false, error: 'GOOGLE_SHEETS_API_URL is not configured.' };
   }
 
   async updateProductStatus(productId: string, status: ProductStatus): Promise<{ success: boolean; message?: string; error?: string }> {
@@ -560,20 +585,34 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         const res = await fetch(this.apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'updateStatus', productId, status }),
+          body: JSON.stringify({ action: 'updateStatus', productId, status, adminToken: process.env.GOOGLE_SHEETS_ADMIN_TOKEN || 'sorayva_admin_secret_key_2026' }),
+          redirect: 'follow'
         });
-        if (res.ok) {
-          const json = await res.json();
-          this.updateLocalStatus(productId, status);
-          return { success: true, message: json.message || `Status updated to ${status}.` };
+        const text = await res.text();
+
+        if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+          return {
+            success: false,
+            error: 'Google Apps Script returned HTML login page. Set "Who has access" to "Anyone" in Google Apps Script Web App Deployment.'
+          };
         }
-      } catch (e) {
-        console.warn('Apps Script status POST failed, updating local admin store:', e);
+
+        if (res.ok && text.trim().startsWith('{')) {
+          const json = JSON.parse(text);
+          if (json.success) {
+            this.updateLocalStatus(productId, status);
+            return { success: true, message: json.message || `Status updated to ${status}.` };
+          }
+          return { success: false, error: json.error || 'Status update failed.' };
+        }
+        return { success: false, error: `HTTP ${res.status}: Failed to update status in Google Sheets.` };
+      } catch (e: any) {
+        console.error('Apps Script status POST failed:', e);
+        return { success: false, error: `Google Sheets connection error: ${e.message}` };
       }
     }
 
-    this.updateLocalStatus(productId, status);
-    return { success: true, message: `Product status updated to ${status}.` };
+    return { success: false, error: 'GOOGLE_SHEETS_API_URL is not configured.' };
   }
 
   async archiveProduct(productId: string): Promise<{ success: boolean; message?: string; error?: string }> {

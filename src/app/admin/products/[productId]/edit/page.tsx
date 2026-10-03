@@ -23,15 +23,21 @@ export default function EditProductPage() {
       setLoading(true);
       try {
         if (productId) {
-          const found = await repository.getAdminProductById(productId);
-          if (found) {
-            setProduct(found);
+          const res = await fetch('/api/admin/products');
+          const json = await res.json();
+          if (res.ok && json.success && Array.isArray(json.products)) {
+            const found = json.products.find((p: InternalProduct) => p.productId.toLowerCase() === productId.trim().toLowerCase());
+            if (found) {
+              setProduct(found);
+            } else {
+              setErrorMsg(`Product ID "${productId}" was not found in the Google Sheets catalogue.`);
+            }
           } else {
-            setErrorMsg(`Product ID "${productId}" was not found in the catalogue repository.`);
+            setErrorMsg(json.error || 'Failed to load product data from Google Sheets.');
           }
         }
-      } catch (e) {
-        setErrorMsg('Error loading product data from repository.');
+      } catch (e: any) {
+        setErrorMsg(`Error loading product data: ${e.message}`);
       } finally {
         setLoading(false);
       }
@@ -46,27 +52,17 @@ export default function EditProductPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ product: updatedProduct })
       });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success) {
-          setTimeout(() => {
-            router.push('/admin/products');
-          }, 1500);
-          return json;
-        }
-        return { success: false, error: json.error || 'Server error updating product.' };
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setTimeout(() => {
+          router.push('/admin/products');
+        }, 1200);
+        return json;
       }
-    } catch (e) {
-      console.warn('API route call fallback to repository:', e);
+      return { success: false, error: json.error || 'Server error updating product in Google Sheets.' };
+    } catch (e: any) {
+      return { success: false, error: `Connection error: ${e.message}` };
     }
-
-    const fallbackRes = await repository.saveOrUpdateProduct(updatedProduct);
-    if (fallbackRes.success) {
-      setTimeout(() => {
-        router.push('/admin/products');
-      }, 1500);
-    }
-    return fallbackRes;
   };
 
   return (

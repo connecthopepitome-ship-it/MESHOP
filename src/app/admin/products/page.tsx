@@ -31,6 +31,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<InternalProduct[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<InternalProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   // Filters state
   const [search, setSearch] = useState('');
@@ -56,11 +57,20 @@ export default function AdminProductsPage() {
 
   async function loadProducts() {
     setLoading(true);
+    setSyncError(null);
     try {
-      const data = await repository.getAdminProducts();
-      setProducts(data);
-    } catch (e) {
+      const res = await fetch('/api/admin/products');
+      const json = await res.json();
+      if (res.ok && json.success && Array.isArray(json.products)) {
+        setProducts(json.products);
+      } else {
+        const errStr = json.error || 'Failed to fetch products from Google Sheets.';
+        setSyncError(errStr);
+        setProducts(json.products || []);
+      }
+    } catch (e: any) {
       console.error('Failed to load admin products:', e);
+      setSyncError(`Network error connecting to Admin API: ${e.message}`);
     } finally {
       setLoading(false);
     }
@@ -116,17 +126,22 @@ export default function AdminProductsPage() {
   const handleStatusChange = async (productId: string, newStatus: ProductStatus) => {
     setToastMsg(`Updating status to ${newStatus} in Google Sheets...`);
     try {
-      const res = await repository.updateProductStatus(productId, newStatus);
-      if (res.success) {
-        setToastMsg(`Product ${productId} status updated to ${newStatus}. Google Sheet: Updated • Catalogue: Refreshing...`);
+      const res = await fetch('/api/admin/products/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, status: newStatus })
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setToastMsg(`Product ${productId} status updated to ${newStatus}. Google Sheet: Updated • Cache: Cleared.`);
         loadProducts();
       } else {
-        setToastMsg(`Failed to update status: ${res.error}`);
+        setToastMsg(`Failed to update status: ${json.error || 'Server error'}`);
       }
-    } catch (e) {
-      setToastMsg('Status update completed.');
+    } catch (e: any) {
+      setToastMsg(`Status update error: ${e.message}`);
     } finally {
-      setTimeout(() => setToastMsg(null), 4000);
+      setTimeout(() => setToastMsg(null), 5000);
     }
   };
 
@@ -142,15 +157,22 @@ export default function AdminProductsPage() {
 
     setToastMsg(`Duplicating saree as new draft ${newId}...`);
     try {
-      const res = await repository.saveOrUpdateProduct(duplicated);
-      if (res.success) {
+      const res = await fetch('/api/admin/products/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product: duplicated })
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
         setToastMsg(`Duplicated ${p.productId} to new draft ${newId}. Saved to Google Sheets.`);
         loadProducts();
+      } else {
+        setToastMsg(`Duplication failed: ${json.error || 'Server error'}`);
       }
-    } catch (e) {
-      setToastMsg('Duplication finished.');
+    } catch (e: any) {
+      setToastMsg(`Duplication error: ${e.message}`);
     } finally {
-      setTimeout(() => setToastMsg(null), 4000);
+      setTimeout(() => setToastMsg(null), 5000);
     }
   };
 
@@ -160,12 +182,16 @@ export default function AdminProductsPage() {
 
     setToastMsg(`Bulk updating ${selectedIds.length} sarees in Google Sheets...`);
     for (const id of selectedIds) {
-      await repository.updateProductStatus(id, newStatus);
+      await fetch('/api/admin/products/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: id, status: newStatus })
+      });
     }
     setToastMsg(`Bulk status updated to ${newStatus}. Catalogue cache refreshed.`);
     setSelectedIds([]);
     loadProducts();
-    setTimeout(() => setToastMsg(null), 4000);
+    setTimeout(() => setToastMsg(null), 5000);
   };
 
   // Pagination slice
@@ -210,6 +236,26 @@ export default function AdminProductsPage() {
             <span>+ Create New Saree</span>
           </Link>
         </div>
+
+        {/* Sync Error Alert Banner */}
+        {syncError && (
+          <div className="bg-rose-950/80 border border-rose-800 p-4 rounded-lg space-y-2 text-rose-200 text-xs">
+            <div className="flex items-center space-x-2 font-bold text-rose-400">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>Google Sheets Sync Warning</span>
+            </div>
+            <p className="font-mono text-[11px] text-rose-300">{syncError}</p>
+            <div className="bg-slate-950/60 p-3 rounded border border-rose-900/50 space-y-1 text-[11px] text-slate-300">
+              <p className="font-semibold text-amber-400">Required Google Apps Script Action:</p>
+              <ol className="list-decimal list-inside space-y-0.5 text-slate-400 font-sans">
+                <li>Open your Google Apps Script Editor.</li>
+                <li>Click <strong className="text-slate-200">Deploy &gt; Manage deployments</strong>.</li>
+                <li>Click the Edit icon (pencil), set <strong className="text-amber-300">Who has access</strong> to <strong className="text-emerald-400">"Anyone"</strong>.</li>
+                <li>Select <strong className="text-slate-200">New version</strong> and click <strong className="text-slate-200">Deploy</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        )}
 
         {/* Toast Alert */}
         {toastMsg && (
