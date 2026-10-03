@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image, { ImageProps } from 'next/image';
+import { formatImageUrl } from '@/lib/utils';
 
 interface ProductImageProps extends Omit<ImageProps, 'onError' | 'src'> {
   src: string;
@@ -18,9 +19,16 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   className = '',
   ...props
 }) => {
-  const [imgSrc, setImgSrc] = useState<string>(src || fallbackSrc);
+  const formattedSrc = formatImageUrl(src);
+  const [imgSrc, setImgSrc] = useState<string>(formattedSrc || fallbackSrc);
   const [hasError, setHasError] = useState<boolean>(!src);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const formatted = formatImageUrl(src);
+    setImgSrc(formatted || fallbackSrc);
+    setHasError(!src);
+  }, [src, fallbackSrc]);
 
   const handleError = () => {
     if (!hasError) {

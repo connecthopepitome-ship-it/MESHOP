@@ -1,6 +1,6 @@
 import { Product, PublicProduct, InternalProduct, Category, Collection, Order, Review, FilterState, CatalogueHealthReport, ProductHealthIssue, ProductStatus } from '@/types';
 import { MOCK_PRODUCTS, MOCK_CATEGORIES, MOCK_COLLECTIONS, MOCK_REVIEWS } from '@/data/mockData';
-import { calculateDiscountPercentage, slugify } from '@/lib/utils';
+import { calculateDiscountPercentage, slugify, formatImageUrl } from '@/lib/utils';
 
 export interface RepositoryInterface {
   getProducts(filters?: Partial<FilterState>): Promise<PublicProduct[]>;
@@ -115,16 +115,19 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         return [];
       };
 
-      const mainImage = String(raw.mainImage || raw.image || raw['Main Image URL'] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80').trim();
+      const rawMainImage = String(raw.mainImage || raw.image || raw['Main Image URL'] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80').trim();
+      const mainImage = formatImageUrl(rawMainImage);
 
       const imagesFromFields = [
-        mainImage,
+        rawMainImage,
         raw.image2 || raw['Image 2 URL'],
         raw.image3 || raw['Image 3 URL'],
         raw.image4 || raw['Image 4 URL'],
-      ].filter((img) => typeof img === 'string' && img.trim().length > 0);
+      ]
+        .filter((img) => typeof img === 'string' && img.trim().length > 0)
+        .map((img) => formatImageUrl(String(img).trim()));
 
-      const galleryImages = parseArray(raw.galleryImages);
+      const galleryImages = parseArray(raw.galleryImages).map((img) => formatImageUrl(img));
       const imagesList = Array.from(new Set([...imagesFromFields, ...galleryImages]));
       if (imagesList.length === 0) {
         imagesList.push(mainImage);

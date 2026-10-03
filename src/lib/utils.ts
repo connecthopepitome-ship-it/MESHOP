@@ -30,6 +30,29 @@ export function slugify(text: string): string {
 }
 
 /**
+ * Normalizes image URLs, automatically converting Google Drive view links
+ * (e.g. drive.google.com/file/d/ID/view) into high-res direct image URLs.
+ */
+export function formatImageUrl(url: string): string {
+  if (!url || typeof url !== 'string') return '';
+  url = url.trim();
+
+  // Match Google Drive file ID from /file/d/FILE_ID/view
+  const driveFileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveFileMatch && driveFileMatch[1]) {
+    return `https://drive.google.com/thumbnail?id=${driveFileMatch[1]}&sz=w1600`;
+  }
+
+  // Match Google Drive id query param ?id=FILE_ID
+  const driveIdMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (url.includes('drive.google.com') && driveIdMatch && driveIdMatch[1]) {
+    return `https://drive.google.com/thumbnail?id=${driveIdMatch[1]}&sz=w1600`;
+  }
+
+  return url;
+}
+
+/**
  * Requirement 14: Smart Category Logic
  * Active Products -> Count Values -> Remove Empty -> Minimum Threshold -> Priority -> Display
  */
