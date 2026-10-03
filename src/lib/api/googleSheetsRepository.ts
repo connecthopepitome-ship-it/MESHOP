@@ -476,7 +476,9 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         const res = await fetch(`${this.apiUrl}?action=getCatalogueHealthReport`);
         if (res.ok) {
           const json = await res.json();
-          return json;
+          if (json && Array.isArray(json.issues)) {
+            return json;
+          }
         }
       } catch (e) {
         console.warn('Catalogue health report API call failed:', e);
@@ -485,8 +487,9 @@ export class GoogleSheetsRepository implements RepositoryInterface {
 
     const issues: ProductHealthIssue[] = [];
     let active = 0, draft = 0, outOfStock = 0, hidden = 0, discontinued = 0;
+    const items = await this.getAdminProducts();
 
-    adminLocalStore.forEach((p) => {
+    items.forEach((p) => {
       const st = p.status || 'Active';
       if (st === 'Active') active++;
       else if (st === 'Draft') draft++;
@@ -501,15 +504,15 @@ export class GoogleSheetsRepository implements RepositoryInterface {
     });
 
     return {
-      totalRows: adminLocalStore.length,
-      validCount: adminLocalStore.length - issues.length,
+      totalRows: items.length,
+      validCount: items.length - issues.length,
       activeCount: active,
       draftCount: draft,
       outOfStockCount: outOfStock,
       hiddenCount: hidden,
       discontinuedCount: discontinued,
       issues,
-      healthScore: Math.round(((adminLocalStore.length - issues.length) / adminLocalStore.length) * 100),
+      healthScore: items.length > 0 ? Math.round(((items.length - issues.length) / items.length) * 100) : 100,
     };
   }
 
@@ -528,7 +531,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
 
         if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
           console.error('[GoogleSheetsRepository] Google Apps Script returned HTML login page instead of JSON!');
-          throw new Error('Google Apps Script permission error: Web App deployment permissions are restricted. Please set "Who has access" to "Anyone" in Google Apps Script > Deploy > Manage deployments.');
+          throw new Error('Google Apps Script permission error: Web App deployment permissions are restricted.');
         }
 
         if (res.ok && text.trim().startsWith('{')) {
@@ -537,10 +540,14 @@ export class GoogleSheetsRepository implements RepositoryInterface {
             const parsed = json.products.map((r: any) => this.sanitizeAdminProduct(r)).filter((p: any): p is InternalProduct => p !== null);
             return parsed;
           }
+          // If action=getAdminProducts is not supported, fallback to public products
+          const publicProds = await this.getProducts();
+          if (publicProds && publicProds.length > 0) {
+            return publicProds.map((p) => this.sanitizeAdminProduct(p)).filter((p): p is InternalProduct => p !== null);
+          }
         }
       } catch (e: any) {
-        console.error('[GoogleSheetsRepository] getAdminProducts error:', e.message);
-        throw e;
+        console.warn('[GoogleSheetsRepository] getAdminProducts error:', e.message);
       }
     }
     return adminLocalStore;

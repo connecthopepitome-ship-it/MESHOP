@@ -31,11 +31,12 @@ export default function AdminDashboardPage() {
       setLoading(true);
       try {
         const adminProds = await repository.getAdminProducts();
-        setProducts(adminProds);
+        setProducts(adminProds || []);
         const health = await repository.getCatalogueHealthReport();
         setHealthReport(health);
       } catch (e) {
         console.error('Failed to load admin dashboard metrics:', e);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
@@ -43,13 +44,16 @@ export default function AdminDashboardPage() {
     loadAdminData();
   }, []);
 
-  const totalProducts = products.length;
-  const activeCount = products.filter((p) => p.status === 'Active').length;
-  const draftCount = products.filter((p) => p.status === 'Draft').length;
-  const outOfStockCount = products.filter((p) => p.status === 'Out of Stock' || (p.stock ?? p.stockQty) <= 0).length;
-  const lowStockCount = products.filter((p) => (p.stock ?? p.stockQty) > 0 && (p.stock ?? p.stockQty) <= 3).length;
-  const newArrivalsCount = products.filter((p) => p.newArrival).length;
-  const featuredCount = products.filter((p) => p.featured).length;
+  const safeProducts = Array.isArray(products) ? products : [];
+  const safeIssues = healthReport && Array.isArray(healthReport.issues) ? healthReport.issues : [];
+
+  const totalProducts = safeProducts.length;
+  const activeCount = safeProducts.filter((p) => p.status === 'Active').length;
+  const draftCount = safeProducts.filter((p) => p.status === 'Draft').length;
+  const outOfStockCount = safeProducts.filter((p) => p.status === 'Out of Stock' || (p.stock ?? p.stockQty) <= 0).length;
+  const lowStockCount = safeProducts.filter((p) => (p.stock ?? p.stockQty) > 0 && (p.stock ?? p.stockQty) <= 3).length;
+  const newArrivalsCount = safeProducts.filter((p) => p.newArrival).length;
+  const featuredCount = safeProducts.filter((p) => p.featured).length;
 
   return (
     <AdminLayout>
@@ -147,15 +151,15 @@ export default function AdminDashboardPage() {
                 </p>
               </div>
               <span className="text-xs font-mono bg-slate-800 px-3 py-1 rounded text-slate-300">
-                Issues Detected: {healthReport?.issues.length || 0}
+                Issues Detected: {safeIssues.length}
               </span>
             </div>
 
             {loading ? (
               <div className="p-8 text-center text-slate-500 text-xs">Scanning Google Sheets catalogue data...</div>
-            ) : healthReport && healthReport.issues.length > 0 ? (
+            ) : safeIssues.length > 0 ? (
               <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-                {healthReport.issues.map((issue, idx) => (
+                {safeIssues.map((issue, idx) => (
                   <div
                     key={idx}
                     className={`p-4 rounded-lg border text-xs flex items-center justify-between transition-colors ${
