@@ -21,13 +21,12 @@ export const ProductImage: React.FC<ProductImageProps> = ({
 }) => {
   const formattedSrc = formatImageUrl(src);
   const [imgSrc, setImgSrc] = useState<string>(formattedSrc || fallbackSrc);
-  const [hasError, setHasError] = useState<boolean>(!src);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [hasError, setHasError] = useState<boolean>(false);
 
   useEffect(() => {
     const formatted = formatImageUrl(src);
     setImgSrc(formatted || fallbackSrc);
-    setHasError(!src);
+    setHasError(false);
   }, [src, fallbackSrc]);
 
   const handleError = () => {
@@ -35,30 +34,16 @@ export const ProductImage: React.FC<ProductImageProps> = ({
       setHasError(true);
       setImgSrc(fallbackSrc);
     }
-    setIsLoading(false);
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 2000);
-    return () => clearTimeout(timer);
-  }, [src]);
-
   return (
-    <div className={`relative overflow-hidden bg-surface-container ${className}`}>
-      {isLoading && (
-        <div className="absolute inset-0 bg-surface-container-high animate-pulse z-10 flex items-center justify-center">
-          <span className="font-sans-fashion text-[0.65rem] tracking-[0.2em] uppercase text-outline">SORAYVA</span>
-        </div>
-      )}
-      <Image
-        {...props}
-        unoptimized
-        src={imgSrc || fallbackSrc}
-        alt={alt || 'SORAYVA Premium Saree'}
-        onError={handleError}
-        onLoad={() => setIsLoading(false)}
-        className={`w-full h-full object-cover transition-all duration-700 ${isLoading ? 'opacity-0 scale-102' : 'opacity-100 scale-100'}`}
-      />
-    </div>
+    <Image
+      {...props}
+      unoptimized
+      src={imgSrc || fallbackSrc}
+      alt={alt || 'SORAYVA Premium Saree'}
+      onError={handleError}
+      className={`w-full h-full object-cover transition-opacity duration-300 opacity-100 ${className}`}
+    />
   );
 };
