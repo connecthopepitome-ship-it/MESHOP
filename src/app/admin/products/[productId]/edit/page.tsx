@@ -12,7 +12,8 @@ import Link from 'next/link';
 export default function EditProductPage() {
   const params = useParams();
   const router = useRouter();
-  const productId = Array.isArray(params.productId) ? params.productId[0] : params.productId;
+  const rawId = params?.productId;
+  const productId = Array.isArray(rawId) ? rawId[0] : (rawId ?? '');
 
   const [product, setProduct] = useState<InternalProduct | null>(null);
   const [loading, setLoading] = useState(true);
