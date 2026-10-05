@@ -10,7 +10,7 @@ import { formatPrice } from '@/lib/utils';
 
 function TrackOrderContent() {
   const searchParams = useSearchParams();
-  const [orderId, setOrderId] = useState(searchParams.get('id') || '');
+  const [orderId, setOrderId] = useState(searchParams?.get('id') || '');
   const [contactInfo, setContactInfo] = useState('');
   const [order, setOrder] = useState<Order | null>(null);
   const [trackingHistory, setTrackingHistory] = useState<any[]>([]);
@@ -36,8 +36,9 @@ function TrackOrderContent() {
   }, [contactInfo]);
 
   useEffect(() => {
-    if (searchParams.get('id')) {
-      handleLookup(searchParams.get('id')!);
+    const qId = searchParams?.get('id');
+    if (qId) {
+      handleLookup(qId);
     }
   }, [searchParams, handleLookup]);
 
