@@ -51,15 +51,15 @@ export const Header: React.FC = () => {
     <>
       <header className="sticky top-2 sm:top-4 z-50 w-full px-2 sm:px-4 pointer-events-none transition-all duration-300">
         <div
-          className={`mx-auto max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] pointer-events-auto rounded-full transition-all duration-300 ${
+          className={`mx-auto max-w-7xl w-[95%] sm:w-[92%] lg:w-[90%] xl:w-[85%] pointer-events-auto rounded-full transition-all duration-300 ${
             scrolled
               ? 'sorayva-glass-bar py-2 shadow-xl border-champagne/40 bg-warm-ivory/90'
-              : 'sorayva-glass py-3 shadow-md border-champagne/20 bg-warm-ivory/75'
+              : 'sorayva-glass py-2.5 shadow-md border-champagne/20 bg-warm-ivory/80'
           }`}
         >
-          <div className="px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+          <div className="px-3 sm:px-5 lg:px-6 flex items-center justify-between gap-2 xl:gap-4">
             {/* Left: Logo */}
-            <div className="flex items-center gap-8 flex-shrink-0">
+            <div className="flex items-center gap-4 xl:gap-8 flex-shrink-0">
               <Link href="/" className="block group flex-items-center py-0.5">
                 <Image
                   src="/images/sorayva-logo.png"
@@ -68,7 +68,7 @@ export const Header: React.FC = () => {
                   height={50}
                   priority
                   className={`w-auto object-contain transition-all duration-300 group-hover:scale-105 ${
-                    scrolled ? 'h-7 sm:h-8' : 'h-8 sm:h-9 md:h-10'
+                    scrolled ? 'h-6 sm:h-7' : 'h-7 sm:h-8 md:h-9'
                   }`}
                   style={{ mixBlendMode: 'multiply' }}
                 />
@@ -76,7 +76,7 @@ export const Header: React.FC = () => {
             </div>
 
             {/* Center: Desktop Capsule Nav */}
-            <nav className="hidden lg:flex items-center gap-6 xl:gap-8 font-sans-fashion text-[0.7rem] xl:text-xs font-semibold tracking-[0.2em] text-deep-espresso uppercase whitespace-nowrap">
+            <nav className="hidden lg:flex items-center gap-3 xl:gap-6 font-sans-fashion text-[0.65rem] xl:text-[0.72rem] font-semibold tracking-[0.15em] xl:tracking-[0.2em] text-deep-espresso uppercase whitespace-nowrap flex-shrink-0">
               <Link href="/shop?filter=newArrival" className="hover:text-terracotta transition-colors py-1 relative group">
                 NEW IN
                 <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-terracotta transition-all duration-300 group-hover:w-full" />
@@ -108,38 +108,30 @@ export const Header: React.FC = () => {
             </nav>
 
             {/* Right: Actions (Search, Wishlist, Tote) */}
-            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
               {/* Expanding Search Trigger Pill */}
               <button
                 onClick={() => setSearchOpen(true)}
-                className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-soft-sand/60 hover:bg-soft-sand/90 text-deep-espresso/80 hover:text-deep-espresso text-xs font-sans-body border border-champagne/30 transition-all cursor-pointer group"
+                className="flex items-center gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-soft-sand/60 hover:bg-soft-sand/90 text-deep-espresso/80 hover:text-deep-espresso text-xs font-sans-body border border-champagne/30 transition-all cursor-pointer group flex-shrink-0"
                 title="Search Sarees"
                 aria-label="Search Sarees"
               >
-                <Search className="w-3.5 h-3.5 text-deep-espresso/60 group-hover:text-terracotta transition-colors" />
-                <span className="font-sans-fashion tracking-wider text-[0.7rem] uppercase text-deep-espresso/60 group-hover:text-deep-espresso">
-                  Search sarees, fabrics...
+                <Search className="w-3.5 h-3.5 text-deep-espresso/60 group-hover:text-terracotta transition-colors flex-shrink-0" />
+                <span className="font-sans-fashion tracking-wider text-[0.65rem] xl:text-[0.7rem] uppercase text-deep-espresso/60 group-hover:text-deep-espresso whitespace-nowrap hidden sm:inline">
+                  Search sarees...
                 </span>
-              </button>
-
-              <button
-                onClick={() => setSearchOpen(true)}
-                className="sm:hidden p-2 text-deep-espresso hover:text-terracotta transition-colors"
-                aria-label="Search"
-              >
-                <Search className="w-5 h-5" />
               </button>
 
               {/* Wishlist Icon */}
               <Link
                 href="/wishlist"
-                className="relative p-2 text-deep-espresso hover:text-terracotta transition-colors flex items-center justify-center"
+                className="relative p-1.5 sm:p-2 text-deep-espresso hover:text-terracotta transition-colors flex items-center justify-center flex-shrink-0"
                 title="Wishlist"
                 aria-label="Wishlist"
               >
-                <Heart className="w-5 h-5" />
+                <Heart className="w-4 sm:w-5 h-4 sm:h-5" />
                 {wishlistCount > 0 && (
-                  <span className="absolute top-0 right-0 font-sans-fashion text-[0.6rem] bg-terracotta text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                  <span className="absolute -top-1 -right-1 font-sans-fashion text-[0.6rem] bg-terracotta text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">
                     {wishlistCount}
                   </span>
                 )}
@@ -148,13 +140,13 @@ export const Header: React.FC = () => {
               {/* Cart Tote */}
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="relative p-2 text-deep-espresso hover:text-terracotta transition-colors flex items-center justify-center"
+                className="relative p-1.5 sm:p-2 text-deep-espresso hover:text-terracotta transition-colors flex items-center justify-center flex-shrink-0"
                 title="Bag"
                 aria-label="Shopping Bag"
               >
-                <ShoppingBag className="w-5 h-5" />
+                <ShoppingBag className="w-4 sm:w-5 h-4 sm:h-5" />
                 {itemCount > 0 && (
-                  <span className="absolute top-0 right-0 font-sans-fashion text-[0.6rem] bg-deep-espresso text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                  <span className="absolute -top-1 -right-1 font-sans-fashion text-[0.6rem] bg-deep-espresso text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">
                     {itemCount}
                   </span>
                 )}
