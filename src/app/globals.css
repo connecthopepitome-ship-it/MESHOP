@@ -6,39 +6,100 @@
 @tailwind utilities;
 
 :root {
-  --font-serif-display: 'Bodoni Moda', Georgia, serif;
+  --font-serif-display: 'Cormorant Garamond', 'Bodoni Moda', Georgia, serif;
   --font-serif-editorial: 'Cormorant Garamond', Georgia, serif;
   --font-sans-fashion: 'Jost', system-ui, sans-serif;
   --font-sans-body: 'Manrope', system-ui, sans-serif;
 }
 
 body {
-  background-color: #fbf9f5;
-  color: #1b1c1a;
+  background-color: #F8F5F0;
+  color: #2C211E;
   font-family: var(--font-sans-body);
   overflow-x: hidden;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
+/* SORAYVA Modern Floating Glass System */
+.sorayva-glass {
+  background: rgba(248, 245, 240, 0.78);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(215, 181, 138, 0.28);
+}
+
+.sorayva-glass-dark {
+  background: rgba(44, 33, 30, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(215, 181, 138, 0.2);
+}
+
+.sorayva-glass-pill {
+  background: rgba(248, 245, 240, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(44, 33, 30, 0.12);
+  box-shadow: 0 4px 20px -2px rgba(44, 33, 30, 0.05);
+}
+
+.sorayva-glass-bar {
+  background: rgba(248, 245, 240, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(215, 181, 138, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(44, 33, 30, 0.08);
+}
+
+.sorayva-glass-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(238, 231, 221, 0.8);
+}
+
+.sorayva-sticky-bar {
+  background: rgba(248, 245, 240, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(215, 181, 138, 0.25);
+  box-shadow: 0 -10px 30px rgba(44, 33, 30, 0.06);
+}
+
 /* Custom Luxury Utility Classes */
-.gold-shimmer {
-  background: linear-gradient(135deg, #c89b67 0%, #ecd5b8 50%, #b8864d 100%);
+.champagne-shimmer {
+  background: linear-gradient(135deg, #2C211E 0%, #B86F5D 50%, #D7B58A 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.fine-gold-border {
-  border: 1px solid rgba(200, 155, 103, 0.35);
+.fine-border {
+  border: 1px solid rgba(44, 33, 30, 0.1);
+}
+
+.fine-champagne-border {
+  border: 1px solid rgba(215, 181, 138, 0.35);
 }
 
 .atelier-glass {
-  background: rgba(251, 249, 245, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(248, 245, 240, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
-/* Custom scrollbars */
+/* Scrollbars */
 ::-webkit-scrollbar {
-  display: none;
+  height: 4px;
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #F8F5F0;
+}
+::-webkit-scrollbar-thumb {
+  background: #EEE7DD;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #D7B58A;
 }

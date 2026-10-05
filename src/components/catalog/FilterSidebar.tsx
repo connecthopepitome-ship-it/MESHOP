@@ -34,12 +34,12 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   };
 
   return (
-    <aside className="w-full space-y-6 text-secondary font-sans-body text-xs bg-surface-bright p-5 fine-gold-border rounded-xs">
-      <div className="flex items-center justify-between pb-3 border-b border-outline-variant/60">
-        <h3 className="font-serif-display text-base font-semibold uppercase tracking-wider text-secondary">REFINE SELECTION</h3>
+    <aside className="w-full space-y-6 text-deep-espresso font-sans-body text-xs sorayva-glass-card p-6 rounded-2xl border border-champagne/40 shadow-sm">
+      <div className="flex items-center justify-between pb-3 border-b border-champagne/30">
+        <h3 className="font-serif-display text-lg font-semibold uppercase tracking-wider text-deep-espresso">REFINE SELECTION</h3>
         <button
           onClick={onReset}
-          className="flex items-center space-x-1 text-[11px] font-sans-fashion text-outline hover:text-primary transition-colors uppercase tracking-wider"
+          className="flex items-center space-x-1 text-[11px] font-sans-fashion text-deep-espresso/60 hover:text-terracotta transition-colors uppercase tracking-wider font-bold"
         >
           <RotateCcw className="w-3 h-3" />
           <span>RESET ALL</span>

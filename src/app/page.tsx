@@ -1,16 +1,15 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { repository } from '@/lib/api/googleSheetsRepository';
 import { Product } from '@/types';
-import { getDynamicCategories, getDynamicFilterOptions } from '@/lib/utils';
+import { getDynamicCategories } from '@/lib/utils';
 import { ProductCard } from '@/components/catalog/ProductCard';
 import { ProductImage } from '@/components/shared/ProductImage';
 import { QuickViewModal } from '@/components/shared/QuickViewModal';
 import { BlouseSizeModal } from '@/components/size/BlouseSizeModal';
-import { Truck, RotateCcw, ShieldCheck, Headphones, MapPin, ArrowRight } from 'lucide-react';
+import { Truck, RotateCcw, ShieldCheck, Sparkles, ArrowRight, ChevronRight, Award } from 'lucide-react';
 
 export default function HomePage() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -21,6 +20,8 @@ export default function HomePage() {
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const sliderRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -28,7 +29,6 @@ export default function HomePage() {
         setAllProducts(prods);
         setFilteredProducts(prods);
 
-        // Load recently viewed products from localStorage
         if (typeof window !== 'undefined') {
           try {
             const raw = localStorage.getItem('meshop_recently_viewed');
@@ -51,7 +51,15 @@ export default function HomePage() {
   }, []);
 
   const dynamicCategories = getDynamicCategories(allProducts, 1);
-  const dynamicFilterOpts = getDynamicFilterOptions(allProducts);
+
+  const collectionPills = [
+    { label: 'NEW IN', key: 'all' },
+    { label: 'FESTIVE', key: 'festive' },
+    { label: 'WEDDING', key: 'wedding' },
+    { label: 'PARTY', key: 'party' },
+    { label: 'OFFICE', key: 'everyday' },
+    { label: 'EVERYDAY', key: 'casual' },
+  ];
 
   const handleFilter = (filterKey: string) => {
     setActiveFilter(filterKey);
@@ -63,7 +71,8 @@ export default function HomePage() {
           (p) =>
             p.category?.toLowerCase().includes(filterKey.toLowerCase()) ||
             (Array.isArray(p.tags) && p.tags.some((t) => t.toLowerCase().includes(filterKey.toLowerCase()))) ||
-            p.fabric?.toLowerCase().includes(filterKey.toLowerCase())
+            p.fabric?.toLowerCase().includes(filterKey.toLowerCase()) ||
+            (Array.isArray(p.occasion) && p.occasion.some((o) => o.toLowerCase().includes(filterKey.toLowerCase())))
         )
       );
     }
@@ -72,7 +81,6 @@ export default function HomePage() {
   const newArrivals = allProducts.filter((p) => p.newArrival || p.published).slice(0, 4);
   const bestSellers = allProducts.filter((p) => p.bestseller || p.featured).slice(0, 4);
 
-  // Dynamic fabric list with counts
   const fabricList = [
     {
       name: 'Organza & Tissue',
@@ -104,144 +112,130 @@ export default function HomePage() {
   });
 
   return (
-    <main className="w-full bg-surface">
-      {/* SECTION 1 — HERO */}
-      <section
-        className="relative w-full overflow-hidden min-h-[85vh] lg:min-h-[800px] flex items-center justify-center border-b border-outline-variant/40 py-20 lg:py-24"
-        style={{
-          backgroundImage:
-            'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCnB9vHgJxa43szzkS7jBzykvoR1YuTQEiLjBpArq71LhEMQHgz1UlryxRlcby6hRuD52dWEWuFvoFFfZJTmS8Cm9wWCF8lwmA2ijttT5tIjox1KeRoZMdiijNRv_ewzR9H0twih3EiJoJem35QC_0V0Vgq865HstugSKja5mSNdwx1bo2BHpIpejZ8blpVz8sKYQs7iqphIX1VKkT0NjpGt8afl-27X63TzskjIzY-JCXjL62BXABR8w")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center center',
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0f0c0a]/80 via-[#1a120c]/60 to-[#0f0c0a]/90 pointer-events-none"></div>
-
-        {/* Radiant Golden Glow Overlays */}
-        <div className="absolute inset-0 pointer-events-none z-[3] overflow-hidden">
-          <div
-            className="absolute -top-24 -left-20 w-[650px] h-[650px] rounded-full"
-            style={{
-              background:
-                'radial-gradient(circle, rgba(238, 190, 135, 0.42) 0%, rgba(200, 155, 103, 0.22) 42%, rgba(200, 155, 103, 0) 72%)',
-              filter: 'blur(55px)',
-              mixBlendMode: 'screen',
-            }}
-          ></div>
+    <main className="w-full bg-warm-ivory text-deep-espresso">
+      {/* SECTION 1 — EDITORIAL HERO SECTION */}
+      <section className="relative w-full min-h-[85vh] lg:min-h-[880px] flex items-center overflow-hidden pt-12 pb-20">
+        {/* Full Bleed Editorial Background */}
+        <div className="absolute inset-0 z-0">
+          <ProductImage
+            src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=2000&q=90"
+            alt="SORAYVA Modern Saree Collection"
+            fill
+            priority
+            className="object-cover object-center scale-105 filter brightness-95"
+          />
+          {/* Subtle Fashion Editorial Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-deep-espresso/80 via-deep-espresso/40 to-transparent"></div>
         </div>
 
-        {/* Hero Content */}
-        <div className="relative w-full max-w-[1560px] mx-auto px-4 sm:px-8 md:px-12 lg:px-16 z-10 text-center flex flex-col items-center">
-          <div className="inline-flex items-center gap-3 mb-6">
-            <span className="px-4 py-1.5 rounded-full fine-gold-border bg-black/40 backdrop-blur-md font-sans-fashion text-xs tracking-[0.25em] uppercase text-[#ffddb9] font-medium flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
-              SORAYVA SAREE HOUSE
+        {/* Floating Glass Content Panel (Desktop Right/Center position so model remains hero) */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 w-full flex justify-start lg:justify-end">
+          <div className="w-full max-w-lg sorayva-glass rounded-3xl p-8 sm:p-12 shadow-2xl border border-champagne/40 backdrop-blur-2xl">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-terracotta/10 text-terracotta font-sans-fashion text-[0.65rem] font-bold tracking-[0.25em] uppercase mb-4 border border-terracotta/20">
+              <Sparkles className="w-3.5 h-3.5" />
+              NEW ARRIVAL
             </span>
-          </div>
 
-          <h1 className="font-serif-display text-4xl sm:text-6xl lg:text-[4.75rem] text-[#fbf9f5] leading-[1.08] tracking-tight mb-6 max-w-4xl">
-            For Moments <span className="font-serif-editorial italic font-normal text-[#eebe87]">That Matter.</span>
-          </h1>
+            <h1 className="font-serif-display text-4xl sm:text-5xl lg:text-6xl text-deep-espresso font-normal leading-[1.08] mb-4">
+              The Festive <span className="font-serif-editorial italic font-light text-terracotta">Edit</span>
+            </h1>
 
-          <p className="font-serif-editorial italic text-2xl sm:text-3xl text-[#ede6dc] leading-relaxed mb-8 max-w-2xl font-light">
-            “Discover your next signature drape.”
-          </p>
+            <p className="font-sans-body text-sm sm:text-base text-deep-espresso/80 font-light leading-relaxed mb-8">
+              Discover sarees made for moments that matter. Handcrafted Kanjeevarams, romantic tissue organzas, and liquid silk drapes.
+            </p>
 
-          <p className="font-sans-body text-sm md:text-base text-[#d3c4b6] leading-relaxed max-w-xl mb-10 font-light">
-            Explore our curated online collection of pure silk, ethereal organza, and fluid georgette sarees crafted for celebrations and everyday elegance.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <Link
-              className="h-12 px-10 rounded-full bg-primary-container text-[#1b1c1a] font-sans-fashion text-xs font-semibold tracking-[0.2em] uppercase text-center shadow-xl shadow-primary-container/25 hover:bg-[#ffddb9] transition-all duration-300 transform hover:-translate-y-0.5 inline-flex items-center justify-center gap-2"
-              href="/shop"
-            >
-              <span>SHOP SAREES</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+              <Link
+                href="/shop"
+                className="rounded-full bg-deep-espresso text-warm-ivory px-8 py-4 font-sans-fashion text-xs font-bold tracking-[0.2em] uppercase hover:bg-terracotta transition-colors shadow-lg flex items-center justify-center gap-2"
+              >
+                <span>SHOP COLLECTION</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/shop?filter=newArrival"
+                className="rounded-full bg-white/70 hover:bg-white text-deep-espresso px-6 py-4 font-sans-fashion text-xs font-bold tracking-[0.2em] uppercase border border-champagne/50 transition-colors flex items-center justify-center"
+              >
+                DISCOVER NEW IN
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* SECTION 2 — DYNAMIC CATEGORY BAR */}
-      <section className="w-full bg-surface-container-low border-b border-outline-variant/50 py-6">
-        <div className="max-w-[1560px] mx-auto px-4 sm:px-8 md:px-12 flex items-center justify-center flex-wrap gap-3">
-          <button
-            onClick={() => handleFilter('all')}
-            className={`px-5 py-2 rounded-full font-sans-fashion text-xs tracking-widest uppercase transition-all ${
-              activeFilter === 'all'
-                ? 'bg-secondary text-white font-medium shadow-sm'
-                : 'bg-surface fine-gold-border text-secondary hover:bg-secondary hover:text-white'
-            }`}
+      {/* SECTION 2 — HORIZONTAL CAPSULE COLLECTION SLIDER */}
+      <section className="sticky top-[72px] z-30 w-full sorayva-glass border-y border-champagne/30 py-4 shadow-sm backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+          <div
+            ref={sliderRef}
+            className="flex items-center gap-3 overflow-x-auto no-scrollbar scroll-smooth py-1 px-1"
           >
-            NEW IN
-          </button>
-          {dynamicCategories.slice(0, 6).map((cat) => (
-            <button
-              key={cat.slug}
-              onClick={() => handleFilter(cat.slug)}
-              className={`px-5 py-2 rounded-full font-sans-fashion text-xs tracking-widest uppercase transition-all ${
-                activeFilter === cat.slug
-                  ? 'bg-secondary text-white font-medium shadow-sm'
-                  : 'bg-surface fine-gold-border text-secondary hover:bg-secondary hover:text-white'
-              }`}
-            >
-              {cat.name} ({cat.count})
-            </button>
-          ))}
+            <span className="font-sans-fashion text-xs font-bold tracking-widest text-deep-espresso/50 uppercase whitespace-nowrap mr-2 hidden sm:inline-block">
+              CATEGORIES:
+            </span>
+            {collectionPills.map((pill) => {
+              const isActive = activeFilter === pill.key;
+              return (
+                <button
+                  key={pill.key}
+                  onClick={() => handleFilter(pill.key)}
+                  className={`px-6 py-2.5 rounded-full font-sans-fashion text-xs font-bold tracking-[0.16em] uppercase whitespace-nowrap transition-all duration-300 flex items-center gap-2 border ${
+                    isActive
+                      ? 'bg-deep-espresso text-warm-ivory border-deep-espresso shadow-md scale-105'
+                      : 'sorayva-glass-pill text-deep-espresso/80 hover:text-deep-espresso hover:border-terracotta'
+                  }`}
+                >
+                  {isActive && <span className="w-1.5 h-1.5 rounded-full bg-terracotta animate-pulse" />}
+                  <span>{pill.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 3 — FRESH ARRIVALS */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-20">
+        <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-champagne/30 pb-6 mb-12">
+          <div>
+            <span className="font-sans-fashion text-xs font-bold tracking-[0.25em] text-terracotta uppercase block mb-2">
+              CURATED SELECTION
+            </span>
+            <h2 className="font-serif-display text-3xl sm:text-4xl lg:text-5xl text-deep-espresso font-normal">
+              Fresh Arrivals
+            </h2>
+          </div>
           <Link
-            href="/shop"
-            className="px-5 py-2 rounded-full font-sans-fashion text-xs tracking-widest uppercase bg-primary-container text-white hover:bg-primary transition-all font-medium"
+            href="/shop?filter=newArrival"
+            className="font-sans-fashion text-xs font-bold tracking-[0.2em] text-terracotta hover:text-deep-espresso uppercase flex items-center gap-1 mt-4 md:mt-0 transition-colors"
           >
-            SHOP ALL
+            <span>EXPLORE ALL NEW ARRIVALS</span>
+            <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
-      </section>
 
-      {/* SECTION 3 — NEW ARRIVALS */}
-      <section className="w-full py-20 bg-surface border-b border-outline-variant/40">
-        <div className="max-w-[1560px] mx-auto px-4 sm:px-8 md:px-12 lg:px-16">
-          <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-outline-variant/60 pb-8 mb-12">
-            <div>
-              <span className="font-sans-fashion text-xs tracking-[0.25em] uppercase text-primary-container font-semibold block mb-2">
-                FRESH FROM THE CATALOGUE
-              </span>
-              <h2 className="font-serif-display text-3xl sm:text-4xl lg:text-5xl text-secondary font-normal tracking-tight">
-                New Arrivals
-              </h2>
-            </div>
-            <Link
-              href="/shop?filter=newArrival"
-              className="font-sans-fashion text-xs tracking-[0.2em] text-primary-container hover:text-primary uppercase font-medium flex items-center gap-1 mt-4 md:mt-0"
-            >
-              <span>VIEW ALL NEW ARRIVALS</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {newArrivals.map((prod) => (
-              <ProductCard
-                key={prod.productId}
-                product={prod}
-                onQuickView={(p) => setQuickViewProduct(p)}
-              />
-            ))}
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          {newArrivals.map((prod) => (
+            <ProductCard
+              key={prod.productId}
+              product={prod}
+              onQuickView={(p) => setQuickViewProduct(p)}
+            />
+          ))}
         </div>
       </section>
 
       {/* SECTION 4 — SHOP BY OCCASION */}
-      <section className="w-full py-20 bg-surface-container-low border-b border-outline-variant/50" id="shop-by-occasion">
-        <div className="max-w-[1560px] mx-auto px-4 sm:px-8 md:px-12 lg:px-16">
+      <section className="w-full bg-soft-sand/50 py-20 border-y border-champagne/30" id="shop-by-occasion">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <span className="font-sans-fashion text-xs tracking-[0.25em] uppercase text-primary-container font-semibold block mb-2">
-              CURATED STYLING
+            <span className="font-sans-fashion text-xs font-bold tracking-[0.25em] text-terracotta uppercase block mb-2">
+              HIGH-FASHION EDITORIAL
             </span>
-            <h2 className="font-serif-display text-3xl sm:text-4xl lg:text-5xl text-secondary font-normal tracking-tight">
+            <h2 className="font-serif-display text-3xl sm:text-4xl lg:text-5xl text-deep-espresso font-normal">
               Shop By Occasion
             </h2>
-            <p className="font-serif-editorial italic text-lg text-on-surface-variant mt-2 font-light">
+            <p className="font-serif-editorial italic text-lg text-deep-espresso/70 mt-2 font-light">
               Tailored drape edits for every moment on your calendar.
             </p>
           </div>
@@ -276,22 +270,22 @@ export default function HomePage() {
               <Link
                 key={item.title}
                 href={`/shop?occasion=${encodeURIComponent(item.query)}`}
-                className="group relative aspect-[3/4] overflow-hidden fine-gold-border bg-surface-container block"
+                className="group relative aspect-[3/4] overflow-hidden rounded-2xl border border-champagne/30 block shadow-md"
               >
                 <ProductImage
                   src={item.image}
                   alt={item.title}
                   fill
                   sizes="(max-width: 640px) 100vw, 25vw"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-secondary/85 via-secondary/20 to-transparent"></div>
-                <div className="absolute bottom-6 inset-x-6 text-white">
-                  <span className="font-sans-fashion text-[0.65rem] tracking-[0.25em] uppercase text-primary-fixed block mb-1">
+                <div className="absolute inset-0 bg-gradient-to-t from-deep-espresso/90 via-deep-espresso/30 to-transparent" />
+                <div className="absolute bottom-6 inset-x-6 text-warm-ivory">
+                  <span className="font-sans-fashion text-[0.65rem] tracking-[0.25em] uppercase text-champagne block mb-1 font-bold">
                     {item.tag}
                   </span>
-                  <h3 className="font-serif-display text-2xl text-white font-normal mb-2">{item.title}</h3>
-                  <span className="font-sans-fashion text-xs text-primary-fixed group-hover:translate-x-1 transition-transform inline-flex items-center gap-1 font-medium">
+                  <h3 className="font-serif-display text-2xl text-warm-ivory font-normal mb-2">{item.title}</h3>
+                  <span className="font-sans-fashion text-xs text-champagne group-hover:translate-x-1 transition-transform inline-flex items-center gap-1 font-semibold">
                     EXPLORE EDIT ↗
                   </span>
                 </div>
@@ -302,107 +296,77 @@ export default function HomePage() {
       </section>
 
       {/* SECTION 5 — EXPLORE BY FABRIC */}
-      <section className="w-full py-20 bg-surface border-b border-outline-variant/40" id="explore-by-fabric">
-        <div className="max-w-[1560px] mx-auto px-4 sm:px-8 md:px-12 lg:px-16">
-          <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-outline-variant/60 pb-8 mb-12">
-            <div>
-              <span className="font-sans-fashion text-xs tracking-[0.25em] uppercase text-primary-container font-semibold block mb-2">
-                TACTILE DIRECTORY
-              </span>
-              <h2 className="font-serif-display text-3xl sm:text-4xl lg:text-5xl text-secondary font-normal tracking-tight">
-                Explore By Fabric
-              </h2>
-            </div>
-            <p className="font-serif-editorial italic text-lg text-on-surface-variant max-w-md mt-4 md:mt-0 font-light leading-relaxed">
-              Navigate by drape feel, weave texture, and fabric density.
-            </p>
+      <section className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-20" id="explore-by-fabric">
+        <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-champagne/30 pb-6 mb-12">
+          <div>
+            <span className="font-sans-fashion text-xs font-bold tracking-[0.25em] text-terracotta uppercase block mb-2">
+              TACTILE DIRECTORY
+            </span>
+            <h2 className="font-serif-display text-3xl sm:text-4xl lg:text-5xl text-deep-espresso font-normal">
+              Explore By Fabric
+            </h2>
           </div>
+          <p className="font-serif-editorial italic text-lg text-deep-espresso/70 max-w-md font-light">
+            Navigate by drape feel, weave texture, and fabric density.
+          </p>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {fabricList.map((f) => (
-              <div
-                key={f.name}
-                className="bg-surface-bright fine-gold-border p-5 group flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary-container"
-              >
-                <div>
-                  <div className="relative aspect-[16/10] overflow-hidden rounded-xs mb-4 bg-surface-container">
-                    <ProductImage
-                      src={f.image}
-                      alt={f.name}
-                      fill
-                      sizes="(max-width: 640px) 100vw, 25vw"
-                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                    />
-                  </div>
-                  <h3 className="font-serif-display text-xl text-secondary font-normal mb-2 flex items-center group-hover:text-primary transition-colors">
-                    {f.name}
-                  </h3>
-                  <p className="font-sans-body text-xs text-on-surface-variant font-light leading-relaxed mb-4">
-                    {f.description}
-                  </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {fabricList.map((f) => (
+            <div
+              key={f.name}
+              className="sorayva-glass-card rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-terracotta"
+            >
+              <div>
+                <div className="relative aspect-[16/10] overflow-hidden rounded-xl mb-4 bg-soft-sand/50">
+                  <ProductImage
+                    src={f.image}
+                    alt={f.name}
+                    fill
+                    sizes="(max-width: 640px) 100vw, 25vw"
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
                 </div>
-                <div className="pt-3 border-t border-outline-variant/40 flex items-center justify-between">
-                  <span className="font-sans-fashion text-xs tracking-wider text-secondary font-medium">
-                    {f.count} SAREES AVAILABLE
-                  </span>
-                  <Link
-                    href={`/shop?fabric=${encodeURIComponent(f.slug)}`}
-                    className="font-sans-fashion text-xs text-primary-container group-hover:text-primary flex items-center gap-1 font-medium transition-colors"
-                  >
-                    <span>Browse</span>
-                    <span>→</span>
-                  </Link>
-                </div>
+                <h3 className="font-serif-display text-xl text-deep-espresso font-normal mb-2">
+                  {f.name}
+                </h3>
+                <p className="font-sans-body text-xs text-deep-espresso/70 font-light leading-relaxed mb-4">
+                  {f.description}
+                </p>
               </div>
-            ))}
-          </div>
+              <div className="pt-3 border-t border-champagne/20 flex items-center justify-between">
+                <span className="font-sans-fashion text-[0.7rem] font-bold tracking-wider text-deep-espresso">
+                  {f.count} SAREES AVAILABLE
+                </span>
+                <Link
+                  href={`/shop?fabric=${encodeURIComponent(f.slug)}`}
+                  className="font-sans-fashion text-xs text-terracotta font-bold hover:text-deep-espresso flex items-center gap-1 transition-colors"
+                >
+                  <span>Browse</span>
+                  <span>→</span>
+                </Link>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* SECTION 6 — THE SORAYVA EDIT */}
-      <section className="w-full py-24 bg-surface-container-low border-y border-outline-variant/50" id="collections">
-        <div className="max-w-[1560px] mx-auto px-4 sm:px-8 md:px-12 lg:px-16">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-14">
-            <div>
-              <span className="font-sans-fashion text-xs tracking-[0.25em] uppercase text-primary-container font-semibold block mb-2">
-                CURATED SELECTION
-              </span>
-              <h2 className="font-serif-display text-3xl sm:text-4xl lg:text-5xl text-secondary font-normal tracking-tight">
-                THE SORAYVA EDIT
-              </h2>
-              <p className="font-serif-editorial italic text-lg sm:text-xl text-on-surface-variant mt-2 font-light">
-                Curated sarees for everyday elegance, celebrations and unforgettable moments.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <button
-                onClick={() => handleFilter('all')}
-                className={`h-10 px-5 rounded-full font-sans-fashion text-xs tracking-wider uppercase transition-colors inline-flex items-center justify-center ${
-                  activeFilter === 'all'
-                    ? 'bg-secondary text-white font-medium'
-                    : 'bg-surface fine-gold-border text-secondary hover:bg-secondary hover:text-white'
-                }`}
-              >
-                ALL DRAPES
-              </button>
-              {dynamicCategories.slice(0, 4).map((cat) => (
-                <button
-                  key={cat.slug}
-                  onClick={() => handleFilter(cat.slug)}
-                  className={`h-10 px-5 rounded-full font-sans-fashion text-xs tracking-wider uppercase transition-colors inline-flex items-center justify-center ${
-                    activeFilter === cat.slug
-                      ? 'bg-secondary text-white font-medium'
-                      : 'bg-surface fine-gold-border text-secondary hover:bg-secondary hover:text-white'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
+      <section className="w-full bg-soft-sand/40 py-24 border-y border-champagne/30" id="collections">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="font-sans-fashion text-xs font-bold tracking-[0.25em] text-terracotta uppercase block mb-2">
+              CURATED SELECTION
+            </span>
+            <h2 className="font-serif-display text-3xl sm:text-4xl lg:text-5xl text-deep-espresso font-normal">
+              THE SORAYVA EDIT
+            </h2>
+            <p className="font-serif-editorial italic text-lg text-deep-espresso/70 mt-2 font-light">
+              Handpicked sarees for everyday elegance, celebrations and unforgettable moments.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {filteredProducts.slice(0, 8).map((prod) => (
               <ProductCard
                 key={prod.productId}
@@ -412,32 +376,26 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="mt-16 text-center">
+          <div className="mt-14 text-center">
             <Link
-              className="inline-flex items-center gap-2 font-sans-fashion text-xs tracking-[0.2em] text-secondary uppercase pb-1 border-b border-primary-container hover:text-primary transition-all"
+              className="inline-flex items-center gap-2 rounded-full bg-deep-espresso text-warm-ivory px-8 py-3.5 font-sans-fashion text-xs font-bold tracking-[0.2em] uppercase hover:bg-terracotta transition-colors shadow-md"
               href="/shop"
             >
               <span>EXPLORE ENTIRE CATALOGUE ({allProducts.length} SAREES)</span>
-              <span className="text-sm">→</span>
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* SECTION 7 — BEST SELLERS */}
-      <section className="w-full py-20 bg-surface border-b border-outline-variant/40">
-        <div className="max-w-[1560px] mx-auto px-4 sm:px-8 md:px-12 lg:px-16">
-          <div className="text-center max-w-2xl mx-auto mb-14">
-            <span className="font-sans-fashion text-xs tracking-[0.25em] uppercase text-primary-container font-semibold block mb-2">
-              CUSTOMER FAVORITES
-            </span>
-            <h2 className="font-serif-display text-3xl sm:text-4xl lg:text-5xl text-secondary font-normal tracking-tight">
-              Best Sellers
-            </h2>
+      {/* SECTION 7 — RECENTLY VIEWED CAROUSEL */}
+      {recentlyViewed.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-16 border-b border-champagne/30">
+          <div className="flex items-center justify-between border-b border-champagne/30 pb-4 mb-8">
+            <h3 className="font-serif-display text-2xl text-deep-espresso font-normal">Recently Viewed</h3>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {bestSellers.map((prod) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {recentlyViewed.map((prod) => (
               <ProductCard
                 key={prod.productId}
                 product={prod}
@@ -445,79 +403,43 @@ export default function HomePage() {
               />
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* SECTION 8 — RECENTLY VIEWED */}
-      {recentlyViewed.length > 0 && (
-        <section className="w-full py-16 bg-surface-container-low border-b border-outline-variant/50">
-          <div className="max-w-[1560px] mx-auto px-4 sm:px-8 md:px-12 lg:px-16">
-            <div className="flex items-center justify-between border-b border-outline-variant/60 pb-6 mb-10">
-              <h3 className="font-serif-display text-2xl text-secondary font-normal">Recently Viewed</h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {recentlyViewed.map((prod) => (
-                <ProductCard
-                  key={prod.productId}
-                  product={prod}
-                  onQuickView={(p) => setQuickViewProduct(p)}
-                />
-              ))}
-            </div>
-          </div>
         </section>
       )}
 
-      {/* SECTION 9 — TRUST & VALUE PROPOSITION */}
-      <section className="w-full py-16 bg-surface border-t border-outline-variant/60">
-        <div className="max-w-[1560px] mx-auto px-4 sm:px-8 md:px-12 lg:px-16">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="bg-surface-bright fine-gold-border p-6 text-center group hover:bg-white transition-all shadow-xs flex flex-col justify-between rounded-xs">
-              <div className="w-12 h-12 mx-auto rounded-full bg-surface-container flex items-center justify-center text-primary-container mb-4 group-hover:bg-primary-container group-hover:text-white transition-colors">
-                <Truck className="w-6 h-6" />
-              </div>
-              <h4 className="font-sans-fashion text-xs font-semibold tracking-[0.18em] text-secondary uppercase mb-2 min-h-[2.5rem] flex items-center justify-center">
-                EXPRESS DOORSTEP SHIPPING
-              </h4>
-              <p className="font-sans-body text-xs text-on-surface-variant font-light leading-relaxed">
-                Complimentary insured delivery across India on orders over ₹15,000.
-              </p>
+      {/* SECTION 8 — MINIMAL TRUST STRIP */}
+      <section className="w-full py-12 bg-warm-ivory border-t border-champagne/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            <div className="p-4 rounded-xl sorayva-glass-card flex flex-col items-center justify-center gap-2">
+              <Truck className="w-5 h-5 text-terracotta" />
+              <span className="font-sans-fashion text-xs font-bold tracking-widest text-deep-espresso uppercase">
+                FAST DISPATCH
+              </span>
+              <span className="text-[0.7rem] text-deep-espresso/60 font-sans-body">Complimentary insured delivery</span>
             </div>
 
-            <div className="bg-surface-bright fine-gold-border p-6 text-center group hover:bg-white transition-all shadow-xs flex flex-col justify-between rounded-xs">
-              <div className="w-12 h-12 mx-auto rounded-full bg-surface-container flex items-center justify-center text-primary-container mb-4 group-hover:bg-primary-container group-hover:text-white transition-colors">
-                <RotateCcw className="w-6 h-6" />
-              </div>
-              <h4 className="font-sans-fashion text-xs font-semibold tracking-[0.18em] text-secondary uppercase mb-2 min-h-[2.5rem] flex items-center justify-center">
-                EASY EXCHANGES
-              </h4>
-              <p className="font-sans-body text-xs text-on-surface-variant font-light leading-relaxed">
-                Hassle-free 7-day doorstep exchange and quality inspection process.
-              </p>
+            <div className="p-4 rounded-xl sorayva-glass-card flex flex-col items-center justify-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-terracotta" />
+              <span className="font-sans-fashion text-xs font-bold tracking-widest text-deep-espresso uppercase">
+                SECURE CHECKOUT
+              </span>
+              <span className="text-[0.7rem] text-deep-espresso/60 font-sans-body">256-bit encrypted card/UPI</span>
             </div>
 
-            <div className="bg-surface-bright fine-gold-border p-6 text-center group hover:bg-white transition-all shadow-xs flex flex-col justify-between rounded-xs">
-              <div className="w-12 h-12 mx-auto rounded-full bg-surface-container flex items-center justify-center text-primary-container mb-4 group-hover:bg-primary-container group-hover:text-white transition-colors">
-                <ShieldCheck className="w-6 h-6" />
-              </div>
-              <h4 className="font-sans-fashion text-xs font-semibold tracking-[0.18em] text-secondary uppercase mb-2 min-h-[2.5rem] flex items-center justify-center">
-                COD & SECURE PAYMENTS
-              </h4>
-              <p className="font-sans-body text-xs text-on-surface-variant font-light leading-relaxed">
-                Cash on Delivery available along with 256-bit encrypted online card & UPI payments.
-              </p>
+            <div className="p-4 rounded-xl sorayva-glass-card flex flex-col items-center justify-center gap-2">
+              <RotateCcw className="w-5 h-5 text-terracotta" />
+              <span className="font-sans-fashion text-xs font-bold tracking-widest text-deep-espresso uppercase">
+                EASY RETURNS
+              </span>
+              <span className="text-[0.7rem] text-deep-espresso/60 font-sans-body">7-day doorstep exchange</span>
             </div>
 
-            <div className="bg-surface-bright fine-gold-border p-6 text-center group hover:bg-white transition-all shadow-xs flex flex-col justify-between rounded-xs">
-              <div className="w-12 h-12 mx-auto rounded-full bg-surface-container flex items-center justify-center text-primary-container mb-4 group-hover:bg-primary-container group-hover:text-white transition-colors">
-                <Headphones className="w-6 h-6" />
-              </div>
-              <h4 className="font-sans-fashion text-xs font-semibold tracking-[0.18em] text-secondary uppercase mb-2 min-h-[2.5rem] flex items-center justify-center">
-                CUSTOMER CARE & TRACKING
-              </h4>
-              <p className="font-sans-body text-xs text-on-surface-variant font-light leading-relaxed">
-                Dedicated WhatsApp support assistance and real-time order tracking dispatch updates.
-              </p>
+            <div className="p-4 rounded-xl sorayva-glass-card flex flex-col items-center justify-center gap-2">
+              <Award className="w-5 h-5 text-terracotta" />
+              <span className="font-sans-fashion text-xs font-bold tracking-widest text-deep-espresso uppercase">
+                QUALITY CHECKED
+              </span>
+              <span className="text-[0.7rem] text-deep-espresso/60 font-sans-body">100% authentic pure weaves</span>
             </div>
           </div>
         </div>

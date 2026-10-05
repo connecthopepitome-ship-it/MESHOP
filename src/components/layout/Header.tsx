@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingBag, Heart, Search, Menu, X, ChevronRight, Calendar } from 'lucide-react';
+import { ShoppingBag, Heart, Search, Menu, X, ChevronRight, ArrowRight, Sparkles, TrendingUp } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { ProductImage } from '@/components/shared/ProductImage';
 
 export const Header: React.FC = () => {
   const { itemCount, setIsCartOpen } = useCart();
@@ -13,6 +14,19 @@ export const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,222 +35,334 @@ export const Header: React.FC = () => {
     }
   };
 
+  const trendingTags = [
+    'Bridal Kanjeevaram',
+    'Tissue Organza',
+    'Banarasi Katan',
+    'Crimson Silk',
+    'Cocktail Sarees',
+    'Pastel Chiffon',
+  ];
+
+  const popularFabrics = ['Organza', 'Kanjeevaram Silk', 'Banarasi', 'Chiffon', 'Georgette'];
+  const popularOccasions = ['Bridal & Wedding', 'Festive Edit', 'Cocktail Soiree', 'Puja & Rituals'];
+
   return (
-    <header className="sticky top-0 z-50 w-full atelier-glass border-b border-outline-variant/50 transition-all duration-300">
-      <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-8 lg:px-12 py-3 flex items-center justify-between gap-4">
-        {/* Left & Center: Logo + Desktop Nav */}
-        <div className="flex items-center gap-6 xl:gap-10 min-w-0">
-          <Link href="/" className="block group flex-shrink-0 flex items-center bg-transparent py-1">
-            <Image
-              src="/images/sorayva-logo.png"
-              alt="SORAYVA — The Modern Saree House"
-              width={220}
-              height={55}
-              priority
-              className="h-8 sm:h-9 md:h-10 w-auto object-contain transition-transform duration-500 group-hover:scale-105"
-              style={{ mixBlendMode: 'multiply' }}
-            />
-          </Link>
+    <>
+      <header className="sticky top-2 sm:top-4 z-50 w-full px-3 sm:px-6 pointer-events-none transition-all duration-300">
+        <div
+          className={`mx-auto max-w-7xl pointer-events-auto rounded-full transition-all duration-300 ${
+            scrolled
+              ? 'sorayva-glass-bar py-2 shadow-xl border-champagne/40 bg-warm-ivory/90'
+              : 'sorayva-glass py-3 shadow-md border-champagne/20 bg-warm-ivory/75'
+          }`}
+        >
+          <div className="px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+            {/* Left: Logo */}
+            <div className="flex items-center gap-8 flex-shrink-0">
+              <Link href="/" className="block group flex-items-center py-0.5">
+                <Image
+                  src="/images/sorayva-logo.png"
+                  alt="SORAYVA — For Moments That Matter"
+                  width={200}
+                  height={50}
+                  priority
+                  className={`w-auto object-contain transition-all duration-300 group-hover:scale-105 ${
+                    scrolled ? 'h-7 sm:h-8' : 'h-8 sm:h-9 md:h-10'
+                  }`}
+                  style={{ mixBlendMode: 'multiply' }}
+                />
+              </Link>
+            </div>
 
-          <nav className="hidden lg:flex items-center gap-4 xl:gap-7 whitespace-nowrap">
-            <Link
-              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
-              href="/shop"
-            >
-              SHOP
-            </Link>
-            <Link
-              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
-              href="/shop?filter=newArrival"
-            >
-              NEW ARRIVALS
-            </Link>
-            <Link
-              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
-              href="#collections"
-            >
-              COLLECTIONS
-            </Link>
-            <Link
-              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
-              href="#shop-by-occasion"
-            >
-              SHOP BY OCCASION
-            </Link>
-            <Link
-              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
-              href="#explore-by-fabric"
-            >
-              SHOP BY FABRIC
-            </Link>
-            <Link
-              className="font-sans-fashion text-[0.725rem] xl:text-xs font-medium text-secondary tracking-[0.16em] xl:tracking-[0.2em] uppercase hover:text-primary transition-all relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-primary-container hover:after:w-full after:transition-all"
-              href="/shop?filter=sale"
-            >
-              SALE
-            </Link>
-          </nav>
-        </div>
+            {/* Center: Desktop Capsule Nav */}
+            <nav className="hidden lg:flex items-center gap-6 xl:gap-8 font-sans-fashion text-[0.7rem] xl:text-xs font-semibold tracking-[0.2em] text-deep-espresso uppercase whitespace-nowrap">
+              <Link href="/shop?filter=newArrival" className="hover:text-terracotta transition-colors py-1 relative group">
+                NEW IN
+                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-terracotta transition-all duration-300 group-hover:w-full" />
+              </Link>
+              <Link href="/shop" className="hover:text-terracotta transition-colors py-1 relative group">
+                SAREES
+                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-terracotta transition-all duration-300 group-hover:w-full" />
+              </Link>
+              <Link href="/shop#collections" className="hover:text-terracotta transition-colors py-1 relative group">
+                COLLECTIONS
+                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-terracotta transition-all duration-300 group-hover:w-full" />
+              </Link>
+              <Link href="/shop#shop-by-occasion" className="hover:text-terracotta transition-colors py-1 relative group">
+                OCCASIONS
+                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-terracotta transition-all duration-300 group-hover:w-full" />
+              </Link>
+              <Link href="/shop#explore-by-fabric" className="hover:text-terracotta transition-colors py-1 relative group">
+                FABRICS
+                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-terracotta transition-all duration-300 group-hover:w-full" />
+              </Link>
+              <Link href="/shop?filter=sale" className="hover:text-terracotta text-muted-rose transition-colors py-1 relative group font-bold">
+                SALE
+                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-muted-rose transition-all duration-300 group-hover:w-full" />
+              </Link>
+            </nav>
 
-        {/* Mobile Hamburger Button */}
-        <div className="flex items-center lg:hidden">
-          <button
-            onClick={() => setMobileMenuOpen(true)}
-            aria-label="Open Menu"
-            className="text-secondary p-1 hover:text-primary flex items-center justify-center"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-        </div>
-
-        {/* Right Actions */}
-        <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
-          <div className="hidden sm:flex items-center gap-1.5 whitespace-nowrap font-sans-fashion text-xs tracking-wider text-secondary border-r border-outline-variant/60 pr-4 h-5">
-            <span className="font-medium">INR ₹</span>
-          </div>
-
-          <button
-            onClick={() => setSearchOpen(!searchOpen)}
-            className="text-secondary hover:text-primary p-1.5 transition-colors flex items-center justify-center"
-            title="Search Archive"
-            aria-label="Search Archive"
-          >
-            <Search className="w-5 h-5" />
-          </button>
-
-          <Link
-            className="relative text-secondary hover:text-primary p-1.5 transition-colors flex items-center justify-center"
-            href="/wishlist"
-            title="Wishlist"
-            aria-label="Wishlist"
-          >
-            <Heart className="w-5 h-5" />
-            <span className="absolute top-0 right-0 font-sans-fashion text-[0.6rem] bg-secondary-container text-secondary w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold">
-              {wishlistCount > 0 ? wishlistCount : 3}
-            </span>
-          </Link>
-
-          <button
-            onClick={() => setIsCartOpen(true)}
-            className="relative text-secondary hover:text-primary p-1.5 transition-colors flex items-center justify-center"
-            title="Atelier Tote"
-            aria-label="Shopping Bag"
-          >
-            <ShoppingBag className="w-5 h-5" />
-            <span className="absolute top-0 right-0 font-sans-fashion text-[0.6rem] bg-primary-container text-white w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold">
-              {itemCount > 0 ? itemCount : 2}
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* Search Bar */}
-      {searchOpen && (
-        <div className="border-t border-outline-variant/50 bg-surface-container py-4 px-margin transition-all animate-fadeIn">
-          <div className="max-w-2xl mx-auto">
-            <form onSubmit={handleSearchSubmit} className="relative flex items-center">
-              <input
-                type="text"
-                placeholder="Search Kanjeevaram, Organza, Banarasi, Crimson, Zari..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-surface border border-outline-variant py-3 px-4 pl-12 text-sm font-sans-body text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary transition-colors"
-                autoFocus
-              />
-              <Search className="w-5 h-5 text-on-surface-variant absolute left-4" />
+            {/* Right: Actions (Search, Wishlist, Tote) */}
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+              {/* Expanding Search Trigger Pill */}
               <button
-                type="submit"
-                className="absolute right-3 text-xs font-sans-fashion uppercase tracking-widest bg-secondary text-white px-4 py-2 hover:bg-primary transition-colors"
+                onClick={() => setSearchOpen(true)}
+                className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-soft-sand/60 hover:bg-soft-sand/90 text-deep-espresso/80 hover:text-deep-espresso text-xs font-sans-body border border-champagne/30 transition-all cursor-pointer group"
+                title="Search Sarees"
+                aria-label="Search Sarees"
               >
-                Search
+                <Search className="w-3.5 h-3.5 text-deep-espresso/60 group-hover:text-terracotta transition-colors" />
+                <span className="font-sans-fashion tracking-wider text-[0.7rem] uppercase text-deep-espresso/60 group-hover:text-deep-espresso">
+                  Search sarees, fabrics...
+                </span>
               </button>
-            </form>
+
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="sm:hidden p-2 text-deep-espresso hover:text-terracotta transition-colors"
+                aria-label="Search"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+
+              {/* Wishlist Icon */}
+              <Link
+                href="/wishlist"
+                className="relative p-2 text-deep-espresso hover:text-terracotta transition-colors flex items-center justify-center"
+                title="Wishlist"
+                aria-label="Wishlist"
+              >
+                <Heart className="w-5 h-5" />
+                {wishlistCount > 0 && (
+                  <span className="absolute top-0 right-0 font-sans-fashion text-[0.6rem] bg-terracotta text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
+
+              {/* Cart Tote */}
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="relative p-2 text-deep-espresso hover:text-terracotta transition-colors flex items-center justify-center"
+                title="Bag"
+                aria-label="Shopping Bag"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                {itemCount > 0 && (
+                  <span className="absolute top-0 right-0 font-sans-fashion text-[0.6rem] bg-deep-espresso text-white w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                    {itemCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Mobile Menu Trigger */}
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                aria-label="Open Navigation"
+                className="p-2 text-deep-espresso hover:text-terracotta lg:hidden flex items-center justify-center"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Glass Search Panel Overlay */}
+      {searchOpen && (
+        <div className="fixed inset-0 z-50 bg-deep-espresso/40 backdrop-blur-md flex flex-col justify-start transition-all duration-300 animate-fadeIn">
+          <div className="w-full sorayva-glass-bar border-b border-champagne/40 pt-6 pb-8 px-4 sm:px-8 max-h-[85vh] overflow-y-auto shadow-2xl">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2 text-xs font-sans-fashion tracking-widest text-terracotta uppercase font-bold">
+                  <Sparkles className="w-4 h-4" />
+                  <span>SORAYVA Atelier Search</span>
+                </div>
+                <button
+                  onClick={() => setSearchOpen(false)}
+                  className="p-2 rounded-full bg-soft-sand hover:bg-champagne/40 text-deep-espresso transition-colors"
+                  aria-label="Close search"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Search Form */}
+              <form onSubmit={handleSearchSubmit} className="relative mb-8">
+                <input
+                  type="text"
+                  placeholder="Search by fabric (Organza, Kanjeevaram), color, occasion, or style..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white/80 backdrop-blur-md border border-champagne/50 rounded-full py-4 px-6 pl-14 pr-32 text-base font-sans-body text-deep-espresso placeholder:text-deep-espresso/40 focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20 transition-all shadow-inner"
+                  autoFocus
+                />
+                <Search className="w-6 h-6 text-deep-espresso/50 absolute left-5 top-1/2 -translate-y-1/2" />
+                <button
+                  type="submit"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-deep-espresso text-warm-ivory px-6 py-2.5 font-sans-fashion text-xs font-semibold tracking-widest uppercase hover:bg-terracotta transition-colors shadow-md flex items-center gap-2"
+                >
+                  <span>Search</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </form>
+
+              {/* Trending & Quick Categories Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-champagne/20">
+                {/* Trending Queries */}
+                <div>
+                  <h4 className="font-sans-fashion text-xs font-bold tracking-widest text-deep-espresso uppercase mb-3 flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5 text-terracotta" />
+                    Trending Searches
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {trendingTags.map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => {
+                          setSearchQuery(tag);
+                          window.location.href = `/search?q=${encodeURIComponent(tag)}`;
+                        }}
+                        className="px-3 py-1.5 rounded-full bg-white/70 hover:bg-soft-sand text-deep-espresso text-xs font-sans-body border border-champagne/30 transition-all hover:border-terracotta text-left"
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Popular Fabrics */}
+                <div>
+                  <h4 className="font-sans-fashion text-xs font-bold tracking-widest text-deep-espresso uppercase mb-3">
+                    Popular Fabrics
+                  </h4>
+                  <ul className="space-y-2 text-xs font-sans-body text-deep-espresso/80">
+                    {popularFabrics.map((fabric) => (
+                      <li key={fabric}>
+                        <Link
+                          href={`/shop?fabric=${encodeURIComponent(fabric)}`}
+                          onClick={() => setSearchOpen(false)}
+                          className="hover:text-terracotta hover:translate-x-1 transition-all inline-flex items-center gap-2"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-champagne" />
+                          <span>{fabric} Sarees</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Popular Occasions */}
+                <div>
+                  <h4 className="font-sans-fashion text-xs font-bold tracking-widest text-deep-espresso uppercase mb-3">
+                    Shop by Occasion
+                  </h4>
+                  <ul className="space-y-2 text-xs font-sans-body text-deep-espresso/80">
+                    {popularOccasions.map((occ) => (
+                      <li key={occ}>
+                        <Link
+                          href={`/shop?occasion=${encodeURIComponent(occ)}`}
+                          onClick={() => setSearchOpen(false)}
+                          className="hover:text-terracotta hover:translate-x-1 transition-all inline-flex items-center gap-2"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-terracotta" />
+                          <span>{occ}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Mobile Navigation Drawer */}
+      {/* Mobile Drawer Navigation */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden flex">
-          <div className="w-4/5 max-w-sm bg-surface h-full p-6 flex flex-col justify-between shadow-xl animate-slideLeft">
+        <div className="fixed inset-0 z-50 bg-deep-espresso/60 backdrop-blur-sm lg:hidden flex">
+          <div className="w-4/5 max-w-sm sorayva-glass h-full p-6 flex flex-col justify-between shadow-2xl animate-slideLeft">
             <div>
-              <div className="flex items-center justify-between pb-6 border-b border-outline-variant">
+              <div className="flex items-center justify-between pb-6 border-b border-champagne/30">
                 <Image
                   src="/images/sorayva-logo.png"
                   alt="SORAYVA"
                   width={160}
                   height={48}
-                  className="h-9 w-auto object-contain"
+                  className="h-8 w-auto object-contain"
                   style={{ mixBlendMode: 'multiply' }}
                 />
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-1 text-secondary hover:text-on-surface"
+                  className="p-1.5 rounded-full bg-soft-sand text-deep-espresso hover:text-terracotta"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <nav className="mt-6 flex flex-col space-y-4 font-sans-fashion text-xs font-medium text-secondary tracking-[0.2em] uppercase">
-                <Link
-                  href="/shop"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
-                >
-                  <span>SHOP</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
-                </Link>
+              <nav className="mt-6 flex flex-col space-y-3 font-sans-fashion text-xs font-semibold tracking-[0.2em] text-deep-espresso uppercase">
                 <Link
                   href="/shop?filter=newArrival"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
+                  className="py-3 border-b border-champagne/20 flex items-center justify-between hover:text-terracotta"
                 >
-                  <span>NEW ARRIVALS</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
+                  <span>NEW ARRIVALS</span> <ChevronRight className="w-4 h-4 text-terracotta" />
                 </Link>
                 <Link
-                  href="#collections"
+                  href="/shop"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
+                  className="py-3 border-b border-champagne/20 flex items-center justify-between hover:text-terracotta"
                 >
-                  <span>COLLECTIONS</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
+                  <span>ALL SAREES</span> <ChevronRight className="w-4 h-4 text-terracotta" />
                 </Link>
                 <Link
-                  href="#shop-by-occasion"
+                  href="/shop#collections"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
+                  className="py-3 border-b border-champagne/20 flex items-center justify-between hover:text-terracotta"
                 >
-                  <span>SHOP BY OCCASION</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
+                  <span>COLLECTIONS</span> <ChevronRight className="w-4 h-4 text-terracotta" />
                 </Link>
                 <Link
-                  href="#explore-by-fabric"
+                  href="/shop#shop-by-occasion"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
+                  className="py-3 border-b border-champagne/20 flex items-center justify-between hover:text-terracotta"
                 >
-                  <span>SHOP BY FABRIC</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
+                  <span>OCCASIONS</span> <ChevronRight className="w-4 h-4 text-terracotta" />
+                </Link>
+                <Link
+                  href="/shop#explore-by-fabric"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="py-3 border-b border-champagne/20 flex items-center justify-between hover:text-terracotta"
+                >
+                  <span>FABRICS</span> <ChevronRight className="w-4 h-4 text-terracotta" />
                 </Link>
                 <Link
                   href="/shop?filter=sale"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 border-b border-outline-variant/60 flex items-center justify-between"
+                  className="py-3 border-b border-champagne/20 flex items-center justify-between text-muted-rose font-bold"
                 >
-                  <span>SALE</span> <ChevronRight className="w-4 h-4 text-on-surface-variant" />
+                  <span>FESTIVE SALE</span> <ChevronRight className="w-4 h-4 text-muted-rose" />
                 </Link>
               </nav>
             </div>
 
-            <div className="pt-6 border-t border-outline-variant text-xs font-sans-body text-on-surface-variant">
-              <p className="font-sans-fashion text-xs font-semibold tracking-wider text-secondary uppercase">ATELIER CONCIERGE</p>
+            <div className="pt-6 border-t border-champagne/30 text-xs font-sans-body text-deep-espresso/70">
+              <p className="font-sans-fashion text-xs font-bold tracking-wider text-deep-espresso uppercase">
+                CONCIERGE STYLIST
+              </p>
               <a
                 href="https://wa.me/919876543210"
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 inline-flex items-center gap-2 font-sans-fashion text-primary-container hover:text-primary transition-colors"
+                className="mt-2 inline-flex items-center gap-2 font-sans-fashion text-terracotta font-semibold hover:underline"
               >
-                💬 WhatsApp Stylist Concierge
+                💬 WhatsApp Personal Styling
               </a>
             </div>
           </div>
         </div>
       )}
-    </header>
+    </>
   );
 };
