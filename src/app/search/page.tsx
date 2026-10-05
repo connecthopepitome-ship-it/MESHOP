@@ -6,7 +6,7 @@ import { CatalogView } from '@/components/catalog/CatalogView';
 
 function SearchContent() {
   const searchParams = useSearchParams();
-  const query = searchParams.get('q') || '';
+  const query = searchParams?.get('q') || '';
 
   return (
     <CatalogView
