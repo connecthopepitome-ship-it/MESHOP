@@ -85,6 +85,10 @@ export const Header: React.FC = () => {
                 SAREES
                 <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-terracotta transition-all duration-300 group-hover:w-full" />
               </Link>
+              <Link href="/#premium-sarees" className="hover:text-terracotta text-terracotta font-bold transition-colors py-1 relative group">
+                PREMIUM
+                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-terracotta transition-all duration-300 group-hover:w-full" />
+              </Link>
               <Link href="/shop#collections" className="hover:text-terracotta transition-colors py-1 relative group">
                 COLLECTIONS
                 <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-terracotta transition-all duration-300 group-hover:w-full" />

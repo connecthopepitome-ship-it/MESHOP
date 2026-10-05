@@ -80,6 +80,9 @@ export default function HomePage() {
 
   const newArrivals = allProducts.filter((p) => p.newArrival || p.published).slice(0, 4);
   const bestSellers = allProducts.filter((p) => p.bestseller || p.featured).slice(0, 4);
+  const premiumSarees = (allProducts.filter((p) => p.bestseller || p.featured || (p.price && p.price >= 2000)).length > 0
+    ? allProducts.filter((p) => p.bestseller || p.featured || (p.price && p.price >= 2000))
+    : allProducts).slice(0, 4);
 
   const fabricList = [
     {
@@ -348,6 +351,45 @@ export default function HomePage() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* DEDICATED SECTION — PREMIUM SAREES */}
+      <section className="w-full bg-gradient-to-b from-deep-espresso via-[#251d1a] to-deep-espresso text-warm-ivory py-24 border-y border-champagne/30" id="premium-sarees">
+        <div className="max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] mx-auto px-4 sm:px-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-champagne/20 pb-6 mb-12">
+            <div>
+              <span className="font-sans-fashion text-xs font-bold tracking-[0.25em] text-terracotta uppercase block mb-2 flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-champagne" />
+                BESPOKE WEAVES &amp; LUXURY ATELIER
+              </span>
+              <h2 className="font-serif-display text-3xl sm:text-4xl lg:text-5xl text-warm-ivory font-normal">
+                Premium Sarees
+              </h2>
+            </div>
+            <div className="mt-4 md:mt-0 flex items-center gap-4">
+              <p className="font-serif-editorial italic text-base sm:text-lg text-champagne/90 font-light max-w-sm hidden lg:block">
+                Archival Kanjeevarams, liquid silk drapes, and handcrafted gold zari heirlooms.
+              </p>
+              <Link
+                href="/shop?filter=premium"
+                className="font-sans-fashion text-xs font-bold tracking-[0.2em] text-champagne hover:text-white uppercase flex items-center gap-1 transition-colors px-5 py-2.5 rounded-full sorayva-glass border border-champagne/30"
+              >
+                <span>EXPLORE ALL PREMIUM</span>
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            {premiumSarees.map((prod) => (
+              <ProductCard
+                key={`premium-${prod.productId}`}
+                product={prod}
+                onQuickView={(p) => setQuickViewProduct(p)}
+              />
+            ))}
+          </div>
         </div>
       </section>
 
