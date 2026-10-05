@@ -19,6 +19,7 @@ import {
   RotateCcw,
   Award,
   ArrowRight,
+  Share2,
 } from 'lucide-react';
 import { repository } from '@/lib/api/googleSheetsRepository';
 import { Product } from '@/types';
@@ -134,8 +135,8 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
   const inWishlist = isInWishlist(product.productId);
   const discount = calculateDiscountPercentage(product.price, product.compareAtPrice);
-  
-  // Construct 5-image gallery section repertoire (matches reference layout)
+
+  // Construct guaranteed 5-image repertoire
   const baseGallery =
     Array.isArray(product.galleryImages) && product.galleryImages.length > 0
       ? product.galleryImages
@@ -182,45 +183,45 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
   const stockStatus =
     product.stockQty > 5
-      ? { text: `In stock (${product.stockQty} pieces remaining)`, color: 'bg-emerald-500' }
+      ? { text: `In stock — ${product.stockQty} pieces remaining`, color: 'bg-emerald-500' }
       : product.stockQty > 0
       ? { text: `Only ${product.stockQty} left in stock`, color: 'bg-amber-500' }
       : { text: 'Currently unavailable', color: 'bg-rose-500' };
 
   return (
-    <div className="w-full bg-warm-ivory text-deep-espresso min-h-screen pb-24">
+    <div className="w-full bg-warm-ivory text-deep-espresso min-h-screen pb-24 font-sans-body">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-6">
-        {/* Breadcrumb Header */}
-        <nav className="font-sans-fashion text-xs text-deep-espresso/60 uppercase tracking-widest flex items-center space-x-2 mb-8">
+        {/* Editorial Breadcrumb Navigation */}
+        <nav className="font-sans-fashion text-[0.7rem] text-deep-espresso/60 uppercase tracking-widest flex items-center space-x-2 mb-8">
           <Link href="/" className="hover:text-terracotta transition-colors">
             Home
           </Link>
-          <span>/</span>
+          <span className="text-champagne">/</span>
           <Link href="/shop" className="hover:text-terracotta transition-colors">
             Shop
           </Link>
-          <span>/</span>
-          <span className="text-terracotta font-semibold">{product.category}</span>
-          <span>/</span>
+          <span className="text-champagne">/</span>
+          <span className="text-terracotta font-bold">{product.category}</span>
+          <span className="text-champagne">/</span>
           <span className="text-deep-espresso font-medium line-clamp-1">{product.name}</span>
         </nav>
 
-        {/* Split Editorial Grid Stage */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
-          {/* LEFT: 5-IMAGE GALLERY STAGE (7 Columns) */}
-          <div className="lg:col-span-7 sticky top-24">
-            <div className="flex flex-col sm:flex-row gap-4 items-start">
-              {/* Desktop Vertical 5-Thumbnail Rail (Left of Main Image) */}
-              <div className="hidden sm:flex flex-col items-center gap-3 w-20 sm:w-24 flex-shrink-0">
-                <div className="flex flex-col gap-3 max-h-[640px] overflow-y-auto no-scrollbar py-1 w-full">
+        {/* Split Editorial Layout Stage */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
+          {/* LEFT: GALLERY STAGE (6.5 Cols) */}
+          <div className="lg:col-span-6 sticky top-24">
+            <div className="flex flex-col sm:flex-row gap-3 items-start">
+              {/* Reduced Compact Desktop Vertical 5-Thumbnail Strip (Width 64px) */}
+              <div className="hidden sm:flex flex-col items-center gap-2.5 w-16 sm:w-18 flex-shrink-0">
+                <div className="flex flex-col gap-2.5 max-h-[580px] overflow-y-auto no-scrollbar py-0.5 w-full">
                   {gallery.map((img, idx) => (
                     <button
                       key={idx}
                       onClick={() => setActiveImageIndex(idx)}
-                      className={`relative aspect-[3/4] w-full rounded-2xl overflow-hidden border-2 transition-all duration-300 ${
+                      className={`relative aspect-[3/4] w-full rounded-xl overflow-hidden border-2 transition-all duration-300 ${
                         activeImageIndex === idx
-                          ? 'border-deep-espresso ring-2 ring-champagne/60 scale-105 shadow-md opacity-100'
-                          : 'border-champagne/40 opacity-70 hover:opacity-100 hover:scale-102'
+                          ? 'border-deep-espresso ring-2 ring-champagne/60 scale-104 shadow-md opacity-100 filter saturate-100'
+                          : 'border-champagne/30 opacity-70 filter saturate-[0.85] hover:opacity-100 hover:scale-104 hover:border-terracotta'
                       }`}
                     >
                       <ProductImage src={img} alt={`Angle ${idx + 1}`} fill className="object-cover" />
@@ -230,41 +231,46 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                 {gallery.length > 5 && (
                   <button
                     onClick={() => setActiveImageIndex((prev) => (prev + 1) % gallery.length)}
-                    className="p-2 rounded-full sorayva-glass text-deep-espresso hover:text-terracotta border border-champagne/40 shadow-sm"
-                    aria-label="Next image angle"
+                    className="p-1.5 rounded-full sorayva-glass text-deep-espresso hover:text-terracotta border border-champagne/40 shadow-xs"
+                    aria-label="Next angle"
                   >
-                    <ChevronDown className="w-4 h-4" />
+                    <ChevronDown className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
 
-              {/* Main Image Stage */}
-              <div className="flex-1 relative aspect-[3/4] w-full rounded-2xl overflow-hidden sorayva-glass-card shadow-xl border border-champagne/40 group">
+              {/* Main Product Image Viewport */}
+              <div className="flex-1 relative aspect-[3/4] w-full rounded-[18px] overflow-hidden sorayva-glass-card shadow-[0_15px_40px_rgba(44,33,30,0.08)] border border-champagne/40 group">
                 <ProductImage
                   src={gallery[activeImageIndex] || product.mainImage}
                   alt={product.name}
                   fill
                   priority
-                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  className="object-cover transition-all duration-700 ease-out group-hover:scale-[1.015]"
                 />
 
-                {/* Badges Top Left (NEW ARRIVAL, LIMITED STOCK) */}
-                <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5 pointer-events-none">
+                {/* Floating Image Counter Pill */}
+                <div className="absolute top-4 left-4 z-10 sorayva-glass px-3 py-1 rounded-full text-deep-espresso font-sans-fashion text-[0.65rem] font-bold tracking-widest uppercase border border-champagne/40 shadow-xs">
+                  {String(activeImageIndex + 1).padStart(2, '0')} / {String(gallery.length).padStart(2, '0')}
+                </div>
+
+                {/* Badges Overlay */}
+                <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-1.5 pointer-events-none">
                   {product.newArrival && (
                     <span className="bg-terracotta text-white font-sans-fashion text-[0.65rem] px-3 py-1 rounded-full font-bold tracking-widest uppercase shadow-sm">
                       NEW ARRIVAL
                     </span>
                   )}
                   <span className="sorayva-glass font-sans-fashion text-[0.65rem] px-3 py-1 rounded-full font-bold tracking-widest uppercase border border-champagne/40 text-deep-espresso">
-                    {product.stockQty > 0 && product.stockQty <= 5 ? 'LIMITED STOCK' : 'EXCLUSIVELY WEAVED'}
+                    {product.stockQty > 0 && product.stockQty <= 5 ? 'LIMITED STOCK' : 'SORAYVA HANDLOOM'}
                   </span>
                 </div>
 
-                {/* Expand Fullscreen & Wishlist Top Right */}
+                {/* Circular Glass Action Buttons (Wishlist & Fullscreen Expand) */}
                 <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
                   <button
                     onClick={() => setFullscreenModalOpen(true)}
-                    className="p-3 rounded-full bg-white/90 backdrop-blur-md text-deep-espresso hover:text-terracotta transition-all shadow-md"
+                    className="w-11 h-11 rounded-full sorayva-glass text-deep-espresso hover:text-terracotta hover:scale-105 hover:-translate-y-0.5 transition-all shadow-md flex items-center justify-center border border-champagne/40"
                     title="Expand Fullscreen"
                     aria-label="Expand Fullscreen"
                   >
@@ -272,8 +278,10 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                   </button>
                   <button
                     onClick={() => toggleWishlist(product)}
-                    className={`p-3 rounded-full bg-white/90 backdrop-blur-md transition-all shadow-md ${
-                      inWishlist ? 'bg-terracotta text-white border-terracotta' : 'text-deep-espresso hover:text-terracotta'
+                    className={`w-11 h-11 rounded-full sorayva-glass transition-all shadow-md flex items-center justify-center border border-champagne/40 ${
+                      inWishlist
+                        ? 'bg-terracotta text-white border-terracotta scale-105'
+                        : 'text-deep-espresso hover:text-terracotta hover:scale-105 hover:-translate-y-0.5'
                     }`}
                     aria-label="Wishlist"
                   >
@@ -283,13 +291,13 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
               </div>
             </div>
 
-            {/* Mobile Horizontal Thumbnail Slider */}
-            <div className="flex sm:hidden space-x-3 overflow-x-auto pt-4 no-scrollbar">
+            {/* Mobile Compact Horizontal Thumbnail Slider */}
+            <div className="flex sm:hidden space-x-2.5 overflow-x-auto pt-3 no-scrollbar">
               {gallery.map((img, idx) => (
                 <button
                   key={idx}
                   onClick={() => setActiveImageIndex(idx)}
-                  className={`relative w-16 aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
+                  className={`relative w-14 aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
                     activeImageIndex === idx ? 'border-deep-espresso scale-105 shadow-md' : 'border-champagne/40 opacity-70'
                   }`}
                 >
@@ -299,28 +307,65 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
             </div>
           </div>
 
-          {/* RIGHT: STICKY PRODUCT DETAILS (5 Columns) */}
+          {/* CENTER: DISTINCTIVE SORAYVA SLIM GLASS COLUMN (1 Col on Desktop) */}
+          <div className="hidden lg:flex lg:col-span-1 h-full min-h-[580px] flex-col items-center justify-between py-6 px-1 sorayva-glass rounded-2xl border border-champagne/30 backdrop-blur-md text-deep-espresso shadow-sm text-center">
+            <span className="font-sans-fashion text-[0.65rem] font-bold tracking-widest text-terracotta uppercase">
+              {String(activeImageIndex + 1).padStart(2, '0')}
+            </span>
+
+            <div className="flex flex-col items-center gap-3 my-auto">
+              <span className="text-terracotta text-xs">✦</span>
+              <span className="font-sans-fashion text-[0.6rem] font-bold tracking-[0.3em] uppercase text-deep-espresso/40 [writing-mode:vertical-lr] rotate-180">
+                SORAYVA EDIT
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-terracotta animate-pulse" />
+            </div>
+
+            <span className="font-sans-fashion text-[0.65rem] font-bold tracking-widest text-deep-espresso/50 uppercase">
+              {String(gallery.length).padStart(2, '0')}
+            </span>
+          </div>
+
+          {/* RIGHT: STICKY PRODUCT INFORMATION AREA (5 Columns) */}
           <div className="lg:col-span-5 space-y-6">
-            {/* Header & Meta */}
+            {/* Header & Meta Hierarchy */}
             <div>
+              {/* SectionLabel Accent */}
               <div className="flex items-center gap-2 mb-2">
-                <span className="px-3 py-1 rounded-full bg-soft-sand font-sans-fashion text-[0.65rem] font-bold text-terracotta tracking-widest uppercase border border-champagne/40">
-                  {fabricLabel} · {occasionLabel}
+                <span className="font-sans-fashion text-[0.68rem] font-bold text-terracotta tracking-widest uppercase flex items-center gap-1.5">
+                  <span className="text-xs">✦</span>
+                  <span>{fabricLabel}</span>
+                  <span className="text-deep-espresso/30">·</span>
+                  <span>{occasionLabel}</span>
                 </span>
-                {product.newArrival && (
-                  <span className="px-2.5 py-1 rounded-full bg-deep-espresso text-warm-ivory font-sans-fashion text-[0.65rem] font-bold tracking-widest uppercase">
-                    NEW
-                  </span>
-                )}
               </div>
 
-              <h1 className="font-serif-display text-3xl sm:text-4xl lg:text-5xl text-deep-espresso font-normal leading-tight mb-2">
+              <h1 className="font-serif-display text-3xl sm:text-4xl lg:text-5xl text-deep-espresso font-normal leading-[1.12] mb-3">
                 {product.name}
               </h1>
 
+              {/* SKU & Share Row */}
+              <div className="flex items-center justify-between text-[0.7rem] font-sans-fashion text-deep-espresso/60 tracking-wider uppercase pb-3 border-b border-champagne/20">
+                <span>SKU: {product.sku || product.productId}</span>
+                <button
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({ title: product.name, url: window.location.href });
+                    } else {
+                      navigator.clipboard.writeText(window.location.href);
+                      alert('Product link copied to clipboard!');
+                    }
+                  }}
+                  className="hover:text-terracotta transition-colors flex items-center gap-1 font-semibold"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>SHARE EDIT</span>
+                </button>
+              </div>
+
               {/* Rating & Review Count */}
-              <div className="flex items-center gap-3 text-xs font-sans-body text-deep-espresso/70 mt-2">
-                <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-soft-sand border border-champagne/30">
+              <div className="flex items-center gap-3 text-xs font-sans-body text-deep-espresso/70 mt-3">
+                <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-soft-sand/90 border border-champagne/40">
                   <Star className="w-3.5 h-3.5 fill-champagne text-champagne" />
                   <span className="font-bold text-deep-espresso">{product.rating ? product.rating.toFixed(1) : '4.8'}</span>
                 </div>
@@ -328,84 +373,88 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
               </div>
             </div>
 
-            {/* Pricing Strip */}
-            <div className="flex items-baseline gap-4 pt-4 border-t border-champagne/30">
-              <span className="font-sans-fashion text-3xl sm:text-4xl font-bold text-deep-espresso">
+            {/* Price Area */}
+            <div className="flex items-baseline gap-4 pt-3 border-t border-champagne/30">
+              <span className="font-serif-display text-3xl sm:text-4xl font-bold text-deep-espresso">
                 {formatPrice(product.price, product.currency)}
               </span>
               {product.compareAtPrice && product.compareAtPrice > product.price && (
-                <span className="font-sans-fashion text-lg text-deep-espresso/40 line-through">
+                <span className="font-sans-fashion text-base text-deep-espresso/40 line-through font-medium">
                   {formatPrice(product.compareAtPrice, product.currency)}
                 </span>
               )}
               {discount && (
-                <span className="bg-terracotta text-white font-sans-fashion text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                <span className="sorayva-glass-pill px-3 py-1 rounded-full font-sans-fashion text-xs font-bold text-terracotta uppercase tracking-wider border border-champagne/40 shadow-xs">
                   SAVE {discount}%
                 </span>
               )}
             </div>
 
-            {/* Live Stock Indicator Dot */}
-            <div className="flex items-center gap-2 text-xs font-sans-body">
-              <span className={`w-2.5 h-2.5 rounded-full ${stockStatus.color} animate-pulse`} />
-              <span className="font-semibold text-deep-espresso">{stockStatus.text}</span>
+            {/* Live Stock Status Glass Pill */}
+            <div className="sorayva-glass-pill rounded-full px-4 py-2 inline-flex items-center gap-2 border border-champagne/30">
+              <span className={`w-2 h-2 rounded-full ${stockStatus.color} animate-pulse`} />
+              <span className="font-sans-body text-xs font-semibold text-deep-espresso">{stockStatus.text}</span>
             </div>
 
-            {/* Product Information Glass Panels / Chips */}
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="sorayva-glass-card rounded-xl p-3 flex items-center gap-3">
-                <span className="text-terracotta text-lg font-serif-display">✦</span>
-                <div>
-                  <span className="block font-sans-fashion text-[0.6rem] font-bold text-deep-espresso/60 tracking-widest uppercase">
-                    FABRIC
-                  </span>
-                  <span className="font-sans-body text-xs font-semibold text-deep-espresso">{fabricLabel}</span>
-                </div>
+            {/* Asymmetric Editorial Glass Information Chips */}
+            <div>
+              <div className="text-[0.65rem] font-sans-fashion font-bold tracking-widest text-terracotta uppercase mb-2 flex items-center gap-1.5">
+                <span>✦ SPECIFICATIONS & CRAFT</span>
+                <span className="flex-1 h-[1px] bg-champagne/30" />
               </div>
 
-              <div className="sorayva-glass-card rounded-xl p-3 flex items-center gap-3">
-                <span className="text-terracotta text-lg font-serif-display">✧</span>
-                <div>
-                  <span className="block font-sans-fashion text-[0.6rem] font-bold text-deep-espresso/60 tracking-widest uppercase">
-                    OCCASION
-                  </span>
-                  <span className="font-sans-body text-xs font-semibold text-deep-espresso">{occasionLabel}</span>
+              <div className="grid grid-cols-2 gap-3">
+                {/* FABRIC - Elevated Large Card */}
+                <div className="col-span-2 sorayva-glass-card rounded-[14px] p-3.5 flex items-center justify-between border border-champagne/40 hover:-translate-y-0.5 transition-all">
+                  <div className="flex items-center gap-3">
+                    <span className="text-terracotta text-base font-serif-display">✦</span>
+                    <div>
+                      <span className="block font-sans-fashion text-[0.6rem] font-bold text-deep-espresso/60 tracking-widest uppercase">
+                        FABRIC
+                      </span>
+                      <span className="font-sans-body text-sm font-semibold text-deep-espresso">{fabricLabel}</span>
+                    </div>
+                  </div>
+                  <span className="font-sans-fashion text-[0.65rem] text-terracotta uppercase font-bold tracking-wider">PURE WEAVE</span>
                 </div>
-              </div>
 
-              <div className="sorayva-glass-card rounded-xl p-3 flex items-center gap-3">
-                <span className="text-terracotta text-lg font-serif-display">◇</span>
-                <div>
-                  <span className="block font-sans-fashion text-[0.6rem] font-bold text-deep-espresso/60 tracking-widest uppercase">
-                    WORK
-                  </span>
-                  <span className="font-sans-body text-xs font-semibold text-deep-espresso">{workLabel}</span>
+                {/* OCCASION */}
+                <div className="sorayva-glass-card rounded-[14px] p-3 flex items-center gap-2.5 border border-champagne/40 hover:-translate-y-0.5 transition-all">
+                  <span className="text-terracotta text-sm font-serif-display">✧</span>
+                  <div>
+                    <span className="block font-sans-fashion text-[0.58rem] font-bold text-deep-espresso/60 tracking-widest uppercase">
+                      OCCASION
+                    </span>
+                    <span className="font-sans-body text-xs font-semibold text-deep-espresso line-clamp-1">{occasionLabel}</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="sorayva-glass-card rounded-xl p-3 flex items-center gap-3">
-                <span className="text-terracotta text-lg font-serif-display">◈</span>
-                <div>
-                  <span className="block font-sans-fashion text-[0.6rem] font-bold text-deep-espresso/60 tracking-widest uppercase">
-                    STYLE
-                  </span>
-                  <span className="font-sans-body text-xs font-semibold text-deep-espresso">{styleLabel}</span>
+                {/* WORK */}
+                <div className="sorayva-glass-card rounded-[14px] p-3 flex items-center gap-2.5 border border-champagne/40 hover:-translate-y-0.5 transition-all">
+                  <span className="text-terracotta text-sm font-serif-display">◇</span>
+                  <div>
+                    <span className="block font-sans-fashion text-[0.58rem] font-bold text-deep-espresso/60 tracking-widest uppercase">
+                      WORK / CRAFT
+                    </span>
+                    <span className="font-sans-body text-xs font-semibold text-deep-espresso line-clamp-1">{workLabel}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Size Selector Pills */}
+            {/* Size Section */}
             <div className="space-y-3 pt-4 border-t border-champagne/30">
               <div className="flex items-center justify-between">
-                <label className="font-sans-fashion text-xs font-bold uppercase tracking-wider text-deep-espresso">
-                  Blouse Size Reference:
+                <label className="font-sans-fashion text-xs font-bold uppercase tracking-wider text-deep-espresso flex items-center gap-1.5">
+                  <span className="text-terracotta text-xs">◈</span>
+                  <span>BLOUSE SIZE REFERENCE</span>
                 </label>
                 <button
                   onClick={() => setSizeModalOpen(true)}
                   className="font-sans-fashion text-xs text-terracotta hover:underline font-bold flex items-center gap-1"
                 >
                   <Ruler className="w-3.5 h-3.5" />
-                  <span>Size Guide</span>
+                  <span>Size Guide ↗</span>
                 </button>
               </div>
 
@@ -416,10 +465,10 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                     <button
                       key={sz}
                       onClick={() => setSelectedBlouseSize(sz)}
-                      className={`px-4 py-2.5 rounded-full font-sans-fashion text-xs font-bold transition-all border ${
+                      className={`px-4 py-2 rounded-full font-sans-fashion text-xs font-bold transition-all border ${
                         isSelected
-                          ? 'bg-deep-espresso text-warm-ivory border-deep-espresso shadow-md scale-105'
-                          : 'bg-white/70 hover:bg-white text-deep-espresso border-champagne/50 hover:border-terracotta'
+                          ? 'bg-deep-espresso text-warm-ivory border-deep-espresso shadow-md scale-104'
+                          : 'bg-white/70 hover:bg-soft-sand text-deep-espresso border-champagne/50 hover:border-terracotta hover:-translate-y-0.5'
                       }`}
                     >
                       {sz}
@@ -429,38 +478,42 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
               </div>
             </div>
 
-            {/* Quantity & Primary Action Buttons */}
+            {/* Quantity Stepper & CTA Buttons */}
             <div ref={mainCtaRef} className="space-y-4 pt-4 border-t border-champagne/30">
               <div className="flex items-center gap-4">
                 <span className="font-sans-fashion text-xs font-bold uppercase tracking-wider text-deep-espresso">
                   QUANTITY:
                 </span>
-                <div className="flex items-center sorayva-glass-pill rounded-full px-3 py-1">
+                <div className="flex items-center sorayva-glass-pill rounded-full px-3 py-1 border border-champagne/40">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-7 h-7 flex items-center justify-center font-bold text-sm hover:text-terracotta"
+                    className="w-7 h-7 flex items-center justify-center font-bold text-sm hover:text-terracotta transition-colors"
                   >
                     -
                   </button>
                   <span className="px-3 font-sans-fashion text-xs font-bold">{quantity}</span>
                   <button
                     onClick={() => setQuantity(Math.min(product.stockQty, quantity + 1))}
-                    className="w-7 h-7 flex items-center justify-center font-bold text-sm hover:text-terracotta"
+                    className="w-7 h-7 flex items-center justify-center font-bold text-sm hover:text-terracotta transition-colors"
                   >
                     +
                   </button>
                 </div>
               </div>
 
+              {/* Primary & Secondary CTAs */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Primary: ADD TO BAG */}
                 <button
                   onClick={handleAddToCart}
-                  className="rounded-full bg-deep-espresso text-warm-ivory py-4 px-6 font-sans-fashion text-xs font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-terracotta transition-colors shadow-lg"
+                  className="relative overflow-hidden rounded-full bg-deep-espresso text-warm-ivory py-4 px-6 font-sans-fashion text-xs font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-terracotta transition-colors shadow-lg group"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span>ADD TO BAG</span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
                 </button>
 
+                {/* Secondary: BUY NOW */}
                 <button
                   onClick={handleBuyNow}
                   className="rounded-full bg-terracotta text-white py-4 px-6 font-sans-fashion text-xs font-bold uppercase tracking-[0.2em] flex items-center justify-center hover:bg-deep-espresso transition-colors shadow-lg"
@@ -470,11 +523,11 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
               </div>
             </div>
 
-            {/* Pincode Delivery Card */}
-            <div className="sorayva-glass-card rounded-2xl p-4 space-y-3 border border-champagne/40">
+            {/* Delivery & Pincode Glass Module */}
+            <div className="sorayva-glass-card rounded-[14px] p-4 space-y-3 border border-champagne/40">
               <span className="font-sans-fashion text-xs font-bold uppercase tracking-wider block text-deep-espresso flex items-center gap-2">
                 <Truck className="w-4 h-4 text-terracotta" />
-                Delivery & Pincode Estimator
+                ✦ DELIVERY & PINCODE ESTIMATOR
               </span>
               <form onSubmit={handlePincodeCheck} className="flex gap-2">
                 <input
@@ -506,35 +559,35 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
               )}
             </div>
 
-            {/* Minimal Trust Strip */}
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="flex items-center gap-2 text-xs font-sans-body text-deep-espresso/80">
-                <Truck className="w-4 h-4 text-terracotta flex-shrink-0" />
+            {/* Minimal Editorial Trust Strip */}
+            <div className="grid grid-cols-2 gap-3 pt-2 text-[0.7rem] font-sans-fashion font-semibold tracking-wider text-deep-espresso/80 uppercase">
+              <div className="flex items-center gap-2">
+                <span className="text-terracotta">◈</span>
                 <span>FAST DISPATCH</span>
               </div>
-              <div className="flex items-center gap-2 text-xs font-sans-body text-deep-espresso/80">
-                <ShieldCheck className="w-4 h-4 text-terracotta flex-shrink-0" />
+              <div className="flex items-center gap-2">
+                <span className="text-terracotta">◈</span>
                 <span>SECURE CHECKOUT</span>
               </div>
-              <div className="flex items-center gap-2 text-xs font-sans-body text-deep-espresso/80">
-                <RotateCcw className="w-4 h-4 text-terracotta flex-shrink-0" />
+              <div className="flex items-center gap-2">
+                <span className="text-terracotta">◈</span>
                 <span>EASY RETURNS</span>
               </div>
-              <div className="flex items-center gap-2 text-xs font-sans-body text-deep-espresso/80">
-                <Award className="w-4 h-4 text-terracotta flex-shrink-0" />
+              <div className="flex items-center gap-2">
+                <span className="text-terracotta">◈</span>
                 <span>QUALITY CHECKED</span>
               </div>
             </div>
 
-            {/* WhatsApp Stylist */}
+            {/* WhatsApp Stylist Soft Glass Module */}
             <a
               href={`https://wa.me/919876543210?text=Hi!%20I%20am%20interested%20in%20${encodeURIComponent(product.name)}`}
               target="_blank"
               rel="noreferrer"
-              className="w-full py-3 rounded-full bg-emerald-800/10 hover:bg-emerald-800/20 text-emerald-800 text-xs font-sans-fashion font-bold uppercase tracking-wider flex items-center justify-center gap-2 border border-emerald-800/20 transition-colors"
+              className="w-full py-3 rounded-full bg-emerald-800/10 hover:bg-emerald-800/20 text-emerald-800 text-xs font-sans-fashion font-bold uppercase tracking-wider flex items-center justify-center gap-2 border border-emerald-800/20 transition-all hover:-translate-y-0.5 shadow-xs"
             >
               <MessageCircle className="w-4 h-4" />
-              <span>Ask Personal Stylist on WhatsApp</span>
+              <span>◌ ASK A PERSONAL STYLIST ON WHATSAPP</span>
             </a>
 
             {/* Tabbed Product Accordion */}
@@ -592,7 +645,6 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                         <span className="text-[0.7rem] text-deep-espresso/60">Based on 126 verified reviews</span>
                       </div>
                     </div>
-                    {/* Rating Distribution Bars */}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span>5 ★</span>
@@ -614,9 +666,16 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           </div>
         </div>
 
+        {/* Signature SORAYVA Divider */}
+        <div className="my-16 flex items-center justify-center gap-4 text-champagne">
+          <span className="w-24 h-[1px] bg-champagne/40" />
+          <span className="text-xs font-serif-display text-terracotta">✦</span>
+          <span className="w-24 h-[1px] bg-champagne/40" />
+        </div>
+
         {/* Complete the Look Carousel */}
         {relatedProducts.length > 0 && (
-          <section className="mt-20 pt-12 border-t border-champagne/30">
+          <section className="pt-4">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <span className="font-sans-fashion text-xs font-bold tracking-widest text-terracotta uppercase block mb-1">
@@ -646,7 +705,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         )}
       </div>
 
-      {/* FLOATING STICKY PURCHASE BAR (DESKTOP & MOBILE) */}
+      {/* FLOATING STICKY GLASS PURCHASE BAR */}
       {showStickyBar && (
         <div className="fixed bottom-0 inset-x-0 z-40 sorayva-sticky-bar py-3 px-4 sm:px-8 animate-fadeIn">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
