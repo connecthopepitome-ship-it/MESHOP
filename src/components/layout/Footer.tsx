@@ -132,8 +132,8 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link className="hover:text-primary-fixed transition-colors" href="/shop/bridal">
-                  Bridal Registry &amp; Trousseau Box
+                <Link className="hover:text-primary-fixed transition-colors" href="/shop?filter=premium">
+                  Premium Saree Atelier &amp; Trousseau
                 </Link>
               </li>
               <li>

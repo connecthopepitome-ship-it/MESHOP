@@ -36,7 +36,7 @@ export const Header: React.FC = () => {
   };
 
   const trendingTags = [
-    'Bridal Kanjeevaram',
+    'Premium Kanjeevaram',
     'Tissue Organza',
     'Banarasi Katan',
     'Crimson Silk',
@@ -45,7 +45,7 @@ export const Header: React.FC = () => {
   ];
 
   const popularFabrics = ['Organza', 'Kanjeevaram Silk', 'Banarasi', 'Chiffon', 'Georgette'];
-  const popularOccasions = ['Bridal & Wedding', 'Festive Edit', 'Cocktail Soiree', 'Puja & Rituals'];
+  const popularOccasions = ['Premium & Festive', 'Cocktail Soiree', 'Puja & Rituals', 'Wedding Edit'];
 
   return (
     <>
