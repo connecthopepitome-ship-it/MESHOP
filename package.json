@@ -9,8 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "cf-build": "npm run clean && opennextjs-cloudflare",
-    "preview": "npm run cf-build && opennextjs-cloudflare preview",
-    "deploy": "npm run cf-build && opennextjs-cloudflare deploy"
+    "preview": "npm run cf-build && wrangler dev",
+    "deploy": "npm run cf-build && wrangler deploy"
   },
   "dependencies": {
     "clsx": "^2.1.1",
