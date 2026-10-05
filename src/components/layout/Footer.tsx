@@ -13,7 +13,7 @@ export const Footer: React.FC = () => {
 
   return (
     <footer className="w-full bg-[#1b1c1a] text-[#ede6dc] pt-20 pb-12 border-t border-[#302d28]">
-      <div className="max-w-[1560px] mx-auto px-4 sm:px-8 md:px-12 lg:px-16">
+      <div className="max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] mx-auto px-4 sm:px-6 md:px-8">
         {/* Newsletter Section */}
         <div className="max-w-2xl mx-auto text-center pb-16 border-b border-[#302d28]">
           <span className="font-sans-fashion text-xs tracking-[0.25em] text-primary-container uppercase font-semibold block mb-2">

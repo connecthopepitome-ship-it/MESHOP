@@ -190,7 +190,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
   return (
     <div className="w-full bg-warm-ivory text-deep-espresso min-h-screen pb-24 font-sans-body">
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-6">
+      <div className="max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] mx-auto px-4 sm:px-6 py-6">
         {/* Editorial Breadcrumb Navigation */}
         <nav className="font-sans-fashion text-[0.7rem] text-deep-espresso/60 uppercase tracking-widest flex items-center space-x-2 mb-8">
           <Link href="/" className="hover:text-terracotta transition-colors">

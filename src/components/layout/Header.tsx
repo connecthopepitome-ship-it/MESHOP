@@ -49,9 +49,9 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="sticky top-2 sm:top-4 z-50 w-full px-3 sm:px-6 pointer-events-none transition-all duration-300">
+      <header className="sticky top-2 sm:top-4 z-50 w-full px-2 sm:px-4 pointer-events-none transition-all duration-300">
         <div
-          className={`mx-auto max-w-7xl pointer-events-auto rounded-full transition-all duration-300 ${
+          className={`mx-auto max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] pointer-events-auto rounded-full transition-all duration-300 ${
             scrolled
               ? 'sorayva-glass-bar py-2 shadow-xl border-champagne/40 bg-warm-ivory/90'
               : 'sorayva-glass py-3 shadow-md border-champagne/20 bg-warm-ivory/75'

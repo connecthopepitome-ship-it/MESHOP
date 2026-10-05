@@ -50,7 +50,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 md:px-8 py-12 space-y-8">
+    <div className="max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] mx-auto px-4 sm:px-6 py-12 space-y-8">
       <div className="text-center max-w-xl mx-auto space-y-2 border-b border-brand-border pb-6">
         <span className="text-xs font-semibold tracking-widest text-brand-gold uppercase">Review Selection</span>
         <h1 className="font-serif text-3xl md:text-5xl text-brand-charcoal font-medium">Your Shopping Bag</h1>

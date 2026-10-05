@@ -129,7 +129,7 @@ export default function HomePage() {
         </div>
 
         {/* Floating Glass Content Panel (Desktop Right/Center position so model remains hero) */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 w-full flex justify-start lg:justify-end">
+        <div className="relative z-10 max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] mx-auto px-4 sm:px-6 w-full flex justify-start lg:justify-end">
           <div className="w-full max-w-lg sorayva-glass rounded-3xl p-8 sm:p-12 shadow-2xl border border-champagne/40 backdrop-blur-2xl">
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-terracotta/10 text-terracotta font-sans-fashion text-[0.65rem] font-bold tracking-[0.25em] uppercase mb-4 border border-terracotta/20">
               <Sparkles className="w-3.5 h-3.5" />
@@ -165,7 +165,7 @@ export default function HomePage() {
 
       {/* SECTION 2 — HORIZONTAL CAPSULE COLLECTION SLIDER */}
       <section className="sticky top-[72px] z-30 w-full sorayva-glass border-y border-champagne/30 py-4 shadow-sm backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] mx-auto px-4 sm:px-6">
           <div
             ref={sliderRef}
             className="flex items-center gap-3 overflow-x-auto no-scrollbar scroll-smooth py-1 px-1"
@@ -195,7 +195,7 @@ export default function HomePage() {
       </section>
 
       {/* SECTION 3 — FRESH ARRIVALS */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-20">
+      <section className="max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] mx-auto px-4 sm:px-6 py-20">
         <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-champagne/30 pb-6 mb-12">
           <div>
             <span className="font-sans-fashion text-xs font-bold tracking-[0.25em] text-terracotta uppercase block mb-2">
@@ -227,7 +227,7 @@ export default function HomePage() {
 
       {/* SECTION 4 — SHOP BY OCCASION */}
       <section className="w-full bg-soft-sand/50 py-20 border-y border-champagne/30" id="shop-by-occasion">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
+        <div className="max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] mx-auto px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
             <span className="font-sans-fashion text-xs font-bold tracking-[0.25em] text-terracotta uppercase block mb-2">
               HIGH-FASHION EDITORIAL
@@ -296,7 +296,7 @@ export default function HomePage() {
       </section>
 
       {/* SECTION 5 — EXPLORE BY FABRIC */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-20" id="explore-by-fabric">
+      <section className="max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] mx-auto px-4 sm:px-6 py-20" id="explore-by-fabric">
         <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-champagne/30 pb-6 mb-12">
           <div>
             <span className="font-sans-fashion text-xs font-bold tracking-[0.25em] text-terracotta uppercase block mb-2">
@@ -353,7 +353,7 @@ export default function HomePage() {
 
       {/* SECTION 6 — THE SORAYVA EDIT */}
       <section className="w-full bg-soft-sand/40 py-24 border-y border-champagne/30" id="collections">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
+        <div className="max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] mx-auto px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
             <span className="font-sans-fashion text-xs font-bold tracking-[0.25em] text-terracotta uppercase block mb-2">
               CURATED SELECTION
@@ -390,7 +390,7 @@ export default function HomePage() {
 
       {/* SECTION 7 — RECENTLY VIEWED CAROUSEL */}
       {recentlyViewed.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-16 border-b border-champagne/30">
+        <section className="max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] mx-auto px-4 sm:px-6 py-16 border-b border-champagne/30">
           <div className="flex items-center justify-between border-b border-champagne/30 pb-4 mb-8">
             <h3 className="font-serif-display text-2xl text-deep-espresso font-normal">Recently Viewed</h3>
           </div>
@@ -408,7 +408,7 @@ export default function HomePage() {
 
       {/* SECTION 8 — MINIMAL TRUST STRIP */}
       <section className="w-full py-12 bg-warm-ivory border-t border-champagne/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
+        <div className="max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div className="p-4 rounded-xl sorayva-glass-card flex flex-col items-center justify-center gap-2">
               <Truck className="w-5 h-5 text-terracotta" />

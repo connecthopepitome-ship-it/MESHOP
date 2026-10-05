@@ -137,7 +137,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 md:px-8 py-10 space-y-8">
+    <div className="max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] mx-auto px-4 sm:px-6 py-10 space-y-8">
       <div className="text-center max-w-xl mx-auto space-y-2 border-b border-brand-border pb-4">
         <span className="text-xs font-semibold tracking-widest text-brand-gold uppercase flex items-center justify-center">
           <Lock className="w-3.5 h-3.5 mr-1" /> 256-Bit SSL Encrypted Checkout

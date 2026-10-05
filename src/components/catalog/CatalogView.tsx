@@ -84,7 +84,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     (filters.maxPrice < 100000 ? 1 : 0);
 
   return (
-    <div className="max-w-[1560px] mx-auto px-4 sm:px-8 md:px-12 py-12 space-y-8">
+    <div className="max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] mx-auto px-4 sm:px-6 py-12 space-y-8">
       {/* Title & Header */}
       <div className="text-center max-w-2xl mx-auto space-y-3 border-b border-outline-variant/60 pb-8">
         <span className="font-sans-fashion text-xs font-semibold tracking-[0.25em] text-primary-container uppercase block">
