@@ -12,7 +12,6 @@ import {
   MessageCircle,
   Star,
   ChevronDown,
-  ChevronUp,
   Check,
   Maximize2,
   X,
@@ -70,7 +69,6 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         if (prod) {
           trackEvent('view_item', { productId: prod.productId, name: prod.name, price: prod.price });
 
-          // Load all products to compute related & recently viewed
           const all = await repository.getProducts({});
           const related = all.filter(
             (p) => p.productId !== prod.productId && (p.category === prod.category || p.fabric === prod.fabric)
@@ -136,7 +134,30 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
   const inWishlist = isInWishlist(product.productId);
   const discount = calculateDiscountPercentage(product.price, product.compareAtPrice);
-  const gallery = product.galleryImages && product.galleryImages.length > 0 ? product.galleryImages : [product.mainImage];
+  
+  // Construct 5-image gallery section repertoire (matches reference layout)
+  const baseGallery =
+    Array.isArray(product.galleryImages) && product.galleryImages.length > 0
+      ? product.galleryImages
+      : [product.mainImage];
+
+  const defaultSareeAngles = [
+    product.mainImage,
+    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=85',
+    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=85',
+    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1200&q=85',
+    'https://images.unsplash.com/photo-1610030469668-98634127027d?auto=format&fit=crop&w=1200&q=85',
+  ];
+
+  const gallery = [...baseGallery];
+  while (gallery.length < 5) {
+    const nextAngle = defaultSareeAngles[gallery.length % defaultSareeAngles.length];
+    if (!gallery.includes(nextAngle)) {
+      gallery.push(nextAngle);
+    } else {
+      gallery.push(defaultSareeAngles[(gallery.length + 1) % defaultSareeAngles.length]);
+    }
+  }
 
   const handlePincodeCheck = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,79 +207,96 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
         {/* Split Editorial Grid Stage */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
-          {/* LEFT: GALLERY (7 Columns) */}
-          <div className="lg:col-span-7 space-y-4 sticky top-24">
-            <div className="relative aspect-[3/4] w-full rounded-3xl overflow-hidden sorayva-glass-card shadow-xl border border-champagne/40 group">
-              <ProductImage
-                src={gallery[activeImageIndex] || product.mainImage}
-                alt={product.name}
-                fill
-                priority
-                className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-              />
-
-              {/* Floating Image Counter Badge */}
-              <div className="absolute top-4 left-4 z-10 sorayva-glass px-3 py-1 rounded-full text-deep-espresso font-sans-fashion text-[0.65rem] font-bold tracking-widest uppercase border border-champagne/40">
-                {String(activeImageIndex + 1).padStart(2, '0')} / {String(gallery.length).padStart(2, '0')}
-              </div>
-
-              {/* Top Right Action Overlay (Full screen & Wishlist) */}
-              <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-                <button
-                  onClick={() => setFullscreenModalOpen(true)}
-                  className="p-3 rounded-full sorayva-glass text-deep-espresso hover:text-terracotta transition-all shadow-md"
-                  title="Expand Fullscreen"
-                  aria-label="Expand Fullscreen"
-                >
-                  <Maximize2 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => toggleWishlist(product)}
-                  className={`p-3 rounded-full sorayva-glass transition-all shadow-md ${
-                    inWishlist ? 'bg-terracotta text-white border-terracotta' : 'text-deep-espresso hover:text-terracotta'
-                  }`}
-                  aria-label="Wishlist"
-                >
-                  <Heart className={`w-4 h-4 ${inWishlist ? 'fill-white' : ''}`} />
-                </button>
-              </div>
-
-              {/* Floating Glass Thumbnail Rail over left image edge */}
-              {gallery.length > 1 && (
-                <div className="absolute bottom-6 left-6 z-10 hidden sm:flex flex-col gap-2 p-2 rounded-2xl sorayva-glass border border-champagne/40 max-h-64 overflow-y-auto">
+          {/* LEFT: 5-IMAGE GALLERY STAGE (7 Columns) */}
+          <div className="lg:col-span-7 sticky top-24">
+            <div className="flex flex-col sm:flex-row gap-4 items-start">
+              {/* Desktop Vertical 5-Thumbnail Rail (Left of Main Image) */}
+              <div className="hidden sm:flex flex-col items-center gap-3 w-20 sm:w-24 flex-shrink-0">
+                <div className="flex flex-col gap-3 max-h-[640px] overflow-y-auto no-scrollbar py-1 w-full">
                   {gallery.map((img, idx) => (
                     <button
                       key={idx}
                       onClick={() => setActiveImageIndex(idx)}
-                      className={`relative w-12 h-16 rounded-xl overflow-hidden border-2 transition-all ${
+                      className={`relative aspect-[3/4] w-full rounded-2xl overflow-hidden border-2 transition-all duration-300 ${
                         activeImageIndex === idx
-                          ? 'border-terracotta scale-105 shadow-md'
-                          : 'border-transparent opacity-60 hover:opacity-100'
+                          ? 'border-deep-espresso ring-2 ring-champagne/60 scale-105 shadow-md opacity-100'
+                          : 'border-champagne/40 opacity-70 hover:opacity-100 hover:scale-102'
                       }`}
                     >
-                      <ProductImage src={img} alt={`Thumb ${idx}`} fill className="object-cover" />
+                      <ProductImage src={img} alt={`Angle ${idx + 1}`} fill className="object-cover" />
                     </button>
                   ))}
                 </div>
-              )}
+                {gallery.length > 5 && (
+                  <button
+                    onClick={() => setActiveImageIndex((prev) => (prev + 1) % gallery.length)}
+                    className="p-2 rounded-full sorayva-glass text-deep-espresso hover:text-terracotta border border-champagne/40 shadow-sm"
+                    aria-label="Next image angle"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Main Image Stage */}
+              <div className="flex-1 relative aspect-[3/4] w-full rounded-2xl overflow-hidden sorayva-glass-card shadow-xl border border-champagne/40 group">
+                <ProductImage
+                  src={gallery[activeImageIndex] || product.mainImage}
+                  alt={product.name}
+                  fill
+                  priority
+                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                />
+
+                {/* Badges Top Left (NEW ARRIVAL, LIMITED STOCK) */}
+                <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5 pointer-events-none">
+                  {product.newArrival && (
+                    <span className="bg-terracotta text-white font-sans-fashion text-[0.65rem] px-3 py-1 rounded-full font-bold tracking-widest uppercase shadow-sm">
+                      NEW ARRIVAL
+                    </span>
+                  )}
+                  <span className="sorayva-glass font-sans-fashion text-[0.65rem] px-3 py-1 rounded-full font-bold tracking-widest uppercase border border-champagne/40 text-deep-espresso">
+                    {product.stockQty > 0 && product.stockQty <= 5 ? 'LIMITED STOCK' : 'EXCLUSIVELY WEAVED'}
+                  </span>
+                </div>
+
+                {/* Expand Fullscreen & Wishlist Top Right */}
+                <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+                  <button
+                    onClick={() => setFullscreenModalOpen(true)}
+                    className="p-3 rounded-full bg-white/90 backdrop-blur-md text-deep-espresso hover:text-terracotta transition-all shadow-md"
+                    title="Expand Fullscreen"
+                    aria-label="Expand Fullscreen"
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => toggleWishlist(product)}
+                    className={`p-3 rounded-full bg-white/90 backdrop-blur-md transition-all shadow-md ${
+                      inWishlist ? 'bg-terracotta text-white border-terracotta' : 'text-deep-espresso hover:text-terracotta'
+                    }`}
+                    aria-label="Wishlist"
+                  >
+                    <Heart className={`w-4 h-4 ${inWishlist ? 'fill-white' : ''}`} />
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Mobile Thumbnails Slider */}
-            {gallery.length > 1 && (
-              <div className="flex sm:hidden space-x-3 overflow-x-auto pb-2 no-scrollbar">
-                {gallery.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveImageIndex(idx)}
-                    className={`relative w-16 aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
-                      activeImageIndex === idx ? 'border-terracotta scale-105' : 'border-champagne/40 opacity-70'
-                    }`}
-                  >
-                    <ProductImage src={img} alt={`Thumb ${idx}`} fill className="object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Mobile Horizontal Thumbnail Slider */}
+            <div className="flex sm:hidden space-x-3 overflow-x-auto pt-4 no-scrollbar">
+              {gallery.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveImageIndex(idx)}
+                  className={`relative w-16 aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
+                    activeImageIndex === idx ? 'border-deep-espresso scale-105 shadow-md' : 'border-champagne/40 opacity-70'
+                  }`}
+                >
+                  <ProductImage src={img} alt={`Thumb ${idx}`} fill className="object-cover" />
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* RIGHT: STICKY PRODUCT DETAILS (5 Columns) */}
