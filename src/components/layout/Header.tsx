@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingBag, Heart, Search, Menu, X, ChevronRight, ArrowRight, Sparkles, TrendingUp } from 'lucide-react';
+import { ShoppingBag, Heart, Search, Menu, X, ChevronRight, ChevronDown, ArrowRight, Sparkles, TrendingUp } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { ProductImage } from '@/components/shared/ProductImage';
@@ -81,26 +81,72 @@ export const Header: React.FC = () => {
                 NEW IN
                 <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-terracotta transition-all duration-300 group-hover:w-full" />
               </Link>
-              <Link href="/shop" className="hover:text-terracotta transition-colors py-1 relative group">
-                SAREES
-                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-terracotta transition-all duration-300 group-hover:w-full" />
-              </Link>
+
+              {/* SAREES Dropdown */}
+              <div className="relative group py-1">
+                <Link href="/shop" className="hover:text-terracotta transition-colors flex items-center gap-0.5">
+                  <span>SAREES</span>
+                  <ChevronDown className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity" />
+                </Link>
+                <div className="absolute top-full left-0 pt-2 hidden group-hover:block z-50 min-w-[200px]">
+                  <div className="sorayva-glass rounded-2xl p-4 shadow-xl border border-champagne/40 flex flex-col gap-1.5 backdrop-blur-2xl bg-warm-ivory/95">
+                    <span className="text-[9px] font-bold text-terracotta tracking-widest uppercase pb-1 border-b border-champagne/30">Shop By Type</span>
+                    {['Daily Wear', 'Party Wear', 'Wedding Wear', 'Printed', 'Embroidered', 'Designer', 'Traditional', 'Ready-to-Wear'].map((type) => (
+                      <Link key={type} href={`/shop?sareeType=${encodeURIComponent(type)}`} className="text-xs text-deep-espresso/80 hover:text-terracotta transition-colors font-normal py-1 px-2 rounded-lg hover:bg-soft-sand/60">
+                        {type} Sarees
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* PREMIUM */}
               <Link href="/#premium-sarees" className="hover:text-terracotta text-terracotta font-bold transition-colors py-1 relative group">
                 PREMIUM
                 <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-terracotta transition-all duration-300 group-hover:w-full" />
               </Link>
+
               <Link href="/shop#collections" className="hover:text-terracotta transition-colors py-1 relative group">
                 COLLECTIONS
                 <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-terracotta transition-all duration-300 group-hover:w-full" />
               </Link>
-              <Link href="/shop#shop-by-occasion" className="hover:text-terracotta transition-colors py-1 relative group">
-                OCCASIONS
-                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-terracotta transition-all duration-300 group-hover:w-full" />
-              </Link>
-              <Link href="/shop#explore-by-fabric" className="hover:text-terracotta transition-colors py-1 relative group">
-                FABRICS
-                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-terracotta transition-all duration-300 group-hover:w-full" />
-              </Link>
+
+              {/* OCCASIONS Dropdown */}
+              <div className="relative group py-1">
+                <Link href="/shop#shop-by-occasion" className="hover:text-terracotta transition-colors flex items-center gap-0.5">
+                  <span>OCCASIONS</span>
+                  <ChevronDown className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity" />
+                </Link>
+                <div className="absolute top-full left-0 pt-2 hidden group-hover:block z-50 min-w-[180px]">
+                  <div className="sorayva-glass rounded-2xl p-4 shadow-xl border border-champagne/40 flex flex-col gap-1.5 backdrop-blur-2xl bg-warm-ivory/95">
+                    <span className="text-[9px] font-bold text-terracotta tracking-widest uppercase pb-1 border-b border-champagne/30">Select Occasion</span>
+                    {['Daily', 'Party', 'Festive', 'Wedding', 'Reception', 'Engagement', 'Haldi', 'Mehendi'].map((occ) => (
+                      <Link key={occ} href={`/shop?occasion=${encodeURIComponent(occ)}`} className="text-xs text-deep-espresso/80 hover:text-terracotta transition-colors font-normal py-1 px-2 rounded-lg hover:bg-soft-sand/60">
+                        {occ}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* FABRICS Dropdown */}
+              <div className="relative group py-1">
+                <Link href="/shop#explore-by-fabric" className="hover:text-terracotta transition-colors flex items-center gap-0.5">
+                  <span>FABRICS</span>
+                  <ChevronDown className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity" />
+                </Link>
+                <div className="absolute top-full left-0 pt-2 hidden group-hover:block z-50 min-w-[180px]">
+                  <div className="sorayva-glass rounded-2xl p-4 shadow-xl border border-champagne/40 flex flex-col gap-1.5 backdrop-blur-2xl bg-warm-ivory/95">
+                    <span className="text-[9px] font-bold text-terracotta tracking-widest uppercase pb-1 border-b border-champagne/30">Saree Fabrics</span>
+                    {['Silk', 'Organza', 'Georgette', 'Chiffon', 'Cotton', 'Linen', 'Banarasi Silk', 'Net', 'Crepe'].map((fab) => (
+                      <Link key={fab} href={`/shop?fabric=${encodeURIComponent(fab)}`} className="text-xs text-deep-espresso/80 hover:text-terracotta transition-colors font-normal py-1 px-2 rounded-lg hover:bg-soft-sand/60">
+                        {fab}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               <Link href="/shop?filter=sale" className="hover:text-terracotta text-muted-rose transition-colors py-1 relative group font-bold">
                 SALE
                 <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-muted-rose transition-all duration-300 group-hover:w-full" />

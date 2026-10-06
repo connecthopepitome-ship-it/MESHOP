@@ -77,52 +77,7 @@ export function getDynamicCategories(products: Product[], minCount = 1): Array<{
     .sort((a, b) => b.count - a.count);
 }
 
-export function getDynamicFilterOptions(products: Product[]) {
-  const activeProducts = products.filter((p) => p.published && (p.status === undefined || p.status === 'Active' || p.status === 'Out of Stock'));
-  
-  const fabrics = new Set<string>();
-  const colours = new Set<string>();
-  const occasions = new Set<string>();
-  const styles = new Set<string>();
-  const works = new Set<string>();
-  const collections = new Set<string>();
-
-  activeProducts.forEach((p) => {
-    if (p.fabric) fabrics.add(p.fabric.trim());
-    if (p.colour) colours.add(p.colour.trim());
-
-    if (p.occasion) {
-      if (Array.isArray(p.occasion)) p.occasion.forEach((o) => occasions.add(o.trim()));
-      else occasions.add(p.occasion.trim());
-    }
-
-    if (p.style) {
-      if (Array.isArray(p.style)) p.style.forEach((s) => styles.add(s.trim()));
-      else styles.add(p.style.trim());
-    }
-
-    if (p.work) {
-      if (Array.isArray(p.work)) p.work.forEach((w) => works.add(w.trim()));
-      else works.add(p.work.trim());
-    } else if (p.workType) {
-      works.add(p.workType.trim());
-    }
-
-    if (p.collection) {
-      if (Array.isArray(p.collection)) p.collection.forEach((c) => collections.add(c.trim()));
-      else collections.add(p.collection.trim());
-    }
-  });
-
-  return {
-    fabrics: Array.from(fabrics).sort(),
-    colours: Array.from(colours).sort(),
-    occasions: Array.from(occasions).sort(),
-    styles: Array.from(styles).sort(),
-    works: Array.from(works).sort(),
-    collections: Array.from(collections).sort(),
-  };
-}
+export { getDynamicFilterOptions, filterProducts } from '@/lib/utils/taxonomyUtils';
 
 /**
  * Requirement 20: Normalized Search with Aliases

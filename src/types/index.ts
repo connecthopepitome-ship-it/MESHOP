@@ -25,15 +25,22 @@ export interface PublicProduct {
   description?: string;
   category: string;
   subcategory?: string;
+  sareeType?: string;
   fabric: string;
+  sourceFabric?: string;
+  displayFabric?: string;
   occasion?: string | string[];
   style?: string | string[];
   work?: string | string[];
   pattern?: string;
+  border?: string;
   colour: string;
   colourHex?: string;
   colourFamily?: string;
   collection?: string | string[];
+  blouseType?: string;
+  blouseFabric?: string;
+  loomType?: string;
   price: number;
   compareAtPrice?: number;
   discountPercentage?: number;
@@ -210,19 +217,28 @@ export interface FilterState {
   searchQuery: string;
   category: string;
   collection: string;
+  sareeTypes?: string[];
   fabrics: string[];
   colours: string[];
+  colourFamilies?: string[];
   occasions: string[];
   styles?: string[];
   works?: string[];
   patterns?: string[];
+  borders?: string[];
+  blouseTypes?: string[];
+  blouseFabrics?: string[];
+  loomTypes?: string[];
   minPrice: number;
   maxPrice: number;
+  priceRange?: string;
+  minRating?: number;
+  availability?: 'all' | 'in_stock' | 'low_stock' | 'out_of_stock';
   inStockOnly: boolean;
   featuredOnly: boolean;
   bestsellersOnly: boolean;
   newArrivalsOnly: boolean;
-  sortBy: 'featured' | 'newest' | 'price_low_high' | 'price_high_low' | 'rating';
+  sortBy: 'recommended' | 'featured' | 'newest' | 'price_low_high' | 'price_high_low' | 'rating' | 'discount' | 'bestseller';
 }
 
 // Pluggable Provider Interfaces
