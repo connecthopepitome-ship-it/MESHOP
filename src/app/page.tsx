@@ -116,75 +116,19 @@ export default function HomePage() {
 
   return (
     <main className="w-full bg-warm-ivory text-deep-espresso">
-      {/* SECTION 1 — EDITORIAL HERO SECTION (MATCHING USER DESIGN) */}
-      <section className="w-full py-6 sm:py-10 bg-warm-ivory">
-        <div className="max-w-7xl w-[94%] sm:w-[88%] lg:w-[84%] mx-auto overflow-hidden rounded-3xl border border-champagne/40 shadow-xl bg-[#F8F4EE]">
-          <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[480px] lg:min-h-[540px]">
-            {/* Left Image Column */}
-            <div className="lg:col-span-6 xl:col-span-7 relative min-h-[360px] sm:min-h-[440px] lg:min-h-full overflow-hidden">
-              <ProductImage
-                src="/images/festive-hero.jpg"
-                alt="SORAYVA The Festive Edit Kanjeevaram Saree"
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 55vw"
-                className="object-cover object-center transition-transform duration-1000 hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent lg:hidden" />
-            </div>
-
-            {/* Right Content Column */}
-            <div className="lg:col-span-6 xl:col-span-5 relative p-8 sm:p-12 lg:p-14 flex flex-col justify-center bg-[#F8F4EE] text-deep-espresso">
-              {/* Decorative Background Lotus SVG Ornament in Top Right */}
-              <div className="absolute top-4 right-4 pointer-events-none opacity-25 text-terracotta">
-                <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M50 15C50 15 35 35 35 50C35 65 50 85 50 85C50 85 65 65 65 50C65 35 50 15 50 15Z" stroke="currentColor" strokeWidth="1.2" />
-                  <path d="M50 30C50 30 25 45 25 55C25 65 40 75 50 85C60 75 75 65 75 55C75 45 50 30 50 30Z" stroke="currentColor" strokeWidth="1" />
-                  <path d="M50 40C50 40 15 50 15 60C15 70 30 80 50 85C70 80 85 70 85 60C85 50 50 40 50 40Z" stroke="currentColor" strokeWidth="0.8" />
-                  <circle cx="50" cy="15" r="2" fill="currentColor" />
-                  <circle cx="50" cy="85" r="2" fill="currentColor" />
-                </svg>
-              </div>
-
-              {/* Top Badge */}
-              <div className="mb-6">
-                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-deep-espresso/25 bg-warm-ivory/60 text-deep-espresso text-[11px] font-sans-fashion font-semibold tracking-[0.2em] uppercase">
-                  <Sparkles className="w-3.5 h-3.5 text-terracotta" />
-                  NEW ARRIVAL
-                </span>
-              </div>
-
-              {/* Heading */}
-              <h1 className="font-serif-display text-4xl sm:text-5xl lg:text-6xl text-deep-espresso font-normal leading-[1.08] mb-4">
-                The Festive <br />
-                <span className="font-serif-editorial italic text-terracotta font-light">Edit</span>
-                <span className="inline-block w-16 sm:w-20 lg:w-24 h-[1.5px] bg-deep-espresso/40 align-middle ml-3" />
-              </h1>
-
-              {/* Description */}
-              <p className="font-sans-body text-xs sm:text-sm text-deep-espresso/80 font-light leading-relaxed mb-8 max-w-md">
-                Discover sarees made for moments that matter. Handcrafted Kanjeevarams, romantic tissue organzas, and liquid silk drapes.
-              </p>
-
-              {/* Buttons */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <Link
-                  href="/shop"
-                  className="rounded-full bg-deep-espresso text-warm-ivory px-7 py-3.5 font-sans-fashion text-xs font-semibold tracking-[0.18em] uppercase hover:bg-terracotta transition-colors shadow-md flex items-center justify-center gap-2 group"
-                >
-                  <span>SHOP COLLECTION</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-                <Link
-                  href="/shop?filter=newArrival"
-                  className="rounded-full bg-[#EFE9E0] hover:bg-white text-deep-espresso px-6 py-3.5 font-sans-fashion text-xs font-semibold tracking-[0.18em] uppercase border border-deep-espresso/20 transition-colors flex items-center justify-center gap-2 group"
-                >
-                  <span>DISCOVER NEW ARRIVALS</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </div>
-          </div>
+      {/* SECTION 1 — EDITORIAL HERO SECTION (EXACT UPLOADED BANNER IMAGE) */}
+      <section className="w-full py-6 sm:py-8 bg-warm-ivory">
+        <div className="max-w-7xl w-[94%] sm:w-[88%] lg:w-[84%] mx-auto overflow-hidden rounded-2xl sm:rounded-3xl border border-champagne/40 shadow-xl relative bg-[#F7F3EE]">
+          <Link href="/shop" className="block relative w-full aspect-[2/1] sm:aspect-[2.15/1] min-h-[320px] sm:min-h-[440px] md:min-h-[500px]">
+            <ProductImage
+              src="/images/festive-hero.jpg"
+              alt="SORAYVA The Festive Edit"
+              fill
+              priority
+              sizes="(max-width: 1280px) 100vw, 84vw"
+              className="object-cover object-center w-full h-full transition-transform duration-700 hover:scale-[1.01]"
+            />
+          </Link>
         </div>
       </section>
 
