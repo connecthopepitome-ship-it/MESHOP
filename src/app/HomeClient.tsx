@@ -74,25 +74,25 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
     {
       name: 'Organza & Tissue',
       slug: 'organza',
-      image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+      image: '/images/fabrics/organza.jpg',
       description: 'Featherlight translucent weave exuding glass-silk luster and delicate sheen.',
     },
     {
       name: 'Silk & Katan',
       slug: 'silk',
-      image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+      image: '/images/fabrics/silk.jpg',
       description: 'Structured royal drape crafted with pure filature silk warp and ornate zari.',
     },
     {
       name: 'Chiffon & Georgette',
       slug: 'chiffon',
-      image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
+      image: '/images/fabrics/chiffon.jpg',
       description: 'Ethereal fluid fall with airy crimp texture, ideal for celebratory soirees.',
     },
     {
       name: 'Chanderi & Cotton',
       slug: 'chanderi',
-      image: 'https://images.unsplash.com/photo-1610030469668-98634127027d?auto=format&fit=crop&w=800&q=80',
+      image: '/images/fabrics/chanderi.jpg',
       description: 'Crisp breathable handloom texture highlighted with subtle metallic selvedges.',
     },
   ].map((f) => {
