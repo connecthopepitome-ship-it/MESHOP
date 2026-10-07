@@ -29,7 +29,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         <WishlistProvider>
           <AnnouncementBar />
           <Header />
-          <main className="flex-1 pb-16 lg:pb-0">{children}</main>
+          <main className="flex-1 min-h-[calc(100dvh-100px)] pb-[calc(92px+env(safe-area-inset-bottom))] lg:pb-0">{children}</main>
           <MobileBottomNav />
           <CartDrawer />
           <Footer />

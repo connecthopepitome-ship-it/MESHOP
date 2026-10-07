@@ -245,50 +245,81 @@ export class GoogleSheetsRepository implements RepositoryInterface {
     return internalProduct;
   }
 
+  private _productsCache: PublicProduct[] | null = null;
+  private _productsCacheTime: number = 0;
+  private _fetchPromise: Promise<PublicProduct[]> | null = null;
+  private _apiBrokenTime: number = 0;
+
   async getProducts(filters?: Partial<FilterState>): Promise<PublicProduct[]> {
     let products: PublicProduct[] = [];
+    const now = Date.now();
 
-    if (this.apiUrl) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
+    // Cache valid for 60 seconds
+    if (this._productsCache && (now - this._productsCacheTime < 60000)) {
+      products = this._productsCache;
+    } else if (this.apiUrl && (now - this._apiBrokenTime > 300000)) { // 5 min backoff if API broken
+      if (!this._fetchPromise) {
+        this._fetchPromise = (async () => {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-        let res = await fetch(`${this.apiUrl}?action=getProducts`, {
-          signal: controller.signal,
-          next: { revalidate: 60 }
-        });
+            let res = await fetch(`${this.apiUrl}?action=getProducts`, {
+              signal: controller.signal,
+              next: { revalidate: 60 }
+            });
 
-        if (res.ok) {
-          let text = await res.text();
-          if (text && text.trim().startsWith('{')) {
-            let json = JSON.parse(text);
-            if (json.error === 'Invalid action' || (!json.success && !json.products)) {
-              const fallbackRes = await fetch(`${this.apiUrl}?action=products`, { signal: controller.signal });
-              if (fallbackRes.ok) {
-                const fallbackText = await fallbackRes.text();
-                if (fallbackText && fallbackText.trim().startsWith('{')) {
-                  json = JSON.parse(fallbackText);
+            if (res.ok) {
+              let text = await res.text();
+              if (text && text.trim().startsWith('{')) {
+                let json = JSON.parse(text);
+                if (json.error === 'Invalid action' || (!json.success && !json.products)) {
+                  const fallbackRes = await fetch(`${this.apiUrl}?action=products`, { signal: controller.signal });
+                  if (fallbackRes.ok) {
+                    const fallbackText = await fallbackRes.text();
+                    if (fallbackText && fallbackText.trim().startsWith('{')) {
+                      json = JSON.parse(fallbackText);
+                    }
+                  }
                 }
+                const rawItems = Array.isArray(json.products) ? json.products : (Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []));
+                if (rawItems.length > 0) {
+                  const parsed = rawItems
+                    .map((r: any) => this.sanitizeProduct(r))
+                    .filter((p: any): p is PublicProduct => p !== null);
+                  clearTimeout(timeoutId);
+                  return parsed;
+                }
+              } else if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+                console.warn('[GoogleSheetsRepository] Apps Script returned HTML. Setting 5-min backoff.');
+                this._apiBrokenTime = Date.now();
               }
             }
-            const rawItems = Array.isArray(json.products) ? json.products : (Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []));
-            if (rawItems.length > 0) {
-              products = rawItems
-                .map((r: any) => this.sanitizeProduct(r))
-                .filter((p: any): p is PublicProduct => p !== null);
-            }
+            clearTimeout(timeoutId);
+          } catch (e) {
+            console.warn('Google Sheets API unavailable or timed out, serving local fallback data:', e);
           }
-        }
-        clearTimeout(timeoutId);
-      } catch (e) {
-        console.warn('Google Sheets API unavailable or timed out, serving local fallback data:', e);
+          return [];
+        })();
       }
+      
+      const fetched = await this._fetchPromise;
+      if (fetched.length > 0) {
+        products = fetched;
+        this._productsCache = products;
+        this._productsCacheTime = Date.now();
+      }
+      this._fetchPromise = null;
     }
 
     if (products.length === 0) {
-      products = adminLocalStore
-        .map((p) => this.sanitizeProduct(p))
-        .filter((p): p is PublicProduct => p !== null);
+      if (!this._productsCache || this._productsCache.length === 0) {
+        this._productsCache = adminLocalStore
+          .map((p) => this.sanitizeProduct(p))
+          .filter((p): p is PublicProduct => p !== null);
+        this._productsCacheTime = Date.now();
+      }
+      products = this._productsCache;
     }
 
     // Apply client filter predicates
