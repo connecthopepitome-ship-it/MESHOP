@@ -3,8 +3,6 @@ import ProductDetailClient from './ProductDetailClient';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 
-export const revalidate = 60; // Revalidate every 60 seconds
-
 export async function generateStaticParams() {
   const products = await repository.getProducts({});
   return products.map((product) => ({

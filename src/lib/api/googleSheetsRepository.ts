@@ -262,7 +262,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         this._fetchPromise = (async () => {
           try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
 
             let res = await fetch(`${this.apiUrl}?action=getProducts`, {
               signal: controller.signal,
@@ -421,7 +421,22 @@ export class GoogleSheetsRepository implements RepositoryInterface {
 
   async getProductBySlug(slug: string): Promise<PublicProduct | null> {
     const products = await this.getProducts();
-    const found = products.find((p) => p.slug === slug || p.productId.toLowerCase() === slug.toLowerCase());
+    const decodedSlug = decodeURIComponent(slug).toLowerCase();
+    
+    let found = products.find((p) => 
+      p.slug.toLowerCase() === decodedSlug || 
+      p.productId.toLowerCase() === decodedSlug
+    );
+    
+    // Safety net: if not found in current products (e.g. API failed but we have it in mock), check adminLocalStore
+    if (!found) {
+      const mockProducts = adminLocalStore.map(p => this.sanitizeProduct(p)).filter((p): p is PublicProduct => p !== null);
+      found = mockProducts.find((p) => 
+        p.slug.toLowerCase() === decodedSlug || 
+        p.productId.toLowerCase() === decodedSlug
+      );
+    }
+    
     return found || null;
   }
 
