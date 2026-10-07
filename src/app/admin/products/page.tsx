@@ -211,45 +211,45 @@ export default function AdminProductsPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 animate-fadeIn">
         {/* Top Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-lg border border-slate-800">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sorayva-glass-card p-6 rounded-xl shadow-subtle">
           <div>
-            <h1 className="text-xl font-bold text-slate-100 flex items-center space-x-2">
-              <span>Saree Catalogue Management</span>
-              <span className="text-xs bg-slate-800 text-slate-300 font-mono px-2.5 py-0.5 rounded border border-slate-700">
+            <h1 className="text-xl font-serif-display font-medium text-deep-espresso flex items-center space-x-3">
+              <span>Saree Catalogue</span>
+              <span className="text-[10px] bg-white text-deep-espresso font-sans uppercase tracking-widest px-2.5 py-0.5 rounded-full border fine-border shadow-sm">
                 {filteredProducts.length} Items
               </span>
             </h1>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-sm font-sans text-brand-muted mt-1.5 max-w-xl leading-relaxed">
               Live Google Sheets two-way sync table. Editing any product updates Google Sheets and invalidates public cache.
             </p>
           </div>
 
           <Link
             href="/admin/products/new"
-            className="flex items-center space-x-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded text-xs uppercase tracking-wider transition-colors shadow-lg shadow-amber-500/20 w-fit"
+            className="flex items-center space-x-2 bg-deep-espresso hover:bg-terracotta text-champagne hover:text-white font-sans font-medium px-5 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-sm w-fit shrink-0"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>+ Create New Saree</span>
+            <span>Add Saree</span>
           </Link>
         </div>
 
         {/* Sync Error Alert Banner */}
         {syncError && (
-          <div className="bg-rose-950/80 border border-rose-800 p-4 rounded-lg space-y-2 text-rose-200 text-xs">
-            <div className="flex items-center space-x-2 font-bold text-rose-400">
+          <div className="bg-rose-50/80 border border-rose-200 p-4 rounded-xl space-y-2 text-rose-900 text-sm font-sans shadow-sm">
+            <div className="flex items-center space-x-2 font-semibold">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>Google Sheets Sync Warning</span>
             </div>
-            <p className="font-mono text-[11px] text-rose-300">{syncError}</p>
-            <div className="bg-slate-950/60 p-3 rounded border border-rose-900/50 space-y-1 text-[11px] text-slate-300">
-              <p className="font-semibold text-amber-400">Required Google Apps Script Action:</p>
-              <ol className="list-decimal list-inside space-y-0.5 text-slate-400 font-sans">
+            <p className="font-mono text-xs text-rose-700">{syncError}</p>
+            <div className="bg-white/60 p-3 rounded-lg border border-rose-100 space-y-1.5 text-xs text-rose-800">
+              <p className="font-bold uppercase tracking-wider">Required Google Apps Script Action:</p>
+              <ol className="list-decimal list-inside space-y-0.5 ml-1">
                 <li>Open your Google Apps Script Editor.</li>
-                <li>Click <strong className="text-slate-200">Deploy &gt; Manage deployments</strong>.</li>
-                <li>Click the Edit icon (pencil), set <strong className="text-amber-300">Who has access</strong> to <strong className="text-emerald-400">"Anyone"</strong>.</li>
-                <li>Select <strong className="text-slate-200">New version</strong> and click <strong className="text-slate-200">Deploy</strong>.</li>
+                <li>Click <strong>Deploy &gt; Manage deployments</strong>.</li>
+                <li>Click the Edit icon, set <strong>Who has access</strong> to <strong>"Anyone"</strong>.</li>
+                <li>Select <strong>New version</strong> and click <strong>Deploy</strong>.</li>
               </ol>
             </div>
           </div>
@@ -257,24 +257,24 @@ export default function AdminProductsPage() {
 
         {/* Toast Alert */}
         {toastMsg && (
-          <div className="bg-amber-500 text-slate-950 px-4 py-2.5 rounded text-xs font-bold uppercase tracking-wider flex items-center justify-between">
-            <span>{toastMsg}</span>
-            <button onClick={() => setToastMsg(null)}>×</button>
+          <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-4 py-3 rounded-lg text-xs font-sans font-medium flex items-center justify-between shadow-sm animate-fadeIn">
+            <span className="flex items-center space-x-2"><CheckCircle2 className="w-4 h-4" /> <span>{toastMsg}</span></span>
+            <button onClick={() => setToastMsg(null)} className="hover:opacity-60 text-lg leading-none">&times;</button>
           </div>
         )}
 
         {/* Filter & Search Bar */}
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-lg space-y-4">
+        <div className="sorayva-glass-card p-4 rounded-xl space-y-4 shadow-sm">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {/* Search */}
             <div className="relative lg:col-span-2">
-              <Search className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
+              <Search className="w-4 h-4 absolute left-3.5 top-3 text-brand-muted" />
               <input
                 type="text"
-                placeholder="Search Product ID, Name, Category, Fabric..."
+                placeholder="Search ID, Name, Category, Fabric..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded py-2 pl-9 pr-3 text-xs text-slate-100 focus:outline-none focus:border-amber-500"
+                className="w-full bg-white/60 border border-brand-border rounded-lg py-2.5 pl-10 pr-3 text-xs font-sans text-deep-espresso placeholder:text-brand-muted focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-shadow"
               />
             </div>
 
@@ -282,7 +282,7 @@ export default function AdminProductsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-slate-800 border border-slate-700 rounded px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500 uppercase tracking-wider font-semibold"
+              className="bg-white/60 border border-brand-border rounded-lg px-3 py-2.5 text-xs font-sans font-medium text-deep-espresso uppercase tracking-wider focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-shadow appearance-none cursor-pointer"
             >
               <option value="all">All Statuses</option>
               <option value="Active">Active (Public)</option>
@@ -296,7 +296,7 @@ export default function AdminProductsPage() {
             <select
               value={fabricFilter}
               onChange={(e) => setFabricFilter(e.target.value)}
-              className="bg-slate-800 border border-slate-700 rounded px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500"
+              className="bg-white/60 border border-brand-border rounded-lg px-3 py-2.5 text-xs font-sans text-deep-espresso focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-shadow appearance-none cursor-pointer"
             >
               <option value="all">All Fabrics</option>
               <option value="Silk">Silk</option>
@@ -311,10 +311,10 @@ export default function AdminProductsPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-slate-800 border border-slate-700 rounded px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500 uppercase tracking-wider"
+              className="bg-white/60 border border-brand-border rounded-lg px-3 py-2.5 text-xs font-sans font-medium text-deep-espresso uppercase tracking-wider focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-shadow appearance-none cursor-pointer"
             >
-              <option value="newest">Sort: Newest First</option>
-              <option value="oldest">Sort: Oldest First</option>
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
               <option value="price_low">Price: Low to High</option>
               <option value="price_high">Price: High to Low</option>
               <option value="stock">Stock Level</option>
@@ -324,24 +324,24 @@ export default function AdminProductsPage() {
 
           {/* Bulk Actions Bar */}
           {selectedIds.length > 0 && (
-            <div className="flex items-center space-x-3 bg-slate-800 p-2.5 rounded border border-slate-700 text-xs font-sans">
-              <span className="font-bold text-amber-400">{selectedIds.length} selected</span>
-              <span className="text-slate-500">|</span>
+            <div className="flex items-center flex-wrap gap-3 bg-white/80 p-3 rounded-lg border border-brand-border text-xs font-sans shadow-sm animate-fadeIn">
+              <span className="font-bold text-terracotta uppercase tracking-widest bg-brand-surface px-2 py-1 rounded">{selectedIds.length} selected</span>
+              <span className="text-brand-border hidden sm:inline">|</span>
               <button
                 onClick={() => handleBulkStatus('Active')}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded text-[11px] font-bold uppercase tracking-wider"
+                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest transition-colors"
               >
                 Bulk Publish
               </button>
               <button
                 onClick={() => handleBulkStatus('Draft')}
-                className="bg-amber-600 hover:bg-amber-500 text-white px-3 py-1 rounded text-[11px] font-bold uppercase tracking-wider"
+                className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest transition-colors"
               >
-                Bulk Unpublish (Draft)
+                Bulk Draft
               </button>
               <button
                 onClick={() => handleBulkStatus('Discontinued')}
-                className="bg-rose-900 hover:bg-rose-800 text-rose-200 px-3 py-1 rounded text-[11px] font-bold uppercase tracking-wider"
+                className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest transition-colors"
               >
                 Bulk Archive
               </button>
@@ -350,47 +350,47 @@ export default function AdminProductsPage() {
         </div>
 
         {/* Product Table */}
-        <div className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden shadow-xl">
+        <div className="sorayva-glass-card rounded-xl overflow-hidden shadow-sm">
           {loading ? (
-            <div className="p-12 text-center text-slate-500 text-xs">Loading catalogue from Google Sheets repository...</div>
+            <div className="p-16 text-center text-brand-muted text-sm font-sans animate-pulse">Loading catalogue from Google Sheets...</div>
           ) : paginatedProducts.length === 0 ? (
-            <div className="p-12 text-center text-slate-400 space-y-3">
-              <p className="text-sm font-semibold">No sarees match your current search or filter criteria.</p>
+            <div className="p-16 text-center text-deep-espresso space-y-4">
+              <p className="text-base font-serif-display font-medium">No sarees match your current search or filter criteria.</p>
               <button
                 onClick={() => {
                   setSearch('');
                   setStatusFilter('all');
                   setFabricFilter('all');
                 }}
-                className="text-amber-400 text-xs underline font-semibold uppercase tracking-wider"
+                className="text-terracotta text-xs font-sans font-semibold uppercase tracking-widest hover:opacity-70 transition-opacity"
               >
                 Reset All Filters
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs font-sans">
-                <thead className="bg-slate-950 text-slate-400 border-b border-slate-800 uppercase tracking-wider font-semibold text-[11px]">
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left text-xs font-sans whitespace-nowrap">
+                <thead className="bg-white/40 text-brand-muted border-b border-brand-border uppercase tracking-widest font-semibold text-[10px]">
                   <tr>
-                    <th className="p-4 w-10">
+                    <th className="p-4 w-12 text-center">
                       <input
                         type="checkbox"
                         checked={selectedIds.length === paginatedProducts.length && paginatedProducts.length > 0}
                         onChange={toggleSelectAll}
-                        className="rounded border-slate-700 bg-slate-800 text-amber-500 focus:ring-amber-500"
+                        className="rounded border-brand-border/80 bg-white text-terracotta focus:ring-terracotta cursor-pointer w-4 h-4 shadow-sm"
                       />
                     </th>
-                    <th className="p-4 w-16">Image</th>
-                    <th className="p-4">Product ID & Name</th>
+                    <th className="p-4 w-20">Image</th>
+                    <th className="p-4 min-w-[200px]">Product</th>
                     <th className="p-4">Category</th>
                     <th className="p-4">Fabric</th>
-                    <th className="p-4">Price (₹)</th>
+                    <th className="p-4">Price</th>
                     <th className="p-4">Stock</th>
                     <th className="p-4">Status</th>
                     <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                <tbody className="divide-y divide-brand-border/40 text-deep-espresso bg-white/20">
                   {paginatedProducts.map((p) => {
                     const status = p.status || 'Active';
                     const stock = p.stock ?? p.stockQty ?? 0;
@@ -398,57 +398,64 @@ export default function AdminProductsPage() {
                     const isSelected = selectedIds.includes(p.productId);
 
                     return (
-                      <tr key={p.productId} className={`hover:bg-slate-800/50 transition-colors ${isSelected ? 'bg-amber-950/20' : ''}`}>
-                        <td className="p-4">
+                      <tr key={p.productId} className={`hover:bg-white/50 transition-colors ${isSelected ? 'bg-champagne/10' : ''}`}>
+                        <td className="p-4 text-center">
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleSelect(p.productId)}
-                            className="rounded border-slate-700 bg-slate-800 text-amber-500 focus:ring-amber-500"
+                            className="rounded border-brand-border/80 bg-white text-terracotta focus:ring-terracotta cursor-pointer w-4 h-4 shadow-sm"
                           />
                         </td>
                         <td className="p-4">
-                          <div className="w-12 h-16 relative bg-slate-950 border border-slate-800 rounded overflow-hidden">
-                            <ProductImage src={mainImg} alt={p.productName || p.name || 'Saree'} fill sizes="80px" className="object-cover" />
+                          <div className="w-14 h-[76px] relative bg-brand-surface border border-brand-border/60 rounded-md overflow-hidden shadow-sm">
+                            {mainImg ? (
+                              <ProductImage src={mainImg} alt={p.productName || p.name || 'Saree'} fill sizes="80px" className="object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-[10px] text-brand-muted font-serif-display uppercase tracking-widest bg-warm-ivory">
+                                No Img
+                              </div>
+                            )}
                           </div>
                         </td>
-                        <td className="p-4 font-medium">
-                          <div className="space-y-0.5">
-                            <span className="font-mono text-[11px] text-amber-400 font-bold block">{p.productId}</span>
-                            <span className="font-serif text-slate-100 block text-sm">{p.productName || p.name}</span>
-                            <div className="flex items-center space-x-2 text-[10px] text-slate-400">
-                              {p.featured && <span className="bg-purple-950 text-purple-300 border border-purple-800 px-1.5 py-0.5 rounded">Featured</span>}
-                              {p.newArrival && <span className="bg-sky-950 text-sky-300 border border-sky-800 px-1.5 py-0.5 rounded">New</span>}
+                        <td className="p-4">
+                          <div className="space-y-1">
+                            <span className="font-mono text-[10px] text-brand-muted font-medium bg-white px-1.5 py-0.5 rounded border fine-border">{p.productId}</span>
+                            <span className="font-serif-editorial text-deep-espresso font-medium block text-base truncate max-w-[250px]" title={p.productName || p.name}>{p.productName || p.name}</span>
+                            <div className="flex items-center space-x-2 text-[9px] uppercase tracking-widest font-sans font-semibold">
+                              {p.featured && <span className="bg-champagne/20 text-deep-espresso border border-champagne/40 px-1.5 py-0.5 rounded shadow-sm">Featured</span>}
+                              {p.newArrival && <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded shadow-sm">New</span>}
                             </div>
                           </div>
                         </td>
-                        <td className="p-4 text-slate-300 font-medium">{p.category}</td>
-                        <td className="p-4 text-slate-300">{p.fabric}</td>
-                        <td className="p-4 font-mono font-bold text-slate-100">
+                        <td className="p-4 font-medium text-brand-muted">{p.category}</td>
+                        <td className="p-4 text-brand-muted">{p.fabric}</td>
+                        <td className="p-4 font-sans text-sm text-deep-espresso">
                           {formatPrice(p.price || 0, p.currency || 'INR')}
                           {p.compareAtPrice && p.compareAtPrice > (p.price || 0) && (
-                            <span className="block text-[10px] text-slate-500 line-through font-normal">
+                            <span className="block text-[11px] text-brand-muted line-through font-normal mt-0.5">
                               {formatPrice(p.compareAtPrice, p.currency || 'INR')}
                             </span>
                           )}
                         </td>
-                        <td className="p-4 font-mono">
-                          <span className={stock <= 0 ? 'text-rose-400 font-bold' : stock <= 3 ? 'text-amber-400 font-bold' : 'text-slate-300'}>
+                        <td className="p-4 font-mono font-medium">
+                          <span className={stock <= 0 ? 'text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded-md border border-rose-200' : stock <= 3 ? 'text-amber-700 font-bold bg-amber-50 px-2 py-1 rounded-md border border-amber-200' : 'text-deep-espresso'}>
                             {stock}
                           </span>
                         </td>
                         <td className="p-4">
                           <span
-                            className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider inline-block ${
+                            className={`px-3 py-1.5 rounded-md text-[9px] font-bold uppercase tracking-widest inline-flex items-center shadow-sm ${
                               status === 'Active'
-                                ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 : status === 'Draft'
-                                ? 'bg-amber-950 text-amber-400 border border-amber-800'
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
                                 : status === 'Out of Stock'
-                                ? 'bg-rose-950 text-rose-400 border border-rose-800'
-                                : 'bg-slate-800 text-slate-400 border border-slate-700'
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                : 'bg-slate-50 text-slate-600 border border-slate-200'
                             }`}
                           >
+                            {status === 'Active' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>}
                             {status}
                           </span>
                         </td>
@@ -457,8 +464,8 @@ export default function AdminProductsPage() {
                             {/* Preview */}
                             <button
                               onClick={() => setPreviewProduct(p)}
-                              title="Live Customer Storefront Preview"
-                              className="p-1.5 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded transition-colors"
+                              title="Preview Live Storefront"
+                              className="p-2 bg-white hover:bg-brand-surface text-brand-muted hover:text-deep-espresso border border-brand-border rounded-md transition-colors shadow-sm"
                             >
                               <Eye className="w-3.5 h-3.5" />
                             </button>
@@ -466,8 +473,8 @@ export default function AdminProductsPage() {
                             {/* Edit */}
                             <Link
                               href={`/admin/products/${p.productId}/edit`}
-                              title="Edit product specifications"
-                              className="p-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded transition-colors"
+                              title="Edit Saree"
+                              className="p-2 bg-white hover:bg-brand-surface text-terracotta border border-brand-border rounded-md transition-colors shadow-sm"
                             >
                               <Edit className="w-3.5 h-3.5" />
                             </Link>
@@ -475,8 +482,8 @@ export default function AdminProductsPage() {
                             {/* Duplicate */}
                             <button
                               onClick={() => handleDuplicate(p)}
-                              title="Duplicate as new draft saree"
-                              className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded transition-colors"
+                              title="Duplicate Saree"
+                              className="p-2 bg-white hover:bg-brand-surface text-brand-muted hover:text-deep-espresso border border-brand-border rounded-md transition-colors shadow-sm"
                             >
                               <Copy className="w-3.5 h-3.5" />
                             </button>
@@ -486,15 +493,15 @@ export default function AdminProductsPage() {
                               <button
                                 onClick={() => handleStatusChange(p.productId, 'Draft')}
                                 title="Unpublish to Draft"
-                                className="p-1.5 bg-amber-950 hover:bg-amber-900 text-amber-400 rounded transition-colors"
+                                className="p-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-md transition-colors shadow-sm"
                               >
                                 <XCircle className="w-3.5 h-3.5" />
                               </button>
                             ) : (
                               <button
                                 onClick={() => handleStatusChange(p.productId, 'Active')}
-                                title="Publish Active to storefront"
-                                className="p-1.5 bg-emerald-950 hover:bg-emerald-900 text-emerald-400 rounded transition-colors"
+                                title="Publish to Storefront"
+                                className="p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-md transition-colors shadow-sm"
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
                               </button>
@@ -503,8 +510,8 @@ export default function AdminProductsPage() {
                             {/* Archive */}
                             <button
                               onClick={() => handleStatusChange(p.productId, 'Discontinued')}
-                              title="Archive saree"
-                              className="p-1.5 bg-rose-950 hover:bg-rose-900 text-rose-400 rounded transition-colors"
+                              title="Archive Saree"
+                              className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-md transition-colors shadow-sm"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -520,28 +527,28 @@ export default function AdminProductsPage() {
 
           {/* Pagination Bar */}
           {totalPages > 1 && (
-            <div className="bg-slate-950 px-4 py-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+            <div className="bg-white/50 px-6 py-4 border-t fine-border flex items-center justify-between text-xs font-sans text-brand-muted">
               <span>
-                Showing <strong className="text-slate-200">{startIndex + 1}</strong> to{' '}
-                <strong className="text-slate-200">{Math.min(startIndex + itemsPerPage, filteredProducts.length)}</strong> of{' '}
-                <strong className="text-slate-200">{filteredProducts.length}</strong> items
+                Showing <strong className="text-deep-espresso font-medium">{startIndex + 1}</strong> to{' '}
+                <strong className="text-deep-espresso font-medium">{Math.min(startIndex + itemsPerPage, filteredProducts.length)}</strong> of{' '}
+                <strong className="text-deep-espresso font-medium">{filteredProducts.length}</strong> items
               </span>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => p - 1)}
-                  className="p-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 rounded text-slate-200"
+                  className="p-2 bg-white hover:bg-brand-surface border border-brand-border disabled:opacity-40 rounded-md text-deep-espresso shadow-sm transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="font-mono text-slate-200 font-bold px-2">
+                <span className="font-mono text-deep-espresso font-semibold px-2">
                   {currentPage} / {totalPages}
                 </span>
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p) => p + 1)}
-                  className="p-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 rounded text-slate-200"
+                  className="p-2 bg-white hover:bg-brand-surface border border-brand-border disabled:opacity-40 rounded-md text-deep-espresso shadow-sm transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>

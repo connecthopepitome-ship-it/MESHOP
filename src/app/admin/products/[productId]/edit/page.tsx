@@ -72,18 +72,18 @@ export default function EditProductPage() {
   return (
     <AdminLayout>
       {loading ? (
-        <div className="p-16 text-center text-slate-400 space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-500 mx-auto" />
-          <p className="text-xs uppercase tracking-widest font-mono">Fetching Saree Specifications for {productId}...</p>
+        <div className="p-16 text-center text-brand-muted space-y-4 animate-fadeIn">
+          <Loader2 className="w-8 h-8 animate-spin text-terracotta mx-auto" />
+          <p className="text-xs uppercase tracking-widest font-sans font-semibold">Fetching Saree Specifications for {productId}...</p>
         </div>
       ) : errorMsg || !product ? (
-        <div className="bg-slate-900 border border-slate-800 p-8 rounded-lg max-w-lg mx-auto text-center space-y-4">
-          <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
-          <h2 className="text-lg font-bold text-slate-100">Product Not Found</h2>
-          <p className="text-xs text-slate-400 font-light">{errorMsg || 'Unable to locate requested product.'}</p>
+        <div className="bg-white border border-brand-border p-8 rounded-2xl max-w-lg mx-auto text-center space-y-5 shadow-sm animate-fadeIn">
+          <AlertCircle className="w-10 h-10 text-rose-600 mx-auto" />
+          <h2 className="text-2xl font-serif-editorial font-medium text-deep-espresso">Product Not Found</h2>
+          <p className="text-sm text-brand-muted font-sans font-light leading-relaxed">{errorMsg || 'Unable to locate requested product.'}</p>
           <Link
             href="/admin/products"
-            className="inline-block bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs uppercase tracking-widest px-6 py-2.5 rounded transition-colors"
+            className="inline-block bg-deep-espresso hover:bg-terracotta text-champagne hover:text-white font-semibold text-xs uppercase tracking-widest px-6 py-3 rounded-lg transition-colors shadow-sm"
           >
             Return to Catalogue Table
           </Link>
