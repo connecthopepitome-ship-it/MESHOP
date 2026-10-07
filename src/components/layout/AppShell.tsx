@@ -14,11 +14,24 @@ import { AdminAuthProvider } from '@/context/AdminAuthContext';
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
   const isAdmin = pathname ? pathname.startsWith('/admin') : false;
+  const isCheckout = pathname === '/checkout';
 
   if (isAdmin) {
     return (
       <AdminAuthProvider>
         <div className="min-h-screen flex flex-col">{children}</div>
+      </AdminAuthProvider>
+    );
+  }
+
+  if (isCheckout) {
+    return (
+      <AdminAuthProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <main className="flex-1 min-h-screen pb-[env(safe-area-inset-bottom)]">{children}</main>
+          </WishlistProvider>
+        </CartProvider>
       </AdminAuthProvider>
     );
   }
