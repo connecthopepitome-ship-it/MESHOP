@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingBag, Heart, Search, Menu, X, ChevronRight, ArrowRight, Sparkles, TrendingUp, MessageCircle } from 'lucide-react';
+import { ShoppingBag, Heart, Search, Menu, X, ChevronRight, ArrowRight, Sparkles, TrendingUp, MessageCircle, User } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 
@@ -118,6 +118,14 @@ export const Header: React.FC = () => {
               </button>
 
               <Link
+                href="/account"
+                className="relative w-[44px] h-[44px] rounded-full text-deep-espresso hover:bg-soft-sand hover:text-terracotta transition-all flex items-center justify-center border border-transparent hover:border-champagne/30"
+                aria-label="Account"
+              >
+                <User className="w-[18px] h-[18px]" />
+              </Link>
+
+              <Link
                 href="/wishlist"
                 className="relative w-[44px] h-[44px] rounded-full text-deep-espresso hover:bg-soft-sand hover:text-terracotta transition-all flex items-center justify-center border border-transparent hover:border-champagne/30"
                 aria-label="Wishlist"
@@ -171,6 +179,14 @@ export const Header: React.FC = () => {
               >
                 <Search className="w-5 h-5" />
               </button>
+
+              <Link
+                href="/account"
+                className="w-[44px] h-[44px] flex items-center justify-center text-deep-espresso hover:text-terracotta transition-colors"
+                aria-label="Account"
+              >
+                <User className="w-5 h-5" />
+              </Link>
 
               <Link
                 href="/wishlist"
@@ -380,6 +396,20 @@ export const Header: React.FC = () => {
                 className="py-4 border-b border-champagne/30 flex items-center justify-between text-terracotta"
               >
                 <span>SALE</span> <ChevronRight className="w-4 h-4 text-terracotta" />
+              </Link>
+              <Link
+                href="/account"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-4 border-b border-champagne/30 flex items-center justify-between hover:text-terracotta"
+              >
+                <span>MY ACCOUNT</span> <ChevronRight className="w-4 h-4 text-terracotta" />
+              </Link>
+              <Link
+                href="/track-order"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-4 border-b border-champagne/30 flex items-center justify-between hover:text-terracotta"
+              >
+                <span>TRACK ORDER</span> <ChevronRight className="w-4 h-4 text-terracotta" />
               </Link>
             </nav>
 

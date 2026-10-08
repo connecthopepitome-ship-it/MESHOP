@@ -2,203 +2,276 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Package, Search, CheckCircle, Clock, Truck, Home } from 'lucide-react';
-import { repository } from '@/lib/api/googleSheetsRepository';
-import { defaultShippingProvider } from '@/lib/adapters/shippingAdapter';
-import { Order } from '@/types';
+import Link from 'next/link';
+import { Package, Search, ExternalLink, MapPin } from 'lucide-react';
+import { OrderService } from '@/lib/services/OrderService';
+import { CustomerOrder, TrackingInfo } from '@/types/customer';
 import { formatPrice } from '@/lib/utils';
 
 function TrackOrderContent() {
   const searchParams = useSearchParams();
-  const [orderId, setOrderId] = useState(searchParams?.get('id') || '');
+  const initialId = searchParams?.get('id') || '';
+  
+  const [orderId, setOrderId] = useState(initialId);
   const [contactInfo, setContactInfo] = useState('');
-  const [order, setOrder] = useState<Order | null>(null);
-  const [trackingHistory, setTrackingHistory] = useState<any[]>([]);
+  
+  const [order, setOrder] = useState<CustomerOrder | null>(null);
+  const [tracking, setTracking] = useState<TrackingInfo | null>(null);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleLookup = React.useCallback(async (idToSearch: string) => {
+  const handleLookup = async (idToSearch: string, contact: string) => {
+    if (!idToSearch) return;
+    
     setLoading(true);
     setSearched(true);
-    try {
-      const found = await repository.lookupOrder(idToSearch, contactInfo);
-      setOrder(found);
-
-      if (found && found.trackingNumber) {
-        const trackRes = await defaultShippingProvider.trackShipment(found.trackingNumber);
-        setTrackingHistory(trackRes.history);
-      }
-    } catch (e) {
-      console.error('Tracking lookup error:', e);
-    } finally {
-      setLoading(false);
+    
+    const result = await OrderService.trackGuestOrder(idToSearch, contact);
+    
+    if (result) {
+      setOrder(result.order);
+      setTracking(result.tracking);
+    } else {
+      setOrder(null);
+      setTracking(null);
     }
-  }, [contactInfo]);
+    
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const qId = searchParams?.get('id');
-    if (qId) {
-      handleLookup(qId);
+    if (initialId) {
+      // If accessed via link with ?id=, we might not have contact info yet,
+      // but let the user fill it out, or try to lookup if backend supports it.
+      // For this implementation, we require contact info for security.
     }
-  }, [searchParams, handleLookup]);
+  }, [initialId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (orderId.trim()) {
-      handleLookup(orderId.trim());
-    }
-  };
-
-  const getStepIndex = (status: string) => {
-    switch (status) {
-      case 'NEW': return 0;
-      case 'PROCESSING': return 1;
-      case 'SHIPPED': return 2;
-      case 'OUT_FOR_DELIVERY': return 3;
-      case 'DELIVERED': return 4;
-      default: return 1;
-    }
+    handleLookup(orderId.trim(), contactInfo.trim());
   };
 
   return (
-    <div className="container mx-auto px-4 md:px-8 py-12 max-w-3xl space-y-8">
-      <div className="text-center max-w-xl mx-auto space-y-2 border-b border-brand-border pb-6">
-        <span className="text-xs font-semibold tracking-widest text-brand-gold uppercase flex items-center justify-center">
-          <Package className="w-4 h-4 mr-1.5" /> Order Fulfillment Status
-        </span>
-        <h1 className="font-serif text-3xl md:text-5xl text-brand-charcoal font-medium">Track Order</h1>
-        <p className="text-xs text-brand-muted">
-          Enter your Order ID (e.g. ORD-XYZ) and Email or Mobile number to view live shipment timeline.
-        </p>
-      </div>
-
-      {/* Search Input Box */}
-      <form onSubmit={handleSubmit} className="bg-brand-surface p-6 border border-brand-border space-y-4 shadow-subtle">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-brand-charcoal mb-1">
-              Order ID *
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. ORD-123"
-              value={orderId}
-              onChange={(e) => setOrderId(e.target.value)}
-              className="w-full bg-brand-base border border-brand-border px-3 py-2 text-xs uppercase focus:outline-none focus:border-brand-gold"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-brand-charcoal mb-1">
-              Mobile Number or Email
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. 9876543210 or email"
-              value={contactInfo}
-              onChange={(e) => setContactInfo(e.target.value)}
-              className="w-full bg-brand-base border border-brand-border px-3 py-2 text-xs focus:outline-none focus:border-brand-gold"
-            />
-          </div>
+    <div className="w-full bg-warm-ivory min-h-screen py-12 md:py-20 px-4 pb-safe">
+      <div className="max-w-3xl mx-auto space-y-8">
+        
+        <div className="text-center max-w-xl mx-auto space-y-3 mb-12">
+          <span className="font-sans-fashion text-[0.65rem] tracking-[0.25em] text-terracotta uppercase block">
+            SORAYVA LOGISTICS
+          </span>
+          <h1 className="font-serif-display text-4xl sm:text-5xl text-deep-espresso">Track Order</h1>
+          <p className="font-sans-body text-sm text-deep-espresso/70">
+            Enter your order number and mobile to track your shipment.
+          </p>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-brand-charcoal text-brand-base hover:bg-brand-gold hover:text-brand-charcoal py-3 px-4 text-xs font-semibold uppercase tracking-widest transition-colors flex items-center justify-center space-x-2"
-        >
-          <Search className="w-4 h-4" />
-          <span>{loading ? 'Searching...' : 'Lookup Order'}</span>
-        </button>
-      </form>
+        {/* Search Input Box */}
+        <form onSubmit={handleSubmit} className="sorayva-glass-card p-6 sm:p-8 rounded-2xl border border-champagne/40 space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="font-sans-fashion text-[0.65rem] tracking-widest text-deep-espresso/70 uppercase pl-1">
+                Order Number
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. SR-2026-0012"
+                value={orderId}
+                onChange={(e) => setOrderId(e.target.value)}
+                className="w-full h-12 bg-white/50 border border-champagne/40 rounded-xl px-4 text-sm focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-all uppercase"
+                required
+              />
+            </div>
 
-      {/* Lookup Result Display */}
-      {searched && (
-        <div>
-          {order ? (
-            <div className="bg-brand-surface border border-brand-border p-6 space-y-6 animate-fadeIn">
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b border-brand-border pb-4 gap-2">
+            <div className="space-y-1">
+              <label className="font-sans-fashion text-[0.65rem] tracking-widest text-deep-espresso/70 uppercase pl-1">
+                Mobile or Email
+              </label>
+              <input
+                type="text"
+                placeholder="Used during checkout"
+                value={contactInfo}
+                onChange={(e) => setContactInfo(e.target.value)}
+                className="w-full h-12 bg-white/50 border border-champagne/40 rounded-xl px-4 text-sm focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-all"
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || !orderId || !contactInfo}
+            className="w-full h-12 bg-deep-espresso text-warm-ivory rounded-xl font-sans-fashion text-xs font-bold tracking-[0.15em] uppercase hover:bg-terracotta transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+          >
+            <Search className="w-4 h-4" />
+            <span>{loading ? 'SEARCHING...' : 'TRACK ORDER'}</span>
+          </button>
+        </form>
+
+        {/* Lookup Result Display */}
+        {searched && !loading && (
+          <div className="animate-fadeIn">
+            {order ? (
+              <div className="sorayva-glass-card rounded-2xl p-6 sm:p-8 border border-champagne/40 space-y-8">
+                
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-champagne/30">
+                  <div>
+                    <h3 className="font-serif-display text-2xl text-deep-espresso">Order #{order.orderNumber}</h3>
+                    <p className="font-sans-body text-xs text-deep-espresso/60 mt-1">
+                      Placed on {new Date(order.createdAt).toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  </div>
+                  <div className="mt-4 sm:mt-0">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-champagne/20 border border-champagne/40 text-[0.65rem] font-sans-fashion tracking-widest uppercase text-deep-espresso">
+                      <span className="w-1.5 h-1.5 rounded-full bg-terracotta animate-pulse" />
+                      {order.orderStatus.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Status Timeline */}
                 <div>
-                  <h3 className="font-serif text-lg font-semibold text-brand-charcoal">Order #{order.orderId}</h3>
-                  <p className="text-xs text-brand-muted">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
-                </div>
-                <div className="text-right">
-                  <span className="bg-brand-gold/20 text-brand-charcoal text-xs font-semibold uppercase tracking-wider px-3 py-1 border border-brand-gold/40">
-                    Status: {order.fulfillmentStatus}
-                  </span>
-                </div>
-              </div>
+                  <h4 className="font-sans-fashion text-[0.65rem] tracking-[0.2em] uppercase text-deep-espresso/60 mb-6">
+                    TRACKING TIMELINE
+                  </h4>
+                  
+                  {!tracking ? (
+                    <div className="py-10 text-center bg-white/30 rounded-xl border border-champagne/30">
+                      <Package className="w-8 h-8 text-deep-espresso/30 mx-auto mb-3" />
+                      <h3 className="font-sans-fashion text-xs font-bold tracking-widest text-deep-espresso uppercase mb-1">
+                        TRACKING WILL APPEAR HERE
+                      </h3>
+                      <p className="font-sans-body text-xs text-deep-espresso/60 max-w-sm mx-auto">
+                        Your order status will update once dispatch information becomes available.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="py-2 px-2">
+                      {tracking.events.map((event, index) => {
+                        const isLast = index === tracking.events.length - 1;
+                        const isActive = !event.completed && (index === 0 || tracking.events[index - 1]?.completed);
+                        
+                        return (
+                          <div key={event.eventId} className="flex gap-4 relative">
+                            {!isLast && (
+                              <div className={`absolute left-[11px] top-6 bottom-[-8px] w-px ${event.completed ? 'bg-terracotta/50' : 'bg-champagne/50'}`} />
+                            )}
+                            
+                            <div className="relative z-10 mt-1 flex-shrink-0">
+                              {event.completed ? (
+                                <div className="w-6 h-6 rounded-full bg-terracotta/10 border border-terracotta flex items-center justify-center">
+                                  <div className="w-2.5 h-2.5 bg-terracotta rounded-full" />
+                                </div>
+                              ) : isActive ? (
+                                <div className="w-6 h-6 rounded-full bg-champagne/30 border-2 border-terracotta flex items-center justify-center">
+                                  <div className="w-2 h-2 bg-terracotta rounded-full animate-pulse" />
+                                </div>
+                              ) : (
+                                <div className="w-6 h-6 rounded-full bg-white/50 border border-champagne" />
+                              )}
+                            </div>
+                            
+                            <div className={`pb-8 ${!event.completed && !isActive ? 'opacity-50' : ''}`}>
+                              <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3 mb-1">
+                                <h4 className="font-sans-fashion text-xs font-bold tracking-widest text-deep-espresso uppercase">
+                                  {event.label}
+                                </h4>
+                                {event.timestamp && (
+                                  <span className="font-sans-body text-[0.65rem] text-deep-espresso/60">
+                                    {new Date(event.timestamp).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="font-sans-body text-sm text-deep-espresso/80">
+                                {event.description}
+                              </p>
+                              {event.location && (
+                                <p className="font-sans-body text-xs text-deep-espresso/50 mt-1 flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" /> {event.location}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
 
-              {/* Status Timeline */}
-              <div className="py-4 border-b border-brand-border">
-                <span className="text-xs font-semibold uppercase tracking-wider text-brand-charcoal block mb-4">
-                  Shipment Progress Timeline
-                </span>
-                <div className="grid grid-cols-5 gap-2 text-center text-[10px] font-semibold uppercase">
-                  {['Received', 'Processing', 'Shipped', 'Out For Delivery', 'Delivered'].map((step, idx) => {
-                    const currentIdx = getStepIndex(order.fulfillmentStatus);
-                    const isCompleted = idx <= currentIdx;
-                    return (
-                      <div key={step} className="flex flex-col items-center space-y-2">
-                        <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                            isCompleted ? 'bg-brand-gold text-brand-charcoal font-bold' : 'bg-brand-border text-brand-muted'
-                          }`}
-                        >
-                          {isCompleted ? '✓' : idx + 1}
+                      {tracking.trackingNumber && (
+                        <div className="mt-4 p-4 bg-white/50 border border-champagne/30 rounded-xl flex items-center justify-between">
+                          <div>
+                            <span className="font-sans-fashion text-[0.65rem] tracking-[0.1em] text-deep-espresso/60 block mb-0.5 uppercase">Carrier / Tracking ID</span>
+                            <span className="font-sans-body text-sm text-deep-espresso font-medium">{tracking.carrier} - {tracking.trackingNumber}</span>
+                          </div>
+                          <button className="p-2 text-terracotta hover:bg-terracotta/10 rounded-full transition-colors">
+                            <ExternalLink className="w-4 h-4" />
+                          </button>
                         </div>
-                        <span className={isCompleted ? 'text-brand-charcoal' : 'text-brand-muted'}>{step}</span>
-                      </div>
-                    );
-                  })}
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-
-              {/* Carrier Details */}
-              {order.trackingNumber && (
-                <div className="p-4 bg-brand-base border border-brand-border text-xs space-y-2">
-                  <span className="font-semibold text-brand-charcoal block uppercase">Courier Tracking Information</span>
-                  <p>Tracking Number: <strong>{order.trackingNumber}</strong></p>
-                  <p>Carrier: <strong>Shiprocket Express Air</strong></p>
-                </div>
-              )}
-
-              {/* Tracking Log History */}
-              {trackingHistory.length > 0 && (
-                <div className="space-y-3 pt-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-brand-charcoal block">Transit Log</span>
-                  <div className="space-y-2 text-xs text-brand-muted">
-                    {trackingHistory.map((h, i) => (
-                      <div key={i} className="flex justify-between items-start border-l-2 border-brand-gold pl-3 py-1">
-                        <div>
-                          <p className="font-medium text-brand-charcoal">{h.note}</p>
-                          <p className="text-[10px]">{h.location}</p>
+                
+                {/* Order Items Summary */}
+                <div className="border-t border-champagne/30 pt-6">
+                  <h4 className="font-sans-fashion text-[0.65rem] tracking-[0.2em] uppercase text-deep-espresso/60 mb-4">
+                    ORDER ITEMS
+                  </h4>
+                  <div className="space-y-4">
+                    {order.items.map((item, idx) => (
+                      <div key={idx} className="flex gap-4 items-center">
+                        <div className="w-12 h-16 bg-champagne/20 rounded-md overflow-hidden shrink-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={item.image} alt={item.productName} className="w-full h-full object-cover" />
                         </div>
-                        <span className="text-[10px]">{new Date(h.timestamp).toLocaleDateString()}</span>
+                        <div className="flex-1">
+                          <p className="font-sans-body text-sm text-deep-espresso">{item.productName}</p>
+                          <p className="font-sans-body text-xs text-deep-espresso/60">Qty {item.quantity}</p>
+                        </div>
+                        <div className="font-serif-editorial text-sm text-deep-espresso">
+                          {formatPrice(item.totalPrice)}
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-center py-12 bg-brand-surface border border-brand-border p-6 space-y-2">
-              <p className="font-serif text-lg text-brand-charcoal">No order found with ID "{orderId}".</p>
-              <p className="text-xs text-brand-muted">
-                Please double check your Order ID from your confirmation email. For assistance, contact our WhatsApp Concierge at +91 98765 43210.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
+
+                {/* Account Promotion for Guests */}
+                <div className="bg-gradient-to-r from-deep-espresso to-[#302622] rounded-xl p-6 text-center mt-8">
+                  <h4 className="font-serif-display text-xl text-warm-ivory mb-2">Want easier tracking?</h4>
+                  <p className="font-sans-body text-xs text-warm-ivory/70 mb-4 max-w-xs mx-auto">
+                    Create an account using {contactInfo || 'your email'} to save your order details and track future purchases seamlessly.
+                  </p>
+                  <Link 
+                    href={`/account/signup?email=${encodeURIComponent(contactInfo)}`}
+                    className="inline-flex h-10 px-6 items-center justify-center bg-warm-ivory text-deep-espresso rounded-lg font-sans-fashion text-xs font-bold tracking-[0.1em] uppercase hover:bg-terracotta hover:text-white transition-colors"
+                  >
+                    CREATE ACCOUNT
+                  </Link>
+                </div>
+
+              </div>
+            ) : (
+              <div className="text-center py-16 sorayva-glass-card rounded-2xl border border-champagne/40 px-6">
+                <Search className="w-8 h-8 text-deep-espresso/30 mx-auto mb-4" />
+                <p className="font-serif-display text-2xl text-deep-espresso mb-2">Order Not Found</p>
+                <p className="text-sm font-sans-body text-deep-espresso/70 max-w-sm mx-auto">
+                  We couldn't find an order matching that ID and contact information. Please check your confirmation email.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 export default function TrackOrderPage() {
   return (
-    <Suspense fallback={<div className="container mx-auto p-12 text-center text-xs">Loading order tracker...</div>}>
+    <Suspense fallback={
+      <div className="w-full min-h-screen bg-warm-ivory flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-terracotta border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
       <TrackOrderContent />
     </Suspense>
   );
