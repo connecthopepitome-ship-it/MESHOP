@@ -99,29 +99,9 @@ export default function ProductDetailClient({
   const inWishlist = isInWishlist(product.productId);
   const discount = calculateDiscountPercentage(product.price, product.compareAtPrice);
 
-  // Construct guaranteed 5-image repertoire
-  const baseGallery =
-    Array.isArray(product.galleryImages) && product.galleryImages.length > 0
-      ? product.galleryImages
-      : [product.mainImage];
-
-  const defaultSareeAngles = [
-    product.mainImage,
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=85',
-    'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=85',
-    'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1200&q=85',
-    'https://images.unsplash.com/photo-1610030469668-98634127027d?auto=format&fit=crop&w=1200&q=85',
-  ];
-
-  const gallery = [...baseGallery];
-  while (gallery.length < 5) {
-    const nextAngle = defaultSareeAngles[gallery.length % defaultSareeAngles.length];
-    if (!gallery.includes(nextAngle)) {
-      gallery.push(nextAngle);
-    } else {
-      gallery.push(defaultSareeAngles[(gallery.length + 1) % defaultSareeAngles.length]);
-    }
-  }
+  const gallery = Array.isArray(product.galleryImages) && product.galleryImages.length > 0
+    ? product.galleryImages
+    : (product.images && product.images.length > 0 ? product.images : [product.mainImage]);
 
   const handlePincodeCheck = async (e: React.FormEvent) => {
     e.preventDefault();
