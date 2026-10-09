@@ -61,6 +61,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit = 
       'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80'
     ],
     sizeType: initialData?.sizeType || 'Standard Saree (5.5m)',
+    searchCode: initialData?.searchCode || '',
     blouseSize: initialData?.blouseSize || ['Unstitched', 'S', 'M', 'L', 'XL'],
     sizeChart: initialData?.sizeChart || 'Saree Length: 5.5 meters | Blouse Piece: 0.8 meters',
     shippingInfo: initialData?.shippingInfo || 'Complimentary insured shipping across India.',
@@ -292,19 +293,34 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit = 
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-deep-espresso uppercase tracking-wider mb-2">
-                Product Title / Name <span className="text-rose-600">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.productName || ''}
-                onChange={(e) => setFormData({ ...formData, productName: e.target.value, name: e.target.value })}
-                className="w-full bg-white/60 border border-brand-border rounded-lg px-4 py-2.5 text-base font-serif-editorial text-deep-espresso placeholder:text-brand-muted focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-shadow"
-                placeholder="e.g. Royal Kanjeevaram Pure Silk Saree in Crimson & Pure Gold Zari"
-              />
-              {errors.productName && <p className="text-xs font-medium text-rose-600 mt-1.5">{errors.productName}</p>}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-semibold text-deep-espresso uppercase tracking-wider mb-2">
+                  Product Title / Name <span className="text-rose-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.productName || ''}
+                  onChange={(e) => setFormData({ ...formData, productName: e.target.value, name: e.target.value })}
+                  className="w-full bg-white/60 border border-brand-border rounded-lg px-4 py-2.5 text-base font-serif-editorial text-deep-espresso placeholder:text-brand-muted focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-shadow"
+                  placeholder="e.g. Royal Kanjeevaram Pure Silk Saree"
+                />
+                {errors.productName && <p className="text-xs font-medium text-rose-600 mt-1.5">{errors.productName}</p>}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-deep-espresso uppercase tracking-wider mb-2">
+                  Search Code
+                </label>
+                <input
+                  type="text"
+                  value={formData.searchCode || ''}
+                  onChange={(e) => setFormData({ ...formData, searchCode: e.target.value })}
+                  className="w-full bg-white/60 border border-brand-border rounded-lg px-4 py-2.5 text-base font-serif-editorial text-deep-espresso placeholder:text-brand-muted focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-shadow"
+                  placeholder="e.g. SR-X10"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

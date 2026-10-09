@@ -150,6 +150,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
       const work = parseArray(raw.work || raw.workType);
       const collection = parseArray(raw.collection);
       const blouseSize = parseArray(raw.blouseSize || raw.blouseSizesAvailable);
+      const searchCode = raw.searchCode ? String(raw.searchCode).trim() : undefined;
 
       const slug = raw.slug ? String(raw.slug) : `${slugify(productName)}-${productId.toLowerCase()}`;
 
@@ -205,6 +206,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         careInstructions: raw.careInstructions ? String(raw.careInstructions) : 'Dry clean only.',
         fitNotes: raw.fitNotes ? String(raw.fitNotes) : 'Standard drape.',
         workType: raw.workType ? String(raw.workType) : undefined,
+        searchCode,
         createdAt: raw.createdAt ? String(raw.createdAt) : undefined,
         updatedAt: raw.updatedAt ? String(raw.updatedAt) : undefined,
       };
@@ -332,6 +334,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
             p.category.toLowerCase().includes(q) ||
             p.fabric.toLowerCase().includes(q) ||
             p.colour.toLowerCase().includes(q) ||
+            (p.searchCode && p.searchCode.toLowerCase() === q) ||
             p.tags.some((t) => t.toLowerCase().includes(q))
         );
       }

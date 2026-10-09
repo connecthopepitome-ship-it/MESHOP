@@ -91,6 +91,7 @@ export const MOCK_PRODUCTS: Product[] = [
     tags: ['Silk', 'Bridal', 'Kanjeevaram', 'Zari', 'Crimson'],
     shortDescription: 'Handwoven pure Mulberry silk saree with traditional korvai weaving and gold zari pallu.',
     description: 'Exuding regal grandeur, this Crimson Kanjeevaram silk saree is masterfully handwoven in Kanchipuram using pure silver-plated gold zari. Features classic floral annam motifs along the body and an opulent contrast rich brocade pallu.',
+    searchCode: 'SR-K01',
     price: 34990,
     compareAtPrice: 42000,
     currency: 'INR',

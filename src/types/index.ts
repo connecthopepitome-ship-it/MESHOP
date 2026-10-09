@@ -75,6 +75,7 @@ export interface PublicProduct {
   careInstructions?: string;
   fitNotes?: string;
   workType?: string;
+  searchCode?: string;
   createdAt?: string;
   updatedAt?: string;
 }
