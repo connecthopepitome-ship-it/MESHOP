@@ -107,12 +107,14 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         return null;
       }
 
-      const parseArray = (val: any): string[] => {
-        if (Array.isArray(val)) return Array.from(new Set(val.map((s) => String(s).trim()).filter(Boolean)));
-        if (typeof val === 'string' && val.trim().length > 0) {
-          return Array.from(new Set(val.split(/[\|\,\n]/).map((s) => s.trim()).filter(Boolean)));
+      const parseArray = (val: any, dedupe: boolean = true): string[] => {
+        let arr: string[] = [];
+        if (Array.isArray(val)) {
+          arr = val.map((s) => String(s).trim()).filter(Boolean);
+        } else if (typeof val === 'string' && val.trim().length > 0) {
+          arr = val.split(/[\|\,\n]/).map((s) => s.trim()).filter(Boolean);
         }
-        return [];
+        return dedupe ? Array.from(new Set(arr)) : arr;
       };
 
       const rawMainImage = String(raw.mainImage || raw.image || raw['Main Image URL'] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80').trim();
@@ -127,7 +129,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         .filter((img) => typeof img === 'string' && img.trim().length > 0)
         .map((img) => formatImageUrl(String(img).trim()));
 
-      const galleryImages = parseArray(raw.galleryImages).map((img) => formatImageUrl(img));
+      const galleryImages = parseArray(raw.galleryImages, false).map((img) => formatImageUrl(img));
       
       let imagesList: string[] = [];
       if (galleryImages.length > 0) {
