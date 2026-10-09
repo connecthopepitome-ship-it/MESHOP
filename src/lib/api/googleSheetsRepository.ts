@@ -128,7 +128,14 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         .map((img) => formatImageUrl(String(img).trim()));
 
       const galleryImages = parseArray(raw.galleryImages).map((img) => formatImageUrl(img));
-      const imagesList = Array.from(new Set([...imagesFromFields, ...galleryImages]));
+      
+      let imagesList: string[] = [];
+      if (galleryImages.length > 0) {
+        imagesList = galleryImages;
+      } else {
+        imagesList = imagesFromFields;
+      }
+
       if (imagesList.length === 0) {
         imagesList.push(mainImage);
       }
