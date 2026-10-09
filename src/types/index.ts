@@ -54,6 +54,10 @@ export interface PublicProduct {
   bestseller: boolean;
   publishDate?: string;
   mainImage: string;
+  image?: string;
+  image2?: string;
+  image3?: string;
+  image4?: string;
   galleryImages: string[];
   images?: string[]; // Standardized images array [mainImage, image2, image3, image4]
   sizeType?: string;

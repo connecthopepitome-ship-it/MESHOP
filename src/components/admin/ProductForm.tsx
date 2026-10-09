@@ -142,6 +142,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit = 
       status: statusToSet,
       name: formData.productName || formData.name,
       stockQty: formData.stock ?? 5,
+      image2: image2 || undefined,
+      image3: image3 || undefined,
+      image4: image4 || undefined,
       images: [formData.mainImage || '', image2, image3, image4].filter(Boolean),
       galleryImages: [formData.mainImage || '', image2, image3, image4].filter(Boolean)
     };
