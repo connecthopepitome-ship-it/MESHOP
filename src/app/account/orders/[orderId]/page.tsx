@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { OrderService } from '@/lib/services/OrderService';
+
 import { CustomerOrder, TrackingInfo, OrderStatus } from '@/types/customer';
 import { formatPrice } from '@/lib/utils';
 import { ChevronLeft, Package, MapPin, CreditCard, ExternalLink, HelpCircle } from 'lucide-react';
@@ -23,7 +24,7 @@ export default function OrderDetailPage() {
         OrderService.getOrder(orderId),
         OrderService.getTracking(orderId)
       ]);
-      setOrder(orderData);
+      setOrder(orderData as any);
       setTracking(trackingData);
       setIsLoading(false);
     }

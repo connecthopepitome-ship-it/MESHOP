@@ -1,4 +1,8 @@
+export * from './orders';
+import type { Order } from './orders';
+
 export type ProductStatus = 'Draft' | 'Active' | 'Out of Stock' | 'Hidden' | 'Discontinued';
+
 
 export type ProductValidationState =
   | 'VALID'
@@ -148,46 +152,8 @@ export interface CartItem {
   quantity: number;
 }
 
-export interface ShippingAddress {
-  fullName: string;
-  mobile: string;
-  email: string;
-  addressLine1: string;
-  addressLine2?: string;
-  city: string;
-  state: string;
-  pincode: string;
-  country: string;
-}
 
-export interface OrderItem {
-  productId: string;
-  sku: string;
-  name: string;
-  price: number;
-  selectedBlouseSize?: string;
-  quantity: number;
-  mainImage: string;
-}
 
-export interface Order {
-  orderId: string;
-  createdAt: string;
-  customerName: string;
-  email: string;
-  phone: string;
-  shippingAddress: ShippingAddress;
-  items: OrderItem[];
-  subtotal: number;
-  discount: number;
-  shipping: number;
-  total: number;
-  paymentMethod: 'cod' | 'online_razorpay' | 'mock_payment';
-  paymentStatus: 'PENDING' | 'PAID' | 'FAILED';
-  fulfillmentStatus: 'NEW' | 'PROCESSING' | 'SHIPPED' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'CANCELLED';
-  trackingNumber?: string;
-  notes?: string;
-}
 
 export interface Coupon {
   code: string;

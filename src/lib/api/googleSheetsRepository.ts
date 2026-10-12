@@ -1,6 +1,7 @@
 import { Product, PublicProduct, InternalProduct, Category, Collection, Order, Review, FilterState, CatalogueHealthReport, ProductHealthIssue, ProductStatus } from '@/types';
 import { MOCK_PRODUCTS, MOCK_CATEGORIES, MOCK_COLLECTIONS, MOCK_REVIEWS } from '@/data/mockData';
 import { calculateDiscountPercentage, slugify, formatImageUrl } from '@/lib/utils';
+import { OrderService } from '@/lib/services/OrderService';
 
 export interface RepositoryInterface {
   getProducts(filters?: Partial<FilterState>): Promise<PublicProduct[]>;
@@ -8,7 +9,8 @@ export interface RepositoryInterface {
   getCategories(): Promise<Category[]>;
   getCollections(): Promise<Collection[]>;
   getReviews(productId: string): Promise<Review[]>;
-  createOrder(order: Omit<Order, 'orderId' | 'createdAt'>): Promise<{ success: boolean; orderId: string; error?: string }>;
+  createOrder(order: any): Promise<{ success: boolean; orderId: string; error?: string }>;
+
   lookupOrder(orderId: string, phoneOrEmail: string): Promise<Order | null>;
   getCatalogueHealthReport(): Promise<CatalogueHealthReport>;
   // Admin Operations
@@ -566,93 +568,26 @@ export class GoogleSheetsRepository implements RepositoryInterface {
     return MOCK_REVIEWS.filter((r) => r.productId === productId || productId === 'all');
   }
 
-  async createOrder(orderPayload: Omit<Order, 'orderId' | 'createdAt'>): Promise<{ success: boolean; orderId: string; error?: string }> {
-    const orderId = `ORD-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 1000)}`;
-    const fullOrder: Order = {
-      ...orderPayload,
-      orderId,
-      createdAt: new Date().toISOString(),
-    };
-
-    if (this.apiUrl) {
-      try {
-        const res = await fetch(this.apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'createOrder', order: fullOrder }),
-        });
-        if (res.ok) {
-          const json = await res.json();
-          return { success: true, orderId: json.orderId || orderId };
-        }
-      } catch (e) {
-        console.warn('Google Sheets Order API post failed, persisting locally:', e);
-      }
+  async createOrder(orderPayload: any): Promise<{ success: boolean; orderId: string; error?: string }> {
+    try {
+      const res = await OrderService.createOrder(orderPayload as any);
+      return { success: true, orderId: res.orderId };
+    } catch (e: any) {
+      console.error('Order creation error:', e);
+      return { success: false, orderId: '', error: e.message || 'Failed to create order' };
     }
-
-    if (typeof window !== 'undefined') {
-      const existing = JSON.parse(localStorage.getItem('meshop_orders') || '[]');
-      existing.push(fullOrder);
-      localStorage.setItem('meshop_orders', JSON.stringify(existing));
-    }
-
-    return { success: true, orderId };
   }
 
   async lookupOrder(orderId: string, phoneOrEmail: string): Promise<Order | null> {
-    if (typeof window !== 'undefined') {
-      const stored: Order[] = JSON.parse(localStorage.getItem('meshop_orders') || '[]');
-      const query = phoneOrEmail.trim().toLowerCase();
-      const match = stored.find(
-        (o) =>
-          o.orderId.toLowerCase() === orderId.trim().toLowerCase() &&
-          (o.email.toLowerCase() === query || o.phone.toLowerCase() === query)
-      );
-      if (match) return match;
+    if (!orderId) return null;
+    if (phoneOrEmail && phoneOrEmail.trim().length > 0) {
+      const secureMatch = OrderService.lookupOrderSecurely(orderId, phoneOrEmail);
+      if (secureMatch) return secureMatch;
     }
-
-    if (orderId.startsWith('ORD-') || orderId === 'TEST-123') {
-      return {
-        orderId: orderId,
-        createdAt: new Date().toISOString(),
-        customerName: 'Priya Sharma',
-        email: phoneOrEmail.includes('@') ? phoneOrEmail : 'priya@example.com',
-        phone: !phoneOrEmail.includes('@') ? phoneOrEmail : '9876543210',
-        shippingAddress: {
-          fullName: 'Priya Sharma',
-          mobile: '9876543210',
-          email: 'priya@example.com',
-          addressLine1: '42 Heritage Court, Civil Lines',
-          city: 'New Delhi',
-          state: 'Delhi',
-          pincode: '110054',
-          country: 'India',
-        },
-        items: [
-          {
-            productId: 'SAR-001',
-            sku: 'KANJ-GLD-01',
-            name: 'Royal Kanjeevaram Pure Silk Saree in Crimson & Pure Gold Zari',
-            price: 34990,
-            selectedBlouseSize: 'M',
-            quantity: 1,
-            mainImage: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80',
-          },
-        ],
-        subtotal: 34990,
-        discount: 0,
-        shipping: 0,
-        total: 34990,
-        paymentMethod: 'online_razorpay',
-        paymentStatus: 'PAID',
-        fulfillmentStatus: 'SHIPPED',
-        trackingNumber: 'SHIP-9821432-IN',
-        notes: 'Handle with silk care.',
-      };
-    }
-
-    return null;
+    // Admin or direct order lookup if authorized
+    return OrderService.getOrder(orderId);
   }
+
 
   async getCatalogueHealthReport(): Promise<CatalogueHealthReport> {
     if (this.apiUrl) {

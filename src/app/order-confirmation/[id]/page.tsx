@@ -13,41 +13,14 @@ export default function OrderConfirmationPage({ params }: { params: { id: string
 
   useEffect(() => {
     async function fetchOrder() {
-      // Lookup by orderId
       const found = await repository.lookupOrder(params.id, '');
       if (found) {
         setOrder(found);
-      } else {
-        // Fallback sample order representation for immediate UI display if lookup fails
-        setOrder({
-          orderId: params.id,
-          createdAt: new Date().toISOString(),
-          customerName: 'Valued Guest',
-          email: 'customer@example.com',
-          phone: '+91 98765 43210',
-          shippingAddress: {
-            fullName: 'Valued Customer',
-            mobile: '9876543210',
-            email: 'customer@example.com',
-            addressLine1: '42 Heritage Lane',
-            city: 'New Delhi',
-            state: 'Delhi',
-            pincode: '110054',
-            country: 'India',
-          },
-          items: [],
-          subtotal: 0,
-          discount: 0,
-          shipping: 0,
-          total: 0,
-          paymentMethod: 'online_razorpay',
-          paymentStatus: 'PAID',
-          fulfillmentStatus: 'NEW',
-        });
       }
     }
     fetchOrder();
   }, [params.id]);
+
 
   return (
     <div className="container mx-auto px-4 md:px-8 py-16 max-w-3xl space-y-8">
@@ -103,7 +76,7 @@ export default function OrderConfirmationPage({ params }: { params: { id: string
               <span className="font-semibold text-brand-charcoal block uppercase mb-1">Payment & Fulfillment</span>
               <p>Payment Method: <strong className="uppercase">{order.paymentMethod}</strong></p>
               <p>Payment Status: <strong className="text-green-800">{order.paymentStatus}</strong></p>
-              <p>Fulfillment Status: <strong>{order.fulfillmentStatus}</strong></p>
+              <p>Fulfillment Status: <strong>{order.orderStatus || order.fulfillmentStatus || 'PLACED'}</strong></p>
             </div>
           </div>
 

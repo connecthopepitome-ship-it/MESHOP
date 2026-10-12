@@ -5,7 +5,19 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAdminAuth } from '@/context/AdminAuthContext';
 import { repository } from '@/lib/api/googleSheetsRepository';
-import { LayoutDashboard, Package, PlusCircle, ExternalLink, RefreshCw, LogOut, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingBag,
+  Truck,
+  Mail,
+  Sliders,
+  ExternalLink,
+  RefreshCw,
+  LogOut,
+  ShieldCheck,
+  CheckCircle2,
+} from 'lucide-react';
 
 export const AdminHeader: React.FC = () => {
   const pathname = usePathname();
@@ -32,9 +44,13 @@ export const AdminHeader: React.FC = () => {
 
   const navItems = [
     { label: 'Overview', href: '/admin', icon: LayoutDashboard },
+    { label: 'Orders', href: '/admin/orders', icon: ShoppingBag },
+    { label: 'Shipments', href: '/admin/shipments', icon: Truck },
+    { label: 'Notifications', href: '/admin/notifications', icon: Mail },
     { label: 'Catalogue', href: '/admin/products', icon: Package },
-    { label: 'Add Saree', href: '/admin/products/new', icon: PlusCircle },
+    { label: 'Settings', href: '/admin/settings/shipping', icon: Sliders },
   ];
+
 
   return (
     <header className="sorayva-glass sticky top-0 z-40 border-b border-brand-border transition-all duration-300">
