@@ -431,11 +431,24 @@ function buildRowFromProductData(p, existingRow, headerMap) {
   setByHeader('Trending', COL.TRENDING, p.trending ? 'TRUE' : 'FALSE');
   setByHeader('Publish Date', COL.PUBLISH_DATE, normalizeSheetDate(p.publishDate) || new Date().toISOString().split('T')[0]);
 
+  var mainImg = p.mainImage !== undefined ? p.mainImage : (p['Main Image URL'] !== undefined ? p['Main Image URL'] : undefined);
+  var img2 = p.image2 !== undefined ? p.image2 : (p['Image 2 URL'] !== undefined ? p['Image 2 URL'] : undefined);
+  var img3 = p.image3 !== undefined ? p.image3 : (p['Image 3 URL'] !== undefined ? p['Image 3 URL'] : undefined);
+  var img4 = p.image4 !== undefined ? p.image4 : (p['Image 4 URL'] !== undefined ? p['Image 4 URL'] : undefined);
+
   var imgs = p.images || p.galleryImages || [];
-  setByHeader('Main Image URL', COL.MAIN_IMAGE_URL, p.mainImage || (imgs.length > 0 ? imgs[0] : ''));
-  setByHeader('Image 2 URL', COL.IMAGE_2_URL, imgs.length > 1 ? imgs[1] : undefined);
-  setByHeader('Image 3 URL', COL.IMAGE_3_URL, imgs.length > 2 ? imgs[2] : undefined);
-  setByHeader('Image 4 URL', COL.IMAGE_4_URL, imgs.length > 3 ? imgs[3] : undefined);
+  if (Array.isArray(imgs) && imgs.length > 0) {
+    if (mainImg === undefined) mainImg = imgs[0];
+    var nonMain = imgs.filter(function(url) { return url && url !== mainImg; });
+    if (img2 === undefined && nonMain.length > 0) img2 = nonMain[0];
+    if (img3 === undefined && nonMain.length > 1) img3 = nonMain[1];
+    if (img4 === undefined && nonMain.length > 2) img4 = nonMain[2];
+  }
+
+  setByHeader('Main Image URL', COL.MAIN_IMAGE_URL, mainImg);
+  setByHeader('Image 2 URL', COL.IMAGE_2_URL, img2);
+  setByHeader('Image 3 URL', COL.IMAGE_3_URL, img3);
+  setByHeader('Image 4 URL', COL.IMAGE_4_URL, img4);
 
   setByHeader('Size Type', COL.SIZE_TYPE, p.sizeType || 'Standard Saree (5.5m)');
   setByHeader('Blouse Size', COL.BLOUSE_SIZE, p.blouseSize);
@@ -571,6 +584,9 @@ function parsePublicProductRow(row) {
       bestseller: parseBoolean(row[COL.FEATURED - 1]),
       publishDate: row[COL.PUBLISH_DATE - 1] ? formatDate(row[COL.PUBLISH_DATE - 1]) : undefined,
       mainImage: mainImage,
+      image2: img2 || undefined,
+      image3: img3 || undefined,
+      image4: img4 || undefined,
       galleryImages: images,
       images: images,
       sizeType: String(row[COL.SIZE_TYPE - 1] || 'Standard Saree (5.5m)').trim(),

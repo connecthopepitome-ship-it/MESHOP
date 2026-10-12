@@ -34,6 +34,9 @@ let adminLocalStore: InternalProduct[] = MOCK_PRODUCTS.map((p) => ({
   lastSourceCheck: new Date().toISOString().split('T')[0]
 }));
 
+// Tracks product IDs that have been explicitly modified or created in this session
+const sessionModifiedProductIds = new Set<string>();
+
 export class GoogleSheetsRepository implements RepositoryInterface {
   private apiUrl: string;
 
@@ -75,36 +78,124 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         }
       } catch (e) {}
     }
-    const inMem = adminLocalStore.find((p) => p.productId.toLowerCase() === pid);
-    if (inMem) {
-      return { ...raw, ...inMem };
+    // Only apply in-memory override if this record was explicitly modified in this session
+    if (sessionModifiedProductIds.has(pid)) {
+      const inMem = adminLocalStore.find((p) => p.productId.toLowerCase() === pid);
+      if (inMem) {
+        return { ...raw, ...inMem };
+      }
     }
     return raw;
   }
 
   /**
-   * CRITICAL SECURITY METHOD:
-   * Converts any raw payload or sheet row object into a sanitized PublicProduct.
-   * Explicitly strips all internal source/supplier fields before returning.
+   * Canonical Image Field Parser
+   * Maps:
+   * Main Image URL -> mainImage
+   * Image 2 URL -> image2
+   * Image 3 URL -> image3
+   * Image 4 URL -> image4
+   * galleryImages -> [mainImage, image2, image3, image4]
    */
-  public sanitizeProduct(raw: any): PublicProduct | null {
+  private parseImageFields(raw: any): {
+    mainImage: string;
+    image2?: string;
+    image3?: string;
+    image4?: string;
+    galleryImages: string[];
+    images: string[];
+  } {
+    const rawMainImage = String(
+      raw.mainImage || raw.image || raw['Main Image URL'] || raw['main_image_url'] || ''
+    ).trim();
+    const mainImage = rawMainImage
+      ? formatImageUrl(rawMainImage)
+      : 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80';
+
+    const parseArray = (val: any, dedupe: boolean = false): string[] => {
+      let arr: string[] = [];
+      if (Array.isArray(val)) {
+        arr = val.map((s) => String(s).trim()).filter(Boolean);
+      } else if (typeof val === 'string' && val.trim().length > 0) {
+        arr = val.split(/[\|\,\n]/).map((s) => s.trim()).filter(Boolean);
+      }
+      return dedupe ? Array.from(new Set(arr)) : arr;
+    };
+
+    // Explicit individual slot extraction
+    const rawImg2 = raw.image2 ?? raw['Image 2 URL'] ?? raw['image_2_url'] ?? undefined;
+    const rawImg3 = raw.image3 ?? raw['Image 3 URL'] ?? raw['image_3_url'] ?? undefined;
+    const rawImg4 = raw.image4 ?? raw['Image 4 URL'] ?? raw['image_4_url'] ?? undefined;
+
+    let image2: string | undefined =
+      typeof rawImg2 === 'string' && rawImg2.trim().length > 0 ? formatImageUrl(rawImg2.trim()) : undefined;
+    let image3: string | undefined =
+      typeof rawImg3 === 'string' && rawImg3.trim().length > 0 ? formatImageUrl(rawImg3.trim()) : undefined;
+    let image4: string | undefined =
+      typeof rawImg4 === 'string' && rawImg4.trim().length > 0 ? formatImageUrl(rawImg4.trim()) : undefined;
+
+    // Check galleryImages array if individual slots are not set
+    const galleryRaw = parseArray(raw.galleryImages, false).map((img) => formatImageUrl(img));
+    if (galleryRaw.length > 0) {
+      const nonMain = galleryRaw[0] === mainImage ? galleryRaw.slice(1) : galleryRaw;
+      if (!image2 && nonMain[0]) image2 = nonMain[0];
+      if (!image3 && nonMain[1]) image3 = nonMain[1];
+      if (!image4 && nonMain[2]) image4 = nonMain[2];
+    }
+
+    // Check images array if still empty
+    const imagesRaw = parseArray(raw.images, false).map((img) => formatImageUrl(img));
+    if (imagesRaw.length > 0) {
+      const nonMain = imagesRaw[0] === mainImage ? imagesRaw.slice(1) : imagesRaw;
+      if (!image2 && nonMain[0]) image2 = nonMain[0];
+      if (!image3 && nonMain[1]) image3 = nonMain[1];
+      if (!image4 && nonMain[2]) image4 = nonMain[2];
+    }
+
+    // Build canonical gallery list [mainImage, image2, image3, image4]
+    const galleryImages: string[] = [mainImage];
+    if (image2 && image2 !== mainImage) galleryImages.push(image2);
+    if (image3 && image3 !== mainImage && image3 !== image2) galleryImages.push(image3);
+    if (image4 && image4 !== mainImage && image4 !== image2 && image4 !== image3) galleryImages.push(image4);
+
+    return {
+      mainImage,
+      image2,
+      image3,
+      image4,
+      galleryImages,
+      images: galleryImages
+    };
+  }
+
+  /**
+   * Internal Core Product Parser
+   * When isInternal is false (public storefront):
+   * - Strict status gate: Draft, Hidden, Discontinued are rejected (returns null)
+   * - Strips all internal source/supplier fields
+   * When isInternal is true (admin dashboard):
+   * - ALL product statuses (Draft, Active, Out of Stock, Hidden, Discontinued) are preserved
+   * - Retains internal supplier fields for inventory fulfillment
+   */
+  public parseProductData(raw: any, isInternal: boolean = false): PublicProduct | InternalProduct | null {
     try {
-      raw = this.mergeLocalOverride(raw);
       if (!raw || (!raw.productId && !raw.id)) return null;
 
       const productId = String(raw.productId || raw.id).trim();
       const productName = String(raw.productName || raw.name || 'Unnamed Saree').trim();
       const category = String(raw.category || 'Silk Sarees').trim();
-      const status: ProductStatus = (raw.status as ProductStatus) || 'Active';
+      const status: ProductStatus = (raw.status as ProductStatus) || (isInternal ? 'Draft' : 'Active');
 
-      // Status rule: Draft, Hidden, Discontinued are NEVER returned to public website
-      if (status === 'Draft' || status === 'Hidden' || status === 'Discontinued') {
-        return null;
-      }
+      if (!isInternal) {
+        // Status rule: Draft, Hidden, Discontinued are NEVER returned to public website
+        if (status === 'Draft' || status === 'Hidden' || status === 'Discontinued') {
+          return null;
+        }
 
-      // Check mandatory published flag if present
-      if (raw.published === false || raw.published === 'FALSE' || raw.published === 'false') {
-        return null;
+        // Check mandatory published flag if present
+        if (raw.published === false || raw.published === 'FALSE' || raw.published === 'false') {
+          return null;
+        }
       }
 
       const parseArray = (val: any, dedupe: boolean = true): string[] => {
@@ -117,30 +208,8 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         return dedupe ? Array.from(new Set(arr)) : arr;
       };
 
-      const rawMainImage = String(raw.mainImage || raw.image || raw['Main Image URL'] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80').trim();
-      const mainImage = formatImageUrl(rawMainImage);
-
-      const imagesFromFields = [
-        rawMainImage,
-        raw.image2 || raw['Image 2 URL'],
-        raw.image3 || raw['Image 3 URL'],
-        raw.image4 || raw['Image 4 URL'],
-      ]
-        .filter((img) => typeof img === 'string' && img.trim().length > 0)
-        .map((img) => formatImageUrl(String(img).trim()));
-
-      const galleryImages = parseArray(raw.galleryImages, false).map((img) => formatImageUrl(img));
-      
-      let imagesList: string[] = [];
-      if (galleryImages.length > 0) {
-        imagesList = galleryImages;
-      } else {
-        imagesList = imagesFromFields;
-      }
-
-      if (imagesList.length === 0) {
-        imagesList.push(mainImage);
-      }
+      // Canonical Image Mapping
+      const imgMap = this.parseImageFields(raw);
 
       const price = typeof raw.price === 'number' ? raw.price : parseFloat(raw.price) || 0;
       let compareAtPrice = raw.compareAtPrice ? (typeof raw.compareAtPrice === 'number' ? raw.compareAtPrice : parseFloat(raw.compareAtPrice)) : undefined;
@@ -163,8 +232,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
 
       const slug = raw.slug ? String(raw.slug) : `${slugify(productName)}-${productId.toLowerCase()}`;
 
-      // PUBLIC PRODUCT DTO
-      const publicProduct: PublicProduct = {
+      const baseProduct: PublicProduct = {
         productId,
         productName,
         name: productName,
@@ -193,9 +261,12 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         trending: raw.trending === true || raw.trending === 'TRUE' || raw.trending === 'true',
         bestseller: raw.bestseller === true || raw.bestseller === 'TRUE' || raw.bestseller === 'true',
         publishDate: raw.publishDate ? String(raw.publishDate) : undefined,
-        mainImage,
-        galleryImages: imagesList,
-        images: imagesList,
+        mainImage: imgMap.mainImage,
+        image2: imgMap.image2,
+        image3: imgMap.image3,
+        image4: imgMap.image4,
+        galleryImages: imgMap.galleryImages,
+        images: imgMap.images,
         sizeType: raw.sizeType ? String(raw.sizeType) : 'Standard Saree (5.5m)',
         blouseSize: blouseSize.length > 0 ? blouseSize : undefined,
         blouseIncluded: raw.blouseIncluded === true || raw.blouseIncluded === 'TRUE' || raw.blouseIncluded === 'true',
@@ -220,16 +291,28 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         updatedAt: raw.updatedAt ? String(raw.updatedAt) : undefined,
       };
 
-      // SECURITY SANITIZATION GUARANTEE:
-      // Explicitly delete any internal fields if present in input object
-      delete (publicProduct as any).meeshoReferenceLink;
-      delete (publicProduct as any).sourceCost;
-      delete (publicProduct as any).sourceStatus;
-      delete (publicProduct as any).supplierReference;
-      delete (publicProduct as any).lastSourceCheck;
-      delete (publicProduct as any).sourceUrl;
+      if (!isInternal) {
+        // SECURITY GUARANTEE: Exclude internal supplier fields from public DTO
+        delete (baseProduct as any).meeshoReferenceLink;
+        delete (baseProduct as any).sourceCost;
+        delete (baseProduct as any).sourceStatus;
+        delete (baseProduct as any).supplierReference;
+        delete (baseProduct as any).lastSourceCheck;
+        delete (baseProduct as any).sourceUrl;
+        return baseProduct;
+      }
 
-      return publicProduct;
+      // ADMIN INTERNAL DTO: Preserve internal supplier fields
+      const internalProduct: InternalProduct = {
+        ...baseProduct,
+        meeshoReferenceLink: raw.meeshoReferenceLink || raw.sourceUrl || undefined,
+        sourceCost: typeof raw.sourceCost === 'number' ? raw.sourceCost : parseFloat(raw.sourceCost) || undefined,
+        sourceStatus: raw.sourceStatus || undefined,
+        supplierReference: raw.supplierReference || undefined,
+        lastSourceCheck: raw.lastSourceCheck || undefined
+      };
+
+      return internalProduct;
     } catch (e) {
       console.warn('Failed to parse product row:', raw, e);
       return null;
@@ -237,23 +320,20 @@ export class GoogleSheetsRepository implements RepositoryInterface {
   }
 
   /**
-   * Internal parser for Admin DTO (Preserves internal supplier fields)
+   * CRITICAL SECURITY METHOD:
+   * Converts any raw payload or sheet row object into a sanitized PublicProduct.
+   * Explicitly strips all internal source/supplier fields before returning.
+   * Rejects Draft, Hidden, and Discontinued products.
+   */
+  public sanitizeProduct(raw: any): PublicProduct | null {
+    return this.parseProductData(raw, false) as PublicProduct | null;
+  }
+
+  /**
+   * Internal parser for Admin DTO (Preserves internal supplier fields and ALL statuses including Draft)
    */
   public sanitizeAdminProduct(raw: any): InternalProduct | null {
-    const publicProduct = this.sanitizeProduct({ ...raw, status: raw.status || 'Active', published: true });
-    if (!publicProduct) return null;
-
-    const internalProduct: InternalProduct = {
-      ...publicProduct,
-      status: (raw.status as ProductStatus) || 'Draft',
-      meeshoReferenceLink: raw.meeshoReferenceLink || raw.sourceUrl || undefined,
-      sourceCost: typeof raw.sourceCost === 'number' ? raw.sourceCost : parseFloat(raw.sourceCost) || undefined,
-      sourceStatus: raw.sourceStatus || undefined,
-      supplierReference: raw.supplierReference || undefined,
-      lastSourceCheck: raw.lastSourceCheck || undefined
-    };
-
-    return internalProduct;
+    return this.parseProductData(raw, true) as InternalProduct | null;
   }
 
   private _productsCache: PublicProduct[] | null = null;
@@ -628,7 +708,8 @@ export class GoogleSheetsRepository implements RepositoryInterface {
     let prods: InternalProduct[] = [];
     if (this.apiUrl) {
       try {
-        const res = await fetch(`${this.apiUrl}?action=getAdminProducts`, {
+        const adminToken = process.env.GOOGLE_SHEETS_ADMIN_TOKEN || 'sorayva_admin_secret_key_2026';
+        const res = await fetch(`${this.apiUrl}?action=getAdminProducts&token=${adminToken}`, {
           redirect: 'follow',
           next: { revalidate: 0 }
         });
@@ -642,21 +723,38 @@ export class GoogleSheetsRepository implements RepositoryInterface {
         if (res.ok && text.trim().startsWith('{')) {
           const json = JSON.parse(text);
           if (Array.isArray(json.products)) {
-            prods = json.products.map((r: any) => this.sanitizeAdminProduct(r)).filter((p: any): p is InternalProduct => p !== null);
-          } else {
-            const publicProds = await this.getProducts();
-            if (publicProds && publicProds.length > 0) {
-              prods = publicProds.map((p) => this.sanitizeAdminProduct(p)).filter((p): p is InternalProduct => p !== null);
-            }
+            prods = json.products
+              .map((r: any) => {
+                const overridden = this.mergeLocalOverride(r);
+                return this.sanitizeAdminProduct(overridden);
+              })
+              .filter((p: any): p is InternalProduct => p !== null);
           }
         }
       } catch (e: any) {
         console.warn('[GoogleSheetsRepository] getAdminProducts error:', e.message);
       }
     }
+
+    // Merge only products that were explicitly modified or created in this session
     if (prods.length === 0) {
-      prods = adminLocalStore;
+      prods = [...adminLocalStore];
+    } else {
+      sessionModifiedProductIds.forEach((pid) => {
+        const localItem = adminLocalStore.find((p) => p.productId.toLowerCase() === pid);
+        if (localItem) {
+          const idx = prods.findIndex(
+            (p) => p.productId.toLowerCase() === pid
+          );
+          if (idx === -1) {
+            prods.push(localItem);
+          } else {
+            prods[idx] = { ...prods[idx], ...localItem };
+          }
+        }
+      });
     }
+
     return this.applyClientOverrides(prods);
   }
 
@@ -667,14 +765,84 @@ export class GoogleSheetsRepository implements RepositoryInterface {
   }
 
   async saveOrUpdateProduct(product: InternalProduct): Promise<{ success: boolean; message?: string; productId?: string; error?: string }> {
-    this.updateLocalAdminStore(product);
+    const pid = String(product.productId).trim().toLowerCase();
+    const existing = adminLocalStore.find((p) => p.productId.toLowerCase() === pid);
+
+    // PART 4: Prevent image URL loss during updates
+    // Differentiate between omitted (preserve existing), explicitly empty "" (clear), and new URL
+    const mainImage =
+      product.mainImage !== undefined && product.mainImage.trim().length > 0
+        ? product.mainImage.trim()
+        : existing?.mainImage || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80';
+
+    const image2 =
+      product.image2 !== undefined
+        ? (product.image2.trim().length > 0 ? product.image2.trim() : undefined)
+        : existing?.image2;
+
+    const image3 =
+      product.image3 !== undefined
+        ? (product.image3.trim().length > 0 ? product.image3.trim() : undefined)
+        : existing?.image3;
+
+    const image4 =
+      product.image4 !== undefined
+        ? (product.image4.trim().length > 0 ? product.image4.trim() : undefined)
+        : existing?.image4;
+
+    const galleryImages: string[] = [mainImage];
+    if (image2 && image2 !== mainImage) galleryImages.push(image2);
+    if (image3 && image3 !== mainImage && image3 !== image2) galleryImages.push(image3);
+    if (image4 && image4 !== mainImage && image4 !== image2 && image4 !== image3) galleryImages.push(image4);
+
+    const mergedProduct: InternalProduct = {
+      ...(existing || {}),
+      ...product,
+      mainImage,
+      image2,
+      image3,
+      image4,
+      galleryImages,
+      images: galleryImages,
+      status: product.status || existing?.status || 'Draft',
+      updatedAt: new Date().toISOString()
+    };
+
+    // If an image slot was explicitly cleared, delete it so it is not resurrected
+    if (product.image2 !== undefined && product.image2.trim().length === 0) {
+      delete (mergedProduct as any).image2;
+      if (existing) delete (existing as any).image2;
+    }
+    if (product.image3 !== undefined && product.image3.trim().length === 0) {
+      delete (mergedProduct as any).image3;
+      if (existing) delete (existing as any).image3;
+    }
+    if (product.image4 !== undefined && product.image4.trim().length === 0) {
+      delete (mergedProduct as any).image4;
+      if (existing) delete (existing as any).image4;
+    }
+
+    // Update in-memory and client storage
+    this.updateLocalAdminStore(mergedProduct);
 
     if (this.apiUrl) {
       try {
+        const payloadToSend = {
+          ...mergedProduct,
+          'Main Image URL': mainImage,
+          'Image 2 URL': image2 || '',
+          'Image 3 URL': image3 || '',
+          'Image 4 URL': image4 || ''
+        };
+
         const res = await fetch(this.apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'saveProduct', product, adminToken: process.env.GOOGLE_SHEETS_ADMIN_TOKEN || 'sorayva_admin_secret_key_2026' }),
+          body: JSON.stringify({
+            action: 'saveProduct',
+            product: payloadToSend,
+            adminToken: process.env.GOOGLE_SHEETS_ADMIN_TOKEN || 'sorayva_admin_secret_key_2026'
+          }),
           redirect: 'follow'
         });
         const text = await res.text();
@@ -684,14 +852,18 @@ export class GoogleSheetsRepository implements RepositoryInterface {
           return {
             success: true,
             message: 'Product updated in local admin session. (To enable live Google Sheets write sync, set "Who has access" to "Anyone" in Google Apps Script Deployment).',
-            productId: product.productId
+            productId: mergedProduct.productId
           };
         }
 
         if (res.ok && text.trim().startsWith('{')) {
           const json = JSON.parse(text);
           if (json.success) {
-            return { success: true, message: json.message || 'Product updated in Google Sheets.', productId: product.productId };
+            return {
+              success: true,
+              message: json.message || 'Product updated in Google Sheets.',
+              productId: mergedProduct.productId
+            };
           }
           return { success: false, error: json.error || 'Google Sheets update failed.' };
         }
@@ -700,7 +872,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
       }
     }
 
-    return { success: true, message: 'Product updated in local admin session.', productId: product.productId };
+    return { success: true, message: 'Product updated in local admin session.', productId: mergedProduct.productId };
   }
 
   async updateProductStatus(productId: string, status: ProductStatus): Promise<{ success: boolean; message?: string; error?: string }> {
@@ -756,6 +928,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
 
   private updateLocalAdminStore(product: InternalProduct) {
     const pid = product.productId.toLowerCase();
+    sessionModifiedProductIds.add(pid);
     const idx = adminLocalStore.findIndex((p) => p.productId.toLowerCase() === pid);
     if (idx >= 0) {
       adminLocalStore[idx] = { ...adminLocalStore[idx], ...product };
@@ -775,6 +948,7 @@ export class GoogleSheetsRepository implements RepositoryInterface {
 
   private updateLocalStatus(productId: string, status: ProductStatus) {
     const pid = productId.toLowerCase();
+    sessionModifiedProductIds.add(pid);
     const item = adminLocalStore.find((p) => p.productId.toLowerCase() === pid);
     if (item) {
       item.status = status;

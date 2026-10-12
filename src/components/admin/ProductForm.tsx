@@ -77,9 +77,32 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit = 
     lastSourceCheck: initialData?.lastSourceCheck || new Date().toISOString().split('T')[0]
   });
 
-  const [image2, setImage2] = useState<string>(formData.galleryImages?.[1] || '');
-  const [image3, setImage3] = useState<string>(formData.galleryImages?.[2] || '');
-  const [image4, setImage4] = useState<string>(formData.galleryImages?.[3] || '');
+  // Helper to extract canonical image slots from initialData
+  const extractImages = (data?: Partial<InternalProduct>) => {
+    const main = data?.mainImage || (data?.galleryImages && data.galleryImages[0]) || (data?.images && data.images[0]) || '';
+    const nonMain = (data?.galleryImages || data?.images || []).filter((img) => img && img !== main);
+    const i2 = data?.image2 !== undefined ? data.image2 : (nonMain[0] || '');
+    const i3 = data?.image3 !== undefined ? data.image3 : (nonMain[1] || '');
+    const i4 = data?.image4 !== undefined ? data.image4 : (nonMain[2] || '');
+    return { main, i2, i3, i4 };
+  };
+
+  const initialImgs = extractImages(initialData);
+  const [mainImage, setMainImage] = useState<string>(initialImgs.main || (isEdit ? '' : 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80'));
+  const [image2, setImage2] = useState<string>(initialImgs.i2);
+  const [image3, setImage3] = useState<string>(initialImgs.i3);
+  const [image4, setImage4] = useState<string>(initialImgs.i4);
+
+  // Sync state if initialData reloads
+  React.useEffect(() => {
+    if (initialData) {
+      const extracted = extractImages(initialData);
+      if (extracted.main) setMainImage(extracted.main);
+      setImage2(extracted.i2);
+      setImage3(extracted.i3);
+      setImage4(extracted.i4);
+    }
+  }, [initialData]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -100,7 +123,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit = 
     return '';
   };
 
-  const validate = (): boolean => {
+  const validate = (targetStatus: ProductStatus): boolean => {
     const errs: Record<string, string> = {};
 
     if (!formData.productId?.trim()) errs.productId = 'Product ID is required.';
@@ -123,8 +146,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit = 
       errs.rating = 'Rating must be between 0 and 5.';
     }
 
-    if (formData.status === 'Active') {
-      if (!formData.mainImage?.trim()) {
+    if (targetStatus === 'Active') {
+      if (!mainImage?.trim()) {
         errs.mainImage = 'Main Image URL is required to publish Active product.';
       }
     }
@@ -137,30 +160,44 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit = 
     setFeedbackMsg(null);
     const statusToSet = targetStatus || formData.status || 'Draft';
     
-    const updatedData: Partial<InternalProduct> = {
-      ...formData,
-      status: statusToSet,
-      name: formData.productName || formData.name,
-      stockQty: formData.stock ?? 5,
-      image2: image2 || undefined,
-      image3: image3 || undefined,
-      image4: image4 || undefined,
-      images: [formData.mainImage || '', image2, image3, image4].filter(Boolean),
-      galleryImages: [formData.mainImage || '', image2, image3, image4].filter(Boolean)
-    };
-
-    if (!validate()) {
+    if (!validate(statusToSet)) {
       setFeedbackMsg({ type: 'error', msg: 'Please resolve form validation errors before saving.' });
       return;
     }
 
+    const cleanMain = mainImage?.trim() || '';
+    const cleanImg2 = image2?.trim() || '';
+    const cleanImg3 = image3?.trim() || '';
+    const cleanImg4 = image4?.trim() || '';
+
+    // Build canonical gallery list
+    const galleryImages: string[] = [cleanMain].filter(Boolean);
+    if (cleanImg2 && cleanImg2 !== cleanMain) galleryImages.push(cleanImg2);
+    if (cleanImg3 && cleanImg3 !== cleanMain && cleanImg3 !== cleanImg2) galleryImages.push(cleanImg3);
+    if (cleanImg4 && cleanImg4 !== cleanMain && cleanImg4 !== cleanImg2 && cleanImg4 !== cleanImg3) galleryImages.push(cleanImg4);
+
+    const updatedData: Partial<InternalProduct> = {
+      ...formData,
+      status: statusToSet,
+      name: formData.productName || formData.name,
+      productName: formData.productName || formData.name,
+      stockQty: formData.stock ?? 5,
+      mainImage: cleanMain,
+      image2: cleanImg2,
+      image3: cleanImg3,
+      image4: cleanImg4,
+      images: galleryImages,
+      galleryImages: galleryImages
+    };
+
     setIsSaving(true);
+    setFeedbackMsg({ type: 'success', msg: 'Saving product...' });
     try {
       const res = await onSave(updatedData as InternalProduct);
       if (res.success) {
         setFeedbackMsg({
           type: 'success',
-          msg: `Product updated successfully. Google Sheet: Updated • Catalogue: Refreshing...`
+          msg: `Product saved successfully. Status: ${statusToSet} • Refreshing catalogue...`
         });
       } else {
         setFeedbackMsg({ type: 'error', msg: res.error || 'Failed to save product to Google Sheets.' });
@@ -199,7 +236,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit = 
           <button
             type="button"
             onClick={() => setIsPreviewOpen(true)}
-            className="flex items-center space-x-2 bg-white hover:bg-brand-surface text-brand-muted hover:text-deep-espresso border border-brand-border px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-widest transition-colors shadow-sm"
+            className="flex items-center space-x-2 bg-white hover:bg-brand-surface text-brand-muted hover:text-deep-espresso border border-brand-border px-4 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-widest transition-colors shadow-sm"
           >
             <Eye className="w-4 h-4" />
             <span>Preview</span>
@@ -210,10 +247,21 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit = 
             type="button"
             onClick={() => handleSubmit('Draft')}
             disabled={isSaving}
-            className="flex items-center space-x-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-widest transition-colors shadow-sm disabled:opacity-50"
+            className="flex items-center space-x-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-4 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-widest transition-colors shadow-sm disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
             <span>Save Draft</span>
+          </button>
+
+          {/* Save Changes (Preserve Current Status) */}
+          <button
+            type="button"
+            onClick={() => handleSubmit(formData.status || 'Draft')}
+            disabled={isSaving}
+            className="flex items-center space-x-2 bg-white hover:bg-brand-surface text-deep-espresso border border-brand-border px-4 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-widest transition-colors shadow-sm disabled:opacity-50"
+          >
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span>Save Changes</span>
           </button>
 
           {/* Publish Active */}
@@ -221,7 +269,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit = 
             type="button"
             onClick={() => handleSubmit('Active')}
             disabled={isSaving}
-            className="flex items-center space-x-2 bg-deep-espresso hover:bg-terracotta text-champagne hover:text-white font-bold px-6 py-2.5 rounded-lg text-xs uppercase tracking-widest transition-colors shadow-md disabled:opacity-50"
+            className="flex items-center space-x-2 bg-deep-espresso hover:bg-terracotta text-champagne hover:text-white font-bold px-5 py-2.5 rounded-lg text-xs uppercase tracking-widest transition-colors shadow-md disabled:opacity-50"
           >
             <Sparkles className="w-4 h-4" />
             <span>Publish Live</span>
@@ -588,72 +636,268 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, isEdit = 
             </div>
           </div>
 
-          {/* SECTION 4: IMAGES */}
-          <div className="sorayva-glass-card rounded-xl p-8 shadow-sm space-y-5">
-            <h2 className="text-xl font-serif-editorial font-medium text-deep-espresso flex items-center space-x-2.5 border-b border-brand-border pb-4">
-              <ImageIcon className="w-5 h-5 text-terracotta" />
-              <span>4. Product Imagery</span>
-            </h2>
-
-            <div>
-              <label className="block text-xs font-semibold text-deep-espresso uppercase tracking-wider mb-2">
-                Main Image URL <span className="text-rose-600">*</span>
-              </label>
-              <input
-                type="url"
-                value={formData.mainImage || ''}
-                onChange={(e) => setFormData({ ...formData, mainImage: e.target.value })}
-                className="w-full bg-white/60 border border-brand-border rounded-lg px-4 py-2.5 text-sm text-deep-espresso placeholder:text-brand-muted focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-shadow"
-                placeholder="https://images.unsplash.com/..."
-              />
-              {errors.mainImage && <p className="text-xs font-medium text-rose-600 mt-1.5">{errors.mainImage}</p>}
+          {/* SECTION 4: IMAGES — PART 5 CANONICAL IMAGE MANAGER */}
+          <div className="sorayva-glass-card rounded-xl p-8 shadow-sm space-y-6">
+            <div className="border-b border-brand-border pb-4 flex items-center justify-between">
+              <h2 className="text-xl font-serif-editorial font-medium text-deep-espresso flex items-center space-x-2.5">
+                <ImageIcon className="w-5 h-5 text-terracotta" />
+                <span>4. Product Imagery</span>
+              </h2>
+              <span className="text-[11px] font-sans text-brand-muted uppercase tracking-widest font-semibold">
+                Up to 4 High-Resolution Views
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-xs font-semibold text-deep-espresso uppercase tracking-wider mb-2">Image 2 URL</label>
-                <input
-                  type="url"
-                  value={image2}
-                  onChange={(e) => setImage2(e.target.value)}
-                  className="w-full bg-white/60 border border-brand-border rounded-lg px-4 py-2.5 text-sm text-deep-espresso focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-shadow"
-                />
+            {/* MAIN IMAGE */}
+            <div className="space-y-3 bg-white/40 p-5 rounded-xl border border-brand-border/60">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold text-deep-espresso uppercase tracking-wider">
+                    MAIN IMAGE <span className="text-rose-600">*</span>
+                  </h3>
+                  <p className="text-[11px] text-brand-muted font-sans mt-0.5">
+                    Primary storefront thumbnail, hero display, and default catalog cover.
+                  </p>
+                </div>
+                {mainImage ? (
+                  <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded border border-emerald-200 uppercase tracking-widest">
+                    Saved & Active
+                  </span>
+                ) : (
+                  <span className="text-[10px] bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded border border-amber-200 uppercase tracking-widest">
+                    Required for Live
+                  </span>
+                )}
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-deep-espresso uppercase tracking-wider mb-2">Image 3 URL</label>
-                <input
-                  type="url"
-                  value={image3}
-                  onChange={(e) => setImage3(e.target.value)}
-                  className="w-full bg-white/60 border border-brand-border rounded-lg px-4 py-2.5 text-sm text-deep-espresso focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-shadow"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-deep-espresso uppercase tracking-wider mb-2">Image 4 URL</label>
-                <input
-                  type="url"
-                  value={image4}
-                  onChange={(e) => setImage4(e.target.value)}
-                  className="w-full bg-white/60 border border-brand-border rounded-lg px-4 py-2.5 text-sm text-deep-espresso focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-shadow"
-                />
-              </div>
-            </div>
-
-            {/* Image Previews */}
-            <div className="pt-4 border-t border-brand-border/60">
-              <span className="block text-xs font-bold text-brand-muted uppercase tracking-widest mb-4">Live Image Previews</span>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[formData.mainImage, image2, image3, image4].map((img, idx) => (
-                  <div key={idx} className="aspect-[3/4] relative bg-brand-surface border border-brand-border/80 rounded-lg overflow-hidden shadow-sm">
-                    {img ? (
-                      <ProductImage src={img} alt={`Preview ${idx + 1}`} fill sizes="200px" className="object-cover" />
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-start pt-2">
+                {/* Main Image Preview Box */}
+                <div className="sm:col-span-1">
+                  <div className="aspect-[3/4] relative bg-brand-surface border border-brand-border rounded-lg overflow-hidden shadow-sm">
+                    {mainImage ? (
+                      <ProductImage src={mainImage} alt="Main Image Preview" fill sizes="250px" className="object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-brand-muted font-sans text-xs font-medium uppercase bg-warm-ivory">Slot {idx + 1} Empty</div>
+                      <div className="w-full h-full flex flex-col items-center justify-center text-center p-3 text-brand-muted bg-warm-ivory/60 space-y-1">
+                        <ImageIcon className="w-6 h-6 stroke-1 text-brand-muted/70" />
+                        <span className="text-[10px] font-sans uppercase font-bold tracking-wider">No Main Image</span>
+                      </div>
                     )}
                   </div>
-                ))}
+                  {/* Action triggers */}
+                  <div className="flex items-center justify-between gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const inputEl = document.getElementById('main-image-url-input') as HTMLInputElement | null;
+                        if (inputEl) {
+                          inputEl.focus();
+                          inputEl.select();
+                        }
+                      }}
+                      className="flex-1 text-[11px] font-semibold text-deep-espresso bg-white hover:bg-brand-surface border border-brand-border py-1.5 px-2 rounded text-center transition-colors shadow-sm"
+                    >
+                      Change
+                    </button>
+                    {mainImage && (
+                      <button
+                        type="button"
+                        onClick={() => setMainImage('')}
+                        className="text-[11px] font-semibold text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200 py-1.5 px-2.5 rounded text-center transition-colors shadow-sm"
+                        title="Remove Main Image"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Main Image URL Input */}
+                <div className="sm:col-span-3 space-y-2">
+                  <label htmlFor="main-image-url-input" className="block text-xs font-semibold text-deep-espresso uppercase tracking-wider">
+                    Main Image URL
+                  </label>
+                  <input
+                    id="main-image-url-input"
+                    type="url"
+                    value={mainImage}
+                    onChange={(e) => setMainImage(e.target.value)}
+                    className="w-full bg-white border border-brand-border rounded-lg px-4 py-2.5 text-xs text-deep-espresso font-mono placeholder:text-brand-muted focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-shadow shadow-sm"
+                    placeholder="https://images.unsplash.com/... or CDN link"
+                  />
+                  {errors.mainImage && <p className="text-xs font-medium text-rose-600 mt-1">{errors.mainImage}</p>}
+                  <p className="text-[11px] text-brand-muted font-sans leading-relaxed">
+                    Enter any secure HTTPS link. This image will appear across all collection grids, search results, and quick-view modals.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* GALLERY IMAGES */}
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold text-deep-espresso uppercase tracking-wider">
+                    GALLERY IMAGES (SLOTS 2, 3, 4)
+                  </h3>
+                  <p className="text-[11px] text-brand-muted font-sans mt-0.5">
+                    Supplementary angles shown in storefront detail pages, mobile swipe carousels, and full-screen zooms.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                {/* Image Slot 2 */}
+                <div className="bg-white/40 p-4 rounded-xl border border-brand-border/60 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-deep-espresso uppercase tracking-wider">Image 2 (Detail)</span>
+                    {image2 ? (
+                      <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-200">Active</span>
+                    ) : (
+                      <span className="text-[9px] text-brand-muted uppercase">Empty</span>
+                    )}
+                  </div>
+                  <div className="aspect-[3/4] relative bg-brand-surface border border-brand-border rounded-lg overflow-hidden shadow-sm">
+                    {image2 ? (
+                      <ProductImage src={image2} alt="Image 2 Preview" fill sizes="200px" className="object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-center p-3 text-brand-muted bg-warm-ivory/60 space-y-1">
+                        <ImageIcon className="w-5 h-5 stroke-1 text-brand-muted/60" />
+                        <span className="text-[10px] font-sans font-medium uppercase text-brand-muted">Slot 2 Empty</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = document.getElementById('image-2-url-input') as HTMLInputElement | null;
+                        if (el) { el.focus(); el.select(); }
+                      }}
+                      className="flex-1 text-[11px] font-semibold text-deep-espresso bg-white hover:bg-brand-surface border border-brand-border py-1 px-2 rounded text-center transition-colors shadow-sm"
+                    >
+                      Change
+                    </button>
+                    {image2 && (
+                      <button
+                        type="button"
+                        onClick={() => setImage2('')}
+                        className="text-[11px] font-semibold text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200 py-1 px-2 rounded text-center transition-colors shadow-sm"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    id="image-2-url-input"
+                    type="url"
+                    value={image2}
+                    onChange={(e) => setImage2(e.target.value)}
+                    placeholder="Image 2 URL (optional)"
+                    className="w-full bg-white border border-brand-border rounded-lg px-3 py-1.5 text-xs text-deep-espresso font-mono placeholder:text-brand-muted focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-shadow"
+                  />
+                </div>
+
+                {/* Image Slot 3 */}
+                <div className="bg-white/40 p-4 rounded-xl border border-brand-border/60 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-deep-espresso uppercase tracking-wider">Image 3 (Border/Pallu)</span>
+                    {image3 ? (
+                      <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-200">Active</span>
+                    ) : (
+                      <span className="text-[9px] text-brand-muted uppercase">Empty</span>
+                    )}
+                  </div>
+                  <div className="aspect-[3/4] relative bg-brand-surface border border-brand-border rounded-lg overflow-hidden shadow-sm">
+                    {image3 ? (
+                      <ProductImage src={image3} alt="Image 3 Preview" fill sizes="200px" className="object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-center p-3 text-brand-muted bg-warm-ivory/60 space-y-1">
+                        <ImageIcon className="w-5 h-5 stroke-1 text-brand-muted/60" />
+                        <span className="text-[10px] font-sans font-medium uppercase text-brand-muted">Slot 3 Empty</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = document.getElementById('image-3-url-input') as HTMLInputElement | null;
+                        if (el) { el.focus(); el.select(); }
+                      }}
+                      className="flex-1 text-[11px] font-semibold text-deep-espresso bg-white hover:bg-brand-surface border border-brand-border py-1 px-2 rounded text-center transition-colors shadow-sm"
+                    >
+                      Change
+                    </button>
+                    {image3 && (
+                      <button
+                        type="button"
+                        onClick={() => setImage3('')}
+                        className="text-[11px] font-semibold text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200 py-1 px-2 rounded text-center transition-colors shadow-sm"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    id="image-3-url-input"
+                    type="url"
+                    value={image3}
+                    onChange={(e) => setImage3(e.target.value)}
+                    placeholder="Image 3 URL (optional)"
+                    className="w-full bg-white border border-brand-border rounded-lg px-3 py-1.5 text-xs text-deep-espresso font-mono placeholder:text-brand-muted focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-shadow"
+                  />
+                </div>
+
+                {/* Image Slot 4 */}
+                <div className="bg-white/40 p-4 rounded-xl border border-brand-border/60 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-deep-espresso uppercase tracking-wider">Image 4 (Drape/Styling)</span>
+                    {image4 ? (
+                      <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-200">Active</span>
+                    ) : (
+                      <span className="text-[9px] text-brand-muted uppercase">Empty</span>
+                    )}
+                  </div>
+                  <div className="aspect-[3/4] relative bg-brand-surface border border-brand-border rounded-lg overflow-hidden shadow-sm">
+                    {image4 ? (
+                      <ProductImage src={image4} alt="Image 4 Preview" fill sizes="200px" className="object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-center p-3 text-brand-muted bg-warm-ivory/60 space-y-1">
+                        <ImageIcon className="w-5 h-5 stroke-1 text-brand-muted/60" />
+                        <span className="text-[10px] font-sans font-medium uppercase text-brand-muted">Slot 4 Empty</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = document.getElementById('image-4-url-input') as HTMLInputElement | null;
+                        if (el) { el.focus(); el.select(); }
+                      }}
+                      className="flex-1 text-[11px] font-semibold text-deep-espresso bg-white hover:bg-brand-surface border border-brand-border py-1 px-2 rounded text-center transition-colors shadow-sm"
+                    >
+                      Change
+                    </button>
+                    {image4 && (
+                      <button
+                        type="button"
+                        onClick={() => setImage4('')}
+                        className="text-[11px] font-semibold text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200 py-1 px-2 rounded text-center transition-colors shadow-sm"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    id="image-4-url-input"
+                    type="url"
+                    value={image4}
+                    onChange={(e) => setImage4(e.target.value)}
+                    placeholder="Image 4 URL (optional)"
+                    className="w-full bg-white border border-brand-border rounded-lg px-3 py-1.5 text-xs text-deep-espresso font-mono placeholder:text-brand-muted focus:outline-none focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-shadow"
+                  />
+                </div>
               </div>
             </div>
           </div>

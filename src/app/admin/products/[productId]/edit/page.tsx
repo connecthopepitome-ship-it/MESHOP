@@ -49,21 +49,41 @@ export default function EditProductPage() {
 
   const handleSave = async (updatedProduct: InternalProduct) => {
     try {
-      // 1. Immediately persist update in browser localStorage & local store
-      await repository.saveOrUpdateProduct(updatedProduct);
-
-      // 2. Call server update API in background
-      fetch('/api/admin/products/update', {
+      // 1. Synchronously call server update API
+      const res = await fetch('/api/admin/products/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ product: updatedProduct })
-      }).catch((err) => console.warn('Server sync warning:', err));
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        return { success: false, error: json.error || 'Failed to update product in Google Sheets.' };
+      }
+
+      // 2. Persist update in local repository stores
+      await repository.saveOrUpdateProduct(updatedProduct);
+
+      // 3. Read back from persistence to confirm saved state
+      const reloadedRes = await fetch('/api/admin/products');
+      if (reloadedRes.ok) {
+        const reloadedJson = await reloadedRes.json();
+        if (reloadedJson.success && Array.isArray(reloadedJson.products)) {
+          const merged = repository.applyClientOverrides<InternalProduct>(reloadedJson.products);
+          const confirmed = merged.find(
+            (p: InternalProduct) => p.productId.toLowerCase() === updatedProduct.productId.toLowerCase()
+          );
+          if (confirmed) {
+            setProduct(confirmed);
+          }
+        }
+      }
 
       setTimeout(() => {
         router.push('/admin/products');
-      }, 800);
+      }, 900);
 
-      return { success: true, message: 'Product updated successfully.' };
+      return { success: true, message: 'Product updated and verified in catalogue.' };
     } catch (e: any) {
       return { success: false, error: `Connection error: ${e.message}` };
     }

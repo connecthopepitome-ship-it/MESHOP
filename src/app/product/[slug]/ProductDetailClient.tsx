@@ -13,6 +13,8 @@ import {
   X,
   Check,
   Share2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Product } from '@/types';
 import { formatPrice, calculateDiscountPercentage } from '@/lib/utils';
@@ -99,9 +101,51 @@ export default function ProductDetailClient({
   const inWishlist = isInWishlist(product.productId);
   const discount = calculateDiscountPercentage(product.price, product.compareAtPrice);
 
-  const gallery = Array.isArray(product.galleryImages) && product.galleryImages.length > 0
+  // Canonical gallery resolution incorporating all valid image slots
+  const validImageSlots = [
+    product.mainImage,
+    (product as any).image2,
+    (product as any).image3,
+    (product as any).image4
+  ].filter((img): img is string => typeof img === 'string' && img.trim().length > 0);
+
+  const rawGallery = Array.isArray(product.galleryImages) && product.galleryImages.length > 0
     ? product.galleryImages
     : (product.images && product.images.length > 0 ? product.images : [product.mainImage]);
+
+  const combinedImages = Array.from(new Set([...validImageSlots, ...rawGallery])).filter(
+    (img) => img && typeof img === 'string' && img.trim().length > 0
+  );
+  const gallery = combinedImages.length > 0
+    ? combinedImages
+    : [product.mainImage || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80'];
+
+  // Touch Swipe for mobile navigation
+  const touchStartX = useRef<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    touchStartX.current = null;
+    if (Math.abs(diff) > 40 && gallery.length > 1) {
+      if (diff > 0) {
+        // Swipe left -> Next
+        setActiveImageIndex((prev) => (prev < gallery.length - 1 ? prev + 1 : 0));
+      } else {
+        // Swipe right -> Prev
+        setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : gallery.length - 1));
+      }
+    }
+  };
+
+  const handlePrevImage = () => {
+    setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : gallery.length - 1));
+  };
+  const handleNextImage = () => {
+    setActiveImageIndex((prev) => (prev < gallery.length - 1 ? prev + 1 : 0));
+  };
 
   const handlePincodeCheck = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,27 +220,33 @@ export default function ProductDetailClient({
           <div className="lg:col-span-7 relative z-10 lg:sticky lg:top-28">
             <div className="flex flex-col sm:flex-row gap-4 items-start">
               
-              {/* Desktop Vertical Thumbnail Rail */}
-              <div className="hidden sm:flex flex-col items-center gap-3 w-[72px] flex-shrink-0">
-                <div className="flex flex-col gap-3 max-h-[600px] overflow-y-auto no-scrollbar py-1 w-full">
-                  {gallery.map((img, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setActiveImageIndex(idx)}
-                      className={`relative aspect-[3/4] w-full rounded-[14px] overflow-hidden transition-all duration-300 ${
-                        activeImageIndex === idx
-                          ? 'ring-2 ring-deep-espresso scale-[1.02] shadow-sm opacity-100'
-                          : 'opacity-60 hover:opacity-100 hover:scale-[1.03]'
-                      }`}
-                    >
-                      <ProductImage src={img} alt={`Angle ${idx + 1}`} fill className="object-cover" />
-                    </button>
-                  ))}
+              {/* Desktop Vertical Thumbnail Rail (Rendered ONLY if more than 1 image exists) */}
+              {gallery.length > 1 && (
+                <div className="hidden sm:flex flex-col items-center gap-3 w-[72px] flex-shrink-0">
+                  <div className="flex flex-col gap-3 max-h-[600px] overflow-y-auto no-scrollbar py-1 w-full">
+                    {gallery.map((img, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setActiveImageIndex(idx)}
+                        className={`relative aspect-[3/4] w-full rounded-[14px] overflow-hidden transition-all duration-300 ${
+                          activeImageIndex === idx
+                            ? 'ring-2 ring-deep-espresso scale-[1.02] shadow-sm opacity-100'
+                            : 'opacity-60 hover:opacity-100 hover:scale-[1.03]'
+                        }`}
+                      >
+                        <ProductImage src={img} alt={`Angle ${idx + 1}`} fill className="object-cover" />
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Main Product Image */}
-              <div className="flex-1 relative aspect-[3/4] w-full rounded-[16px] overflow-hidden bg-soft-sand group z-1">
+              {/* Main Product Image Container with Touch Swipe & Prev/Next chevrons */}
+              <div
+                className="flex-1 relative aspect-[3/4] w-full rounded-[16px] overflow-hidden bg-soft-sand group z-1 select-none"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+              >
                 <ProductImage
                   src={gallery[activeImageIndex] || product.mainImage}
                   alt={product.name}
@@ -206,9 +256,33 @@ export default function ProductDetailClient({
                 />
 
                 {/* Floating Image Counter (Top-Left) */}
-                <div className="absolute top-4 left-4 z-10 bg-white/30 px-3 py-1.5 rounded-full text-deep-espresso font-sans-fashion text-[0.65rem] font-bold tracking-widest uppercase border border-white/40 shadow-[0_4px_12px_rgba(0,0,0,0.05)] backdrop-blur-md">
-                  {String(activeImageIndex + 1).padStart(2, '0')} / {String(gallery.length).padStart(2, '0')}
-                </div>
+                {gallery.length > 1 && (
+                  <div className="absolute top-4 left-4 z-10 bg-white/30 px-3 py-1.5 rounded-full text-deep-espresso font-sans-fashion text-[0.65rem] font-bold tracking-widest uppercase border border-white/40 shadow-[0_4px_12px_rgba(0,0,0,0.05)] backdrop-blur-md">
+                    {String(activeImageIndex + 1).padStart(2, '0')} / {String(gallery.length).padStart(2, '0')}
+                  </div>
+                )}
+
+                {/* Desktop Prev / Next Navigation Arrows */}
+                {gallery.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handlePrevImage}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/70 hover:bg-white text-deep-espresso flex items-center justify-center backdrop-blur-md border border-white/60 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNextImage}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/70 hover:bg-white text-deep-espresso flex items-center justify-center backdrop-blur-md border border-white/60 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
 
                 {/* Circular Glass Action Buttons (Top-Right) */}
                 <div className="absolute top-4 right-4 z-10 flex flex-col items-center gap-3">
@@ -241,22 +315,24 @@ export default function ProductDetailClient({
               </div>
             </div>
 
-            {/* Mobile Horizontal Thumbnail Slider */}
-            <div className="flex sm:hidden space-x-2 overflow-x-auto mt-4 py-1 no-scrollbar snap-x snap-mandatory">
-              {gallery.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveImageIndex(idx)}
-                  className={`snap-start relative w-[60px] aspect-[3/4] rounded-xl overflow-hidden transition-all flex-shrink-0 ${
-                    activeImageIndex === idx
-                      ? 'ring-1 ring-deep-espresso scale-[1.02] opacity-100 shadow-sm'
-                      : 'opacity-60 border border-champagne/40'
-                  }`}
-                >
-                  <ProductImage src={img} alt={`Thumb ${idx + 1}`} fill className="object-cover" />
-                </button>
-              ))}
-            </div>
+            {/* Mobile Horizontal Thumbnail Slider (Rendered ONLY if more than 1 image exists) */}
+            {gallery.length > 1 && (
+              <div className="flex sm:hidden space-x-2 overflow-x-auto mt-4 py-1 no-scrollbar snap-x snap-mandatory">
+                {gallery.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={`snap-start relative w-[60px] aspect-[3/4] rounded-xl overflow-hidden transition-all flex-shrink-0 ${
+                      activeImageIndex === idx
+                        ? 'ring-1 ring-deep-espresso scale-[1.02] opacity-100 shadow-sm'
+                        : 'opacity-60 border border-champagne/40'
+                    }`}
+                  >
+                    <ProductImage src={img} alt={`Thumb ${idx + 1}`} fill className="object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* RIGHT: STRUCTURED PRODUCT INFORMATION AREA (Approx 40%) */}
@@ -635,16 +711,38 @@ export default function ProductDetailClient({
         </div>
       </div>
 
-      {/* Fullscreen Gallery View Modal */}
+      {/* Fullscreen Gallery View Modal with Prev/Next Navigation */}
       {fullscreenModalOpen && (
         <div className="fixed inset-0 z-50 bg-white/95 backdrop-blur-lg flex items-center justify-center p-4 lg:p-12 animate-fadeIn">
           <button
             onClick={() => setFullscreenModalOpen(false)}
-            className="absolute top-6 right-6 p-3 rounded-full bg-soft-sand text-deep-espresso hover:bg-champagne/40 transition-colors z-10"
+            className="absolute top-6 right-6 p-3 rounded-full bg-soft-sand text-deep-espresso hover:bg-champagne/40 transition-colors z-20"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
           </button>
+
+          {gallery.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={handlePrevImage}
+                className="absolute left-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/80 hover:bg-white text-deep-espresso flex items-center justify-center backdrop-blur-md border border-white shadow-md transition-all"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={handleNextImage}
+                className="absolute right-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/80 hover:bg-white text-deep-espresso flex items-center justify-center backdrop-blur-md border border-white shadow-md transition-all"
+                aria-label="Next image"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </>
+          )}
+
           <div className="relative w-full max-w-5xl aspect-[3/4] lg:aspect-auto lg:h-[85vh] rounded-[24px] overflow-hidden shadow-2xl">
             <ProductImage
               src={gallery[activeImageIndex] || product.mainImage}

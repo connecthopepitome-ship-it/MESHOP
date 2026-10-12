@@ -1,8 +1,12 @@
-const LIVE_API_URL = 'https://script.google.com/macros/s/AKfycbwx9tVn855TT7IUrHDkshnwXd8xtTbKCe17V9XjoI9XvfNE1jkEXfGko8B9sAqFWiiIjA/exec';
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
+
+const LIVE_API_URL = process.env.GOOGLE_SHEETS_API_URL || 'https://script.google.com/macros/s/AKfycby5hikFkv1__CQlkwSLoAFhnHM3SGesvHI84uIl9hlExn-6WX7WPVRe0nOD_kjbeoQOtw/exec';
+const ADMIN_TOKEN = process.env.GOOGLE_SHEETS_ADMIN_TOKEN || 'sorayva_admin_secret_key_2026';
 
 async function testLiveApi() {
-  console.log('Testing live Google Apps Script endpoint with manual redirect handling:');
-  const url = `${LIVE_API_URL}?action=getProducts`;
+  console.log('Testing live Google Apps Script ADMIN endpoint:');
+  const url = `${LIVE_API_URL}?action=getAdminProducts&token=${ADMIN_TOKEN}`;
   console.log('Target URL:', url);
 
   try {

@@ -19,9 +19,10 @@ export default function NewProductPage() {
       });
       const json = await res.json();
       if (res.ok && json.success) {
+        await repository.saveOrUpdateProduct(product);
         setTimeout(() => {
           router.push('/admin/products');
-        }, 1200);
+        }, 1000);
         return json;
       }
       return { success: false, error: json.error || 'Server error creating product in Google Sheets.' };
