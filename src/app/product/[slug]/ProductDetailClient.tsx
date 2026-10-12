@@ -25,6 +25,7 @@ import { ProductImage } from '@/components/shared/ProductImage';
 import { ProductCard } from '@/components/catalog/ProductCard';
 import { BlouseSizeModal } from '@/components/size/BlouseSizeModal';
 import { trackEvent } from '@/lib/analytics';
+import { repository, CATALOGUE_IMAGE_REGISTRY } from '@/lib/api/googleSheetsRepository';
 
 export default function ProductDetailClient({ 
   initialProduct, 
@@ -83,6 +84,20 @@ export default function ProductDetailClient({
     }
   }, [initialProduct, allProducts]);
 
+  // Synchronize with local storage overrides (e.g., when edited in Admin panel)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const overridden = repository.applyClientOverrides<Product>([initialProduct])[0];
+        if (overridden) {
+          setProduct(overridden);
+        }
+      } catch (e) {
+        console.warn('Failed to apply client overrides in ProductDetailClient:', e);
+      }
+    }
+  }, [initialProduct]);
+
   // Observer for sticky purchase bar visibility
   useEffect(() => {
     const handleScroll = () => {
@@ -113,9 +128,20 @@ export default function ProductDetailClient({
     ? product.galleryImages
     : (product.images && product.images.length > 0 ? product.images : [product.mainImage]);
 
-  const combinedImages = Array.from(new Set([...validImageSlots, ...rawGallery])).filter(
+  let combinedImages = Array.from(new Set([...validImageSlots, ...rawGallery])).filter(
     (img) => img && typeof img === 'string' && img.trim().length > 0
   );
+
+  // Safety net: if only 1 image resolved, check if CATALOGUE_IMAGE_REGISTRY has supplementary views
+  if (combinedImages.length <= 1) {
+    const pid = String(product.productId || '').trim().toLowerCase();
+    if (CATALOGUE_IMAGE_REGISTRY[pid]) {
+      const reg = CATALOGUE_IMAGE_REGISTRY[pid];
+      const extra = [reg.image2, reg.image3, reg.image4].filter((img): img is string => Boolean(img));
+      combinedImages = Array.from(new Set([...combinedImages, ...extra]));
+    }
+  }
+
   const gallery = combinedImages.length > 0
     ? combinedImages
     : [product.mainImage || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80'];

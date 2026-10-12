@@ -5,21 +5,23 @@ const LIVE_API_URL = process.env.GOOGLE_SHEETS_API_URL || 'https://script.google
 const ADMIN_TOKEN = process.env.GOOGLE_SHEETS_ADMIN_TOKEN || 'sorayva_admin_secret_key_2026';
 
 async function testLiveApi() {
-  console.log('Testing live Google Apps Script ADMIN endpoint:');
-  const url = `${LIVE_API_URL}?action=getAdminProducts&token=${ADMIN_TOKEN}`;
-  console.log('Target URL:', url);
+  console.log('Testing live Google Apps Script endpoints:');
+  const adminUrl = `${LIVE_API_URL}?action=getAdminProducts&token=${ADMIN_TOKEN}`;
+  const publicUrl = `${LIVE_API_URL}?action=getProducts`;
+  const defaultUrl = `${LIVE_API_URL}`;
+  console.log('Admin URL:', adminUrl);
+  console.log('Public URL:', publicUrl);
 
   try {
-    let res = await fetch(url, { redirect: 'manual' });
-    console.log('Initial Status:', res.status);
+    console.log('\n>>> TESTING action=test:');
+    let res = await fetch(`${LIVE_API_URL}?action=test&token=${ADMIN_TOKEN}`, { redirect: 'follow' });
+    console.log('Status:', res.status);
+    console.log('testReadWrite Body:', await res.text());
 
-    if (res.status === 302 || res.status === 301 || res.status === 307) {
-      const redirectUrl = res.headers.get('location');
-      console.log('Redirecting to:', redirectUrl);
-      if (redirectUrl) {
-        res = await fetch(redirectUrl);
-      }
-    }
+    console.log('\n>>> TESTING action=health:');
+    let res2 = await fetch(`${LIVE_API_URL}?action=health&token=${ADMIN_TOKEN}`, { redirect: 'follow' });
+    console.log('Status:', res2.status);
+    console.log('health Body:', await res2.text());
 
     const text = await res.text();
     console.log('Response Length:', text.length);
@@ -34,16 +36,19 @@ async function testLiveApi() {
       console.log('Items Count:', items.length);
 
       if (items.length > 0) {
-        console.log('\nSample Item Keys:', Object.keys(items[0]));
-        console.log('Sample Item Name:', items[0].productName || items[0].name);
-
-        const forbiddenKeys = ['meeshoReferenceLink', 'sourceCost', 'sourceStatus', 'supplierReference', 'lastSourceCheck', 'sourceUrl'];
-        const leaked = Object.keys(items[0]).filter((k) => forbiddenKeys.includes(k));
-        if (leaked.length > 0) {
-          console.error('❌ LEAKED INTERNAL KEYS DETECTED:', leaked);
-        } else {
-          console.log('🔒 SECURITY VERIFIED: Zero internal keys present!');
-        }
+        console.log('\n--- ALL ITEMS FROM GOOGLE SHEETS ---');
+        items.forEach((it: any, idx: number) => {
+          console.log(`\nProduct [${idx}] ${it.productId} (${it.productName || it.name}):`);
+          console.log('All Keys:', Object.keys(it));
+          console.log('Images info:', {
+            mainImage: it.mainImage,
+            image2: it.image2,
+            image3: it.image3,
+            image4: it.image4,
+            galleryImages: it.galleryImages,
+            images: it.images,
+          });
+        });
       }
     } catch (e) {
       console.log('Response body snippet:', text.substring(0, 300));

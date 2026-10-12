@@ -24,20 +24,194 @@ export interface RepositoryInterface {
 }
 
 // In-memory admin store for dev fallback
-let adminLocalStore: InternalProduct[] = MOCK_PRODUCTS.map((p) => ({
-  ...p,
-  productName: p.name,
-  stock: p.stockQty || 5,
-  status: p.status || 'Active',
-  meeshoReferenceLink: (p as any).sourceUrl || 'https://meesho.com/saree/p/sample-item',
-  sourceCost: (p as any).sourceCost || 1800,
-  sourceStatus: (p as any).sourceStatus || 'In Stock',
-  supplierReference: (p as any).supplierReference || 'MEESHO-SUP-101',
-  lastSourceCheck: new Date().toISOString().split('T')[0]
-}));
+let adminLocalStore: InternalProduct[] = [
+  ...MOCK_PRODUCTS.map((p) => ({
+    ...p,
+    productName: p.name,
+    stock: p.stockQty || 5,
+    status: p.status || 'Active',
+    meeshoReferenceLink: (p as any).sourceUrl || 'https://meesho.com/saree/p/sample-item',
+    sourceCost: (p as any).sourceCost || 1800,
+    sourceStatus: (p as any).sourceStatus || 'In Stock',
+    supplierReference: (p as any).supplierReference || 'MEESHO-SUP-101',
+    lastSourceCheck: new Date().toISOString().split('T')[0]
+  })),
+  {
+    productId: 'SAR-MV44PONJ',
+    sku: 'SKU-SAR-MV44PONJ',
+    name: 'Premium Pure Georgette Handwork Saree with Scallop Border & Floral Print',
+    productName: 'Premium Pure Georgette Handwork Saree with Scallop Border & Floral Print',
+    slug: 'premium-pure-georgette-handwork-saree-with-scallop-border-floral-print-sar-mv44ponj',
+    category: 'Georgette Sarees',
+    fabric: 'Georgette',
+    colour: 'Crimson',
+    price: 1149,
+    compareAtPrice: 2500,
+    discountPercentage: 54,
+    stock: 5,
+    stockQty: 5,
+    stockStatus: 'in_stock',
+    status: 'Active',
+    mainImage: 'https://lh3.googleusercontent.com/d/1oS3l1DpzvdO2NVRJ2eTeKmtEw9Iichqu=s1600',
+    image2: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80',
+    image3: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80',
+    image4: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80',
+    galleryImages: [
+      'https://lh3.googleusercontent.com/d/1oS3l1DpzvdO2NVRJ2eTeKmtEw9Iichqu=s1600',
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80'
+    ],
+    images: [
+      'https://lh3.googleusercontent.com/d/1oS3l1DpzvdO2NVRJ2eTeKmtEw9Iichqu=s1600',
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80'
+    ],
+    description: 'Handcrafted luxury saree from SORAYVA.',
+    sareeLength: '5.5 meters',
+    blousePieceLength: '0.8 meters (Unstitched)',
+    blouseIncluded: true,
+    blouseType: 'Unstitched Blouse',
+    blouseSizesAvailable: ['S', 'M', 'L', 'XL', '2XL', 'UNSTITCHED'],
+    published: true,
+    featured: true,
+    newArrival: true,
+    bestseller: true,
+    tags: ['Saree', 'Georgette', 'Handwork', 'Luxury'],
+    rating: 4.8,
+    reviewCount: 126,
+    currency: 'INR'
+  },
+  {
+    productId: 'SAR-MV4304OO',
+    sku: 'SKU-SAR-MV4304OO',
+    name: 'Viscose Zari Saree – Cream with Red Contrast',
+    productName: 'Viscose Zari Saree – Cream with Red Contrast',
+    slug: 'viscose-zari-saree-cream-with-red-contrast-sar-mv4304oo',
+    category: 'Silk Sarees',
+    fabric: 'Georgette',
+    colour: 'Cream & Red',
+    price: 1149,
+    compareAtPrice: 2500,
+    discountPercentage: 54,
+    stock: 15,
+    stockQty: 15,
+    stockStatus: 'in_stock',
+    status: 'Active',
+    mainImage: 'https://lh3.googleusercontent.com/d/16IKk3A_lkM7MSEujhVHQskGGA__Zq18D=s1600',
+    image2: 'https://images.unsplash.com/photo-1610030469668-98634127027d?auto=format&fit=crop&w=1000&q=80',
+    image3: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80',
+    image4: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80',
+    galleryImages: [
+      'https://lh3.googleusercontent.com/d/16IKk3A_lkM7MSEujhVHQskGGA__Zq18D=s1600',
+      'https://images.unsplash.com/photo-1610030469668-98634127027d?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80'
+    ],
+    images: [
+      'https://lh3.googleusercontent.com/d/16IKk3A_lkM7MSEujhVHQskGGA__Zq18D=s1600',
+      'https://images.unsplash.com/photo-1610030469668-98634127027d?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80'
+    ],
+    description: 'Handcrafted luxury saree from SORAYVA.',
+    sareeLength: '5.5 meters',
+    blousePieceLength: '0.8 meters (Unstitched)',
+    blouseIncluded: true,
+    blouseType: 'Unstitched Blouse',
+    blouseSizesAvailable: ['S', 'M', 'L', 'XL'],
+    published: true,
+    featured: true,
+    newArrival: true,
+    bestseller: false,
+    tags: ['Saree', 'Silk', 'Zari', 'Luxury'],
+    rating: 4.8,
+    reviewCount: 42,
+    currency: 'INR'
+  },
+  {
+    productId: 'SAR-MV0TLCXZ',
+    sku: 'SKU-SAR-MV0TLCXZ',
+    name: 'Magenta Bloom Sequin Saree',
+    productName: 'Magenta Bloom Sequin Saree',
+    slug: 'magenta-bloom-sequin-saree-sar-mv0tlcxz',
+    category: 'Chiffon & Georgette',
+    fabric: 'Georgette',
+    colour: 'Magenta',
+    price: 1200,
+    compareAtPrice: 3500,
+    discountPercentage: 65,
+    stock: 5,
+    stockQty: 5,
+    stockStatus: 'in_stock',
+    status: 'Active',
+    mainImage: 'https://lh3.googleusercontent.com/d/16CShIfXqYIIWXH17PSm0pf9kIIk0vUtL=s1600',
+    image2: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80',
+    image3: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80',
+    image4: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80',
+    galleryImages: [
+      'https://lh3.googleusercontent.com/d/16CShIfXqYIIWXH17PSm0pf9kIIk0vUtL=s1600',
+      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80'
+    ],
+    images: [
+      'https://lh3.googleusercontent.com/d/16CShIfXqYIIWXH17PSm0pf9kIIk0vUtL=s1600',
+      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80'
+    ],
+    description: 'Handcrafted luxury saree from SORAYVA.',
+    sareeLength: '5.5 meters',
+    blousePieceLength: '0.8 meters (Unstitched)',
+    blouseIncluded: true,
+    blouseType: 'Unstitched Blouse',
+    blouseSizesAvailable: ['S', 'M', 'L', 'XL'],
+    published: true,
+    featured: true,
+    newArrival: true,
+    bestseller: false,
+    tags: ['Saree', 'Georgette', 'Sequin', 'Luxury'],
+    rating: 4.8,
+    reviewCount: 38,
+    currency: 'INR'
+  }
+];
 
 // Tracks product IDs that have been explicitly modified or created in this session
 const sessionModifiedProductIds = new Set<string>();
+
+// Curated luxury saree gallery registry for Google Sheets products
+// Guarantees multi-angle views (pallu, border, texture) even when Google Apps Script drops image slots
+export const CATALOGUE_IMAGE_REGISTRY: Record<
+  string,
+  {
+    image2?: string;
+    image3?: string;
+    image4?: string;
+  }
+> = {
+  'sar-mv44ponj': {
+    image2: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80',
+    image3: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80',
+    image4: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80'
+  },
+  'sar-mv4304oo': {
+    image2: 'https://images.unsplash.com/photo-1610030469668-98634127027d?auto=format&fit=crop&w=1000&q=80',
+    image3: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80',
+    image4: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80'
+  },
+  'sar-mv0tlcxz': {
+    image2: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80',
+    image3: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80',
+    image4: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80'
+  },
+  'sr-sample-001': {
+    image2: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80',
+    image3: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80'
+  }
+};
 
 export class GoogleSheetsRepository implements RepositoryInterface {
   private apiUrl: string;
@@ -47,47 +221,91 @@ export class GoogleSheetsRepository implements RepositoryInterface {
   }
 
   public applyClientOverrides<T>(products: T[]): T[] {
-    if (typeof window === 'undefined' || !Array.isArray(products)) return products;
-    try {
-      const storedStr = localStorage.getItem('meshop_modified_products');
-      if (!storedStr) return products;
-      const stored = JSON.parse(storedStr);
-      if (!stored || typeof stored !== 'object') return products;
-
-      return products.map((item: any) => {
-        const pid = String(item?.productId || item?.id || '').trim().toLowerCase();
-        if (pid && stored[pid]) {
-          return { ...item, ...stored[pid] };
+    if (!Array.isArray(products)) return products;
+    let stored: Record<string, any> = {};
+    if (typeof window !== 'undefined') {
+      try {
+        const storedStr = localStorage.getItem('meshop_modified_products');
+        if (storedStr) {
+          stored = JSON.parse(storedStr) || {};
         }
-        return item;
-      });
-    } catch (e) {
-      return products;
+      } catch (e) {}
     }
+
+    return products.map((item: any) => {
+      const pid = String(item?.productId || item?.id || '').trim().toLowerCase();
+      let merged = { ...item };
+
+      // 1. Supplement with CATALOGUE_IMAGE_REGISTRY if supplementary images are missing
+      if (pid && CATALOGUE_IMAGE_REGISTRY[pid]) {
+        const reg = CATALOGUE_IMAGE_REGISTRY[pid];
+        if (!merged.image2 && reg.image2) merged.image2 = reg.image2;
+        if (!merged.image3 && reg.image3) merged.image3 = reg.image3;
+        if (!merged.image4 && reg.image4) merged.image4 = reg.image4;
+        if (!merged.galleryImages || merged.galleryImages.length <= 1) {
+          merged.galleryImages = [
+            merged.mainImage,
+            merged.image2,
+            merged.image3,
+            merged.image4
+          ].filter(Boolean);
+          merged.images = merged.galleryImages;
+        }
+      }
+
+      // 2. In-memory session modified products
+      if (pid && sessionModifiedProductIds.has(pid)) {
+        const inMem = adminLocalStore.find((p) => p.productId.toLowerCase() === pid);
+        if (inMem) {
+          merged = { ...merged, ...inMem };
+        }
+      }
+
+      // 3. Client localStorage overrides
+      if (pid && stored[pid]) {
+        merged = { ...merged, ...stored[pid] };
+      }
+
+      return merged;
+    });
   }
 
   private mergeLocalOverride(raw: any): any {
     if (!raw || (!raw.productId && !raw.id)) return raw;
     const pid = String(raw.productId || raw.id).trim().toLowerCase();
+
+    let merged = { ...raw };
+
+    // 1. First supplement with CATALOGUE_IMAGE_REGISTRY if slots are missing
+    if (CATALOGUE_IMAGE_REGISTRY[pid]) {
+      const reg = CATALOGUE_IMAGE_REGISTRY[pid];
+      if (!merged.image2 && !merged['Image 2 URL'] && reg.image2) merged.image2 = reg.image2;
+      if (!merged.image3 && !merged['Image 3 URL'] && reg.image3) merged.image3 = reg.image3;
+      if (!merged.image4 && !merged['Image 4 URL'] && reg.image4) merged.image4 = reg.image4;
+    }
+
+    // 2. Apply in-memory session modifications
+    if (sessionModifiedProductIds.has(pid)) {
+      const inMem = adminLocalStore.find((p) => p.productId.toLowerCase() === pid);
+      if (inMem) {
+        merged = { ...merged, ...inMem };
+      }
+    }
+
+    // 3. Apply localStorage overrides if on client
     if (typeof window !== 'undefined') {
       try {
         const storedStr = localStorage.getItem('meshop_modified_products');
         if (storedStr) {
           const stored = JSON.parse(storedStr);
           if (stored && stored[pid]) {
-            return { ...raw, ...stored[pid] };
+            merged = { ...merged, ...stored[pid] };
           }
         }
       } catch (e) {}
     }
-    // Only apply in-memory override if this record was explicitly modified in this session
-    if (sessionModifiedProductIds.has(pid)) {
-      const inMem = adminLocalStore.find((p) => p.productId.toLowerCase() === pid);
-      if (inMem) {
-        return { ...raw, ...inMem };
-      }
-    }
-    return raw;
+
+    return merged;
   }
 
   /**
@@ -182,6 +400,9 @@ export class GoogleSheetsRepository implements RepositoryInterface {
   public parseProductData(raw: any, isInternal: boolean = false): PublicProduct | InternalProduct | null {
     try {
       if (!raw || (!raw.productId && !raw.id)) return null;
+
+      // Merge local overrides (including curated multi-angle gallery and user session edits)
+      raw = this.mergeLocalOverride(raw);
 
       const productId = String(raw.productId || raw.id).trim();
       const productName = String(raw.productName || raw.name || 'Unnamed Saree').trim();
