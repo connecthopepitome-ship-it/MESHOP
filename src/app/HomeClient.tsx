@@ -255,25 +255,25 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
                 title: 'Everyday & Office',
                 tag: 'Casual Elegance',
                 query: 'Everyday',
-                image: 'https://images.unsplash.com/photo-1610030469668-98634127027d?auto=format&fit=crop&w=800&q=80',
+                image: '/images/occasions/everyday-office.jpg',
               },
               {
                 title: 'Festive Luminescence',
                 tag: 'Pooja & Celebrations',
                 query: 'Festive',
-                image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+                image: '/images/occasions/festive-luminescence.jpg',
               },
               {
                 title: 'Party & Cocktail',
                 tag: 'Evening Soiree',
                 query: 'Party',
-                image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+                image: '/images/occasions/party-cocktail.jpg',
               },
               {
                 title: 'Wedding Guest',
                 tag: 'Reception & Mehendi',
                 query: 'Wedding',
-                image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
+                image: '/images/occasions/wedding-guest.jpg',
               },
             ].map((item) => (
               <Link
