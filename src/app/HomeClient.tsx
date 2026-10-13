@@ -365,7 +365,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
         <div className="max-w-6xl w-[92%] sm:w-[86%] lg:w-[80%] mx-auto px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-champagne/20 pb-3 mb-6 sm:mb-10">
             <div>
-              <span className="font-sans-fashion text-[0.65rem] sm:text-xs font-bold tracking-[0.25em] text-terracotta uppercase block mb-1 flex items-center gap-2">
+              <span className="font-sans-fashion text-[0.65rem] sm:text-xs font-bold tracking-[0.25em] text-champagne uppercase block mb-1 flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-champagne" />
                 BESPOKE WEAVES &amp; LUXURY ATELIER
               </span>
@@ -379,7 +379,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
               </p>
               <Link
                 href="/shop?filter=premium"
-                className="font-sans-fashion text-[0.7rem] sm:text-xs font-bold tracking-[0.2em] text-champagne hover:text-white uppercase flex items-center gap-1 transition-colors px-4 py-2 rounded-full sorayva-glass border border-champagne/30 min-h-[38px]"
+                className="font-sans-fashion text-[0.7rem] sm:text-xs font-bold tracking-[0.2em] text-champagne hover:text-white uppercase flex items-center gap-1 transition-colors px-4 py-2 rounded-full sorayva-glass-dark border border-champagne/40 hover:bg-champagne/10 min-h-[38px]"
               >
                 <span>EXPLORE ALL PREMIUM</span>
                 <ChevronRight className="w-4 h-4" />
@@ -393,6 +393,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
               <div key={`premium-mob-${prod.productId}`} className="w-[76vw] max-w-[280px] flex-shrink-0 snap-start">
                 <ProductCard
                   product={prod}
+                  variant="dark"
                   onQuickView={(p) => setQuickViewProduct(p)}
                 />
               </div>
@@ -405,6 +406,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
               <ProductCard
                 key={`premium-desk-${prod.productId}`}
                 product={prod}
+                variant="dark"
                 onQuickView={(p) => setQuickViewProduct(p)}
               />
             ))}
