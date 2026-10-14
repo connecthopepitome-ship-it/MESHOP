@@ -66,7 +66,7 @@ export async function verifyFirebaseIdToken(
     };
   }
 
-  const projectId = expectedProjectId || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
+  const projectId = expectedProjectId || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || 'meeshop-de48e';
 
   // Development/Test mock verification bypass: Only active in test environment with explicit test token
   if (process.env.NODE_ENV === 'test' || process.env.ENABLE_AUTH_TEST_BYPASS === 'true') {

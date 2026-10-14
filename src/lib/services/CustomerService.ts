@@ -18,6 +18,16 @@ const LOCAL_ADDRESSES_PREFIX = 'sorayva_cust_addresses_';
 const memoryProfileStore = new Map<string, Customer>();
 const memoryAddressStore = new Map<string, Address[]>();
 
+// Track Firestore availability (e.g. when Firestore database has not yet been enabled in Firebase Console)
+let isFirestoreAvailable = true;
+
+function withTimeout<T>(promise: Promise<T>, ms: number = 2500): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Firestore operation timed out')), ms)),
+  ]);
+}
+
 export class CustomerService {
   /**
    * Fetch customer profile document by Firebase UID
@@ -27,11 +37,11 @@ export class CustomerService {
 
     const db = getFirebaseFirestore();
 
-    // 1. Try Firestore if configured
-    if (db && isFirebaseConfigured()) {
+    // 1. Try Firestore if configured and available
+    if (db && isFirebaseConfigured() && isFirestoreAvailable) {
       try {
         const ref = doc(db, 'customers', uid);
-        const snap = await getDoc(ref);
+        const snap = await withTimeout(getDoc(ref), 2000);
         if (snap.exists()) {
           const data = snap.data();
           const profile: Customer = {
@@ -48,8 +58,13 @@ export class CustomerService {
           memoryProfileStore.set(uid, profile);
           return profile;
         }
-      } catch (err) {
-        console.warn('Firestore read failed, falling back to local storage:', err);
+      } catch (err: any) {
+        if (err?.message?.includes('PERMISSION_DENIED') || err?.message?.includes('not been used in project') || err?.message?.includes('timed out')) {
+          isFirestoreAvailable = false;
+          console.warn('Cloud Firestore is not yet enabled in Firebase Console for this project. Operating with resilient customer persistence.');
+        } else {
+          console.warn('Firestore read failed, falling back to local storage:', err);
+        }
       }
     }
 
@@ -104,12 +119,17 @@ export class CustomerService {
     if (data.emailVerified !== undefined) updatePayload.emailVerified = data.emailVerified;
 
     // 1. Persist to Firestore if available
-    if (db && isFirebaseConfigured()) {
+    if (db && isFirebaseConfigured() && isFirestoreAvailable) {
       try {
         const ref = doc(db, 'customers', uid);
-        await setDoc(ref, updatePayload, { merge: true });
+        await withTimeout(setDoc(ref, updatePayload, { merge: true }), 2000);
       } catch (err: any) {
-        console.warn('Firestore update error:', err);
+        if (err?.message?.includes('PERMISSION_DENIED') || err?.message?.includes('not been used in project') || err?.message?.includes('timed out')) {
+          isFirestoreAvailable = false;
+          console.warn('Cloud Firestore is not yet enabled in Firebase Console for this project. Operating with resilient customer persistence.');
+        } else {
+          console.warn('Firestore update error:', err);
+        }
       }
     }
 
@@ -158,17 +178,21 @@ export class CustomerService {
     const db = getFirebaseFirestore();
 
     // 1. Try Firestore
-    if (db && isFirebaseConfigured()) {
+    if (db && isFirebaseConfigured() && isFirestoreAvailable) {
       try {
         const ref = doc(db, 'customers', uid);
-        const snap = await getDoc(ref);
+        const snap = await withTimeout(getDoc(ref), 2000);
         if (snap.exists() && Array.isArray(snap.data()?.addresses)) {
           const list = snap.data()?.addresses as Address[];
           memoryAddressStore.set(uid, list);
           return list;
         }
-      } catch (err) {
-        console.warn('Firestore address fetch error:', err);
+      } catch (err: any) {
+        if (err?.message?.includes('PERMISSION_DENIED') || err?.message?.includes('not been used in project') || err?.message?.includes('timed out')) {
+          isFirestoreAvailable = false;
+        } else {
+          console.warn('Firestore address fetch error:', err);
+        }
       }
     }
 
@@ -227,12 +251,16 @@ export class CustomerService {
 
     // Save to Firestore
     const db = getFirebaseFirestore();
-    if (db && isFirebaseConfigured()) {
+    if (db && isFirebaseConfigured() && isFirestoreAvailable) {
       try {
         const ref = doc(db, 'customers', uid);
-        await setDoc(ref, { addresses: updatedList, updatedAt: new Date().toISOString() }, { merge: true });
-      } catch (err) {
-        console.warn('Failed to persist address to Firestore:', err);
+        await withTimeout(setDoc(ref, { addresses: updatedList, updatedAt: new Date().toISOString() }, { merge: true }), 2000);
+      } catch (err: any) {
+        if (err?.message?.includes('PERMISSION_DENIED') || err?.message?.includes('not been used in project') || err?.message?.includes('timed out')) {
+          isFirestoreAvailable = false;
+        } else {
+          console.warn('Failed to persist address to Firestore:', err);
+        }
       }
     }
 
@@ -268,12 +296,16 @@ export class CustomerService {
     memoryAddressStore.set(uid, updatedList);
 
     const db = getFirebaseFirestore();
-    if (db && isFirebaseConfigured()) {
+    if (db && isFirebaseConfigured() && isFirestoreAvailable) {
       try {
         const ref = doc(db, 'customers', uid);
-        await setDoc(ref, { addresses: updatedList, updatedAt: new Date().toISOString() }, { merge: true });
-      } catch (err) {
-        console.warn('Failed to update address in Firestore:', err);
+        await withTimeout(setDoc(ref, { addresses: updatedList, updatedAt: new Date().toISOString() }, { merge: true }), 2000);
+      } catch (err: any) {
+        if (err?.message?.includes('PERMISSION_DENIED') || err?.message?.includes('not been used in project') || err?.message?.includes('timed out')) {
+          isFirestoreAvailable = false;
+        } else {
+          console.warn('Failed to update address in Firestore:', err);
+        }
       }
     }
 
@@ -304,12 +336,16 @@ export class CustomerService {
     memoryAddressStore.set(uid, updatedList);
 
     const db = getFirebaseFirestore();
-    if (db && isFirebaseConfigured()) {
+    if (db && isFirebaseConfigured() && isFirestoreAvailable) {
       try {
         const ref = doc(db, 'customers', uid);
-        await setDoc(ref, { addresses: updatedList, updatedAt: new Date().toISOString() }, { merge: true });
-      } catch (err) {
-        console.warn('Failed to delete address from Firestore:', err);
+        await withTimeout(setDoc(ref, { addresses: updatedList, updatedAt: new Date().toISOString() }, { merge: true }), 2000);
+      } catch (err: any) {
+        if (err?.message?.includes('PERMISSION_DENIED') || err?.message?.includes('not been used in project') || err?.message?.includes('timed out')) {
+          isFirestoreAvailable = false;
+        } else {
+          console.warn('Failed to delete address from Firestore:', err);
+        }
       }
     }
 

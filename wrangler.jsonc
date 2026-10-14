@@ -10,7 +10,15 @@
   },
   "vars": {
     "GOOGLE_SHEETS_API_URL": "https://script.google.com/macros/s/AKfycby5hikFkv1__CQlkwSLoAFhnHM3SGesvHI84uIl9hlExn-6WX7WPVRe0nOD_kjbeoQOtw/exec",
-    "NEXT_PUBLIC_CATALOG_API_URL": "https://script.google.com/macros/s/AKfycby5hikFkv1__CQlkwSLoAFhnHM3SGesvHI84uIl9hlExn-6WX7WPVRe0nOD_kjbeoQOtw/exec"
+    "NEXT_PUBLIC_CATALOG_API_URL": "https://script.google.com/macros/s/AKfycby5hikFkv1__CQlkwSLoAFhnHM3SGesvHI84uIl9hlExn-6WX7WPVRe0nOD_kjbeoQOtw/exec",
+    "NEXT_PUBLIC_FIREBASE_API_KEY": "AIzaSyDIsHh1RJ7ztj_groWSw0FYjWlfGRYkT2c",
+    "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN": "meeshop-de48e.firebaseapp.com",
+    "NEXT_PUBLIC_FIREBASE_PROJECT_ID": "meeshop-de48e",
+    "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET": "meeshop-de48e.firebasestorage.app",
+    "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "102818615548",
+    "NEXT_PUBLIC_FIREBASE_APP_ID": "1:102818615548:web:6138568e425a93e2ceebf9",
+    "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-TC8ZNBX8L5",
+    "FIREBASE_PROJECT_ID": "meeshop-de48e"
   },
   "build": {
     "command": "npx opennextjs-cloudflare"
