@@ -10,6 +10,7 @@ import { CartDrawer } from '@/components/cart/CartDrawer';
 import { CartProvider } from '@/context/CartContext';
 import { WishlistProvider } from '@/context/WishlistContext';
 import { AdminAuthProvider } from '@/context/AdminAuthContext';
+import { AuthProvider } from '@/context/AuthContext';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
@@ -27,27 +28,31 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   if (isCheckout) {
     return (
       <AdminAuthProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <main className="flex-1 min-h-screen pb-[env(safe-area-inset-bottom)]">{children}</main>
-          </WishlistProvider>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <main className="flex-1 min-h-screen pb-[env(safe-area-inset-bottom)]">{children}</main>
+            </WishlistProvider>
+          </CartProvider>
+        </AuthProvider>
       </AdminAuthProvider>
     );
   }
 
   return (
     <AdminAuthProvider>
-      <CartProvider>
-        <WishlistProvider>
-          <AnnouncementBar />
-          <Header />
-          <main className="flex-1 min-h-[calc(100dvh-100px)] pb-[calc(92px+env(safe-area-inset-bottom))] lg:pb-0">{children}</main>
-          <MobileBottomNav />
-          <CartDrawer />
-          <Footer />
-        </WishlistProvider>
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <AnnouncementBar />
+            <Header />
+            <main className="flex-1 min-h-[calc(100dvh-100px)] pb-[calc(92px+env(safe-area-inset-bottom))] lg:pb-0">{children}</main>
+            <MobileBottomNav />
+            <CartDrawer />
+            <Footer />
+          </WishlistProvider>
+        </CartProvider>
+      </AuthProvider>
     </AdminAuthProvider>
   );
 };

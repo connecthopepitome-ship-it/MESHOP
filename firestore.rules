@@ -1,0 +1,65 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all access across the database
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // CUSTOMERS COLLECTION
+    // Keyed by Firebase UID: /customers/{uid}
+    match /customers/{uid} {
+      // Customer can read their own profile only
+      allow read: if isOwner(uid);
+
+      // Customer can create their profile only with permitted customer fields
+      allow create: if isOwner(uid)
+        && !request.resource.data.keys().hasAny(['isAdmin', 'role', 'permissions', 'sourceCosts', 'internalNotes']);
+
+      // Customer can update their permitted fields (cannot change ownership or elevate privileges)
+      allow update: if isOwner(uid)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['uid', 'customerId', 'isAdmin', 'role', 'permissions']);
+
+      // Disallow client-side customer deletion (managed via compliance/support)
+      allow delete: if false;
+
+      // Customer Subcollections: Addresses
+      match /addresses/{addressId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // Customer Subcollections: Wishlist
+      match /wishlist/{itemId} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // ORDERS COLLECTION:
+    // Managed server-side or via trusted Admin API.
+    // Customers cannot directly overwrite order states, prices, or fulfilment status.
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (
+        resource.data.customerId == request.auth.uid ||
+        resource.data.email == request.auth.token.email
+      );
+      allow write: if false; // All order modifications must go through server-side validated API
+    }
+
+    // ADMIN COLLECTIONS:
+    // Strictly inaccessible to standard customer credentials
+    match /admin/{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

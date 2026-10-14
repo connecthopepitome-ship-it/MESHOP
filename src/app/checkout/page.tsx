@@ -7,6 +7,7 @@ import {
   Lock, Check, ArrowLeft, ChevronDown, ChevronUp, ShieldCheck, CreditCard, Truck, Edit2, AlertCircle, ChevronRight
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { formatPrice } from '@/lib/utils';
 import { repository } from '@/lib/api/googleSheetsRepository';
 import { defaultPaymentProvider } from '@/lib/adapters/paymentAdapter';
@@ -63,10 +64,20 @@ export default function CheckoutPage() {
     notes: '',
   });
 
+  const { currentUser, customerProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Autofill support via useEffect or just relying on browser
+  useEffect(() => {
+    if (currentUser || customerProfile) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || customerProfile?.name || customerProfile?.displayName || currentUser?.displayName || '',
+        email: prev.email || currentUser?.email || '',
+        mobile: prev.mobile || customerProfile?.phone || '',
+      }));
+    }
+  }, [currentUser, customerProfile]);
   
   if (cart.length === 0) {
     return (

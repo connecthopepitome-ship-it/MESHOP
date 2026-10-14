@@ -6,10 +6,12 @@ import Image from 'next/image';
 import { ShoppingBag, Heart, Search, Menu, X, ChevronRight, ArrowRight, Sparkles, TrendingUp, MessageCircle, User } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { useAuth } from '@/context/AuthContext';
 
 export const Header: React.FC = () => {
   const { itemCount, setIsCartOpen } = useCart();
   const { wishlistCount } = useWishlist();
+  const { isAuthenticated, customerProfile, currentUser } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -121,8 +123,12 @@ export const Header: React.FC = () => {
                 href="/account"
                 className="relative w-[44px] h-[44px] rounded-full text-deep-espresso hover:bg-soft-sand hover:text-terracotta transition-all flex items-center justify-center border border-transparent hover:border-champagne/30"
                 aria-label="Account"
+                title={isAuthenticated ? `Account: ${customerProfile?.name || currentUser?.displayName || 'Patron'}` : 'Customer Sign In'}
               >
                 <User className="w-[18px] h-[18px]" />
+                {isAuthenticated && (
+                  <span className="absolute top-[9px] right-[9px] w-2 h-2 rounded-full bg-emerald-500 border border-white" />
+                )}
               </Link>
 
               <Link
@@ -402,7 +408,7 @@ export const Header: React.FC = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-4 border-b border-champagne/30 flex items-center justify-between hover:text-terracotta"
               >
-                <span>MY ACCOUNT</span> <ChevronRight className="w-4 h-4 text-terracotta" />
+                <span>{isAuthenticated ? `MY ACCOUNT (${(customerProfile?.name || currentUser?.displayName || 'Patron').split(' ')[0]})` : 'SIGN IN / REGISTER'}</span> <ChevronRight className="w-4 h-4 text-terracotta" />
               </Link>
               <Link
                 href="/track-order"

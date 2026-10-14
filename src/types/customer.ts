@@ -1,8 +1,11 @@
 export interface Customer {
   customerId: string;
+  uid?: string;
   name: string;
+  displayName?: string;
   email: string;
   phone?: string;
+  emailVerified?: boolean;
   createdAt: string;
   updatedAt: string;
 }

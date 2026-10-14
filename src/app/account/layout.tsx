@@ -1,61 +1,97 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { AuthService } from '@/lib/services/AuthService';
-import { Package, Heart, MapPin, User, Settings, LogOut, ChevronRight } from 'lucide-react';
-import { Customer } from '@/types/customer';
+import { useAuth } from '@/context/AuthContext';
+import { Package, Heart, MapPin, User, Settings, LogOut, ChevronRight, AlertCircle } from 'lucide-react';
 
 const NO_AUTH_ROUTES = [
   '/account/login',
   '/account/signup',
+  '/account/verify-email',
   '/account/verify',
-  '/account/forgot-password'
+  '/account/forgot-password',
 ];
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [customer, setCustomer] = useState<Customer | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { currentUser, customerProfile, loading, isAuthenticated, signOut, isFirebaseReady } = useAuth();
 
-  const isAuthRoute = NO_AUTH_ROUTES.some(r => pathname.includes(r));
+  const isAuthRoute = NO_AUTH_ROUTES.some((r) => pathname.startsWith(r));
 
   useEffect(() => {
-    async function checkAuth() {
-      setIsLoading(true);
-      const user = await AuthService.getCurrentUser();
-      setCustomer(user);
-      setIsLoading(false);
+    if (loading) return;
 
-      if (!user && !isAuthRoute) {
-        router.push('/account/login');
-      } else if (user && isAuthRoute) {
-        router.push('/account');
-      }
+    if (!isAuthenticated && !isAuthRoute) {
+      const redirectUrl = pathname === '/account' ? '/account/login' : `/account/login?redirect=${encodeURIComponent(pathname)}`;
+      router.push(redirectUrl);
+    } else if (isAuthenticated && (pathname === '/account/login' || pathname === '/account/signup')) {
+      router.push('/account');
     }
-    checkAuth();
-  }, [pathname, router, isAuthRoute]);
+  }, [loading, isAuthenticated, isAuthRoute, pathname, router]);
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-warm-ivory flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-terracotta border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-warm-ivory flex flex-col items-center justify-center gap-3">
+        <div className="w-8 h-8 border-2 border-terracotta border-t-transparent rounded-full animate-spin" />
+        <span className="font-sans-fashion text-[0.65rem] tracking-[0.25em] uppercase text-deep-espresso/60">
+          Loading Atelier Account...
+        </span>
       </div>
     );
   }
 
-  // If it's an auth route (login/signup), just render children without sidebar
+  // If on login, signup, forgot-password, or verify-email: render children directly
   if (isAuthRoute) {
     return <>{children}</>;
   }
 
-  // Otherwise render the authenticated Account Shell
+  // Guard against unauthenticated render before router redirection completes
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-warm-ivory flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-terracotta border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const displayName = customerProfile?.name || customerProfile?.displayName || currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Valued Patron';
+  const isUnverified = currentUser && !currentUser.emailVerified;
+
   return (
     <div className="w-full bg-warm-ivory min-h-screen pb-safe">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         
+        {/* Unverified Email Alert Notice */}
+        {isUnverified && (
+          <div className="mb-6 p-4 rounded-xl bg-amber-50/80 border border-amber-200/60 text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-sans-body shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="w-4 h-4 text-amber-700 flex-shrink-0" />
+              <span>
+                Please verify your email address (<strong>{currentUser?.email}</strong>) to secure your account and order updates.
+              </span>
+            </div>
+            <Link
+              href="/account/verify-email"
+              className="font-sans-fashion text-[0.65rem] tracking-wider uppercase font-bold text-amber-900 hover:text-terracotta underline flex-shrink-0"
+            >
+              Verify Email Now &rarr;
+            </Link>
+          </div>
+        )}
+
+        {/* Missing Firebase configuration banner in development */}
+        {!isFirebaseReady && (
+          <div className="mb-6 p-4 rounded-xl bg-champagne/15 border border-champagne/40 text-deep-espresso flex items-center gap-3 text-xs font-sans-body">
+            <AlertCircle className="w-4 h-4 text-terracotta flex-shrink-0" />
+            <span>
+              <strong>Firebase Setup Required:</strong> To enable real-time cloud authentication and Firestore synchronization, add your Firebase keys to <code className="bg-black/5 px-1.5 py-0.5 rounded font-mono text-[0.7rem]">.env.local</code>.
+            </span>
+          </div>
+        )}
+
         {/* Breadcrumbs */}
         <div className="hidden sm:flex items-center gap-2 text-xs font-sans-fashion tracking-widest text-deep-espresso/50 mb-8 uppercase">
           <Link href="/" className="hover:text-terracotta transition-colors">HOME</Link>
@@ -73,7 +109,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
         {/* Mobile Header Greeting */}
         <div className="sm:hidden mb-6">
-          <h1 className="font-serif-display text-3xl text-deep-espresso">Hello, {customer?.name?.split(' ')[0]}</h1>
+          <h1 className="font-serif-display text-3xl text-deep-espresso">Hello, {displayName.split(' ')[0]}</h1>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
@@ -94,7 +130,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
             <div className="mt-8 px-3">
               <button 
                 onClick={async () => {
-                  await AuthService.logout();
+                  await signOut();
                   router.push('/account/login');
                 }}
                 className="flex items-center gap-3 text-sm font-sans-body text-deep-espresso/60 hover:text-terracotta transition-colors"
@@ -105,7 +141,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
             </div>
           </aside>
 
-          {/* Mobile Navigation (Stacked cards above content if on overview) */}
+          {/* Mobile Navigation */}
           {pathname === '/account' && (
             <div className="lg:hidden grid grid-cols-2 gap-3 mb-8">
               <MobileNavCard href="/account/orders" icon={Package} label="Orders" />
@@ -126,7 +162,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   );
 }
 
-function NavItem({ href, icon: Icon, label, isActive }: { href: string, icon: any, label: string, isActive: boolean }) {
+function NavItem({ href, icon: Icon, label, isActive }: { href: string; icon: any; label: string; isActive: boolean }) {
   return (
     <Link 
       href={href}
@@ -143,7 +179,7 @@ function NavItem({ href, icon: Icon, label, isActive }: { href: string, icon: an
   );
 }
 
-function MobileNavCard({ href, icon: Icon, label }: { href: string, icon: any, label: string }) {
+function MobileNavCard({ href, icon: Icon, label }: { href: string; icon: any; label: string }) {
   return (
     <Link 
       href={href}

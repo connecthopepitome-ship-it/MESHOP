@@ -225,3 +225,49 @@ The Admin Dashboard allows viewing and editing private sourcing fields:
 
 These fields are strictly confined to the Admin UI & Google Sheets. `sanitizeProduct()` strips these fields before returning any public payload, ensuring zero exposure to customers, browser bundles, JSON-LD, or search indexing.
 
+---
+
+## 7. Customer Authentication & Account System (Firebase Auth & Firestore)
+
+SORAYVA uses **Firebase Authentication** for patron registration, secure login, email verification, and password resets, with **Cloud Firestore** for customer profiles and saved delivery addresses.
+
+### Architecture Highlights
+- **Client Authentication**: Modular Firebase Web SDK v13 (`firebase/auth`, `firebase/firestore`).
+- **Edge / Cloudflare Compatibility**: Cryptographic server-side verification using standard Web Crypto (`crypto.subtle`) via `jose` to verify Google JWKS. Zero dependency on heavy Node.js `firebase-admin` modules in Cloudflare Workers.
+- **Strict Role Separation**: Customer credentials NEVER grant Admin dashboard or catalogue editing privileges. Admin authentication remains isolated via `AdminAuthContext` and secure server tokens.
+- **Optional Guest Flow**: Guest shopping and guest checkout remain 100% accessible. Customers may register or sign in at any time.
+
+### Required Environment Variables (`.env.local`)
+
+Add your Firebase Web App credentials to `.env.local`:
+
+```bash
+# Firebase Client SDK Credentials (Web App)
+NEXT_PUBLIC_FIREBASE_API_KEY="AIzaSy..."
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="sorayva-atelier.firebaseapp.com"
+NEXT_PUBLIC_FIREBASE_PROJECT_ID="sorayva-atelier"
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="sorayva-atelier.appspot.com"
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="123456789012"
+NEXT_PUBLIC_FIREBASE_APP_ID="1:123456789012:web:abcdef123456"
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="G-ABCDEF1234" # Optional
+```
+
+> [!CAUTION]
+> **NEVER EXPOSE SECRETS**: Service account private keys, admin credentials, payment gateway secrets, or Google Sheets tokens must NEVER be prefixed with `NEXT_PUBLIC_` or added to client configs.
+
+### Firebase Console Setup Checklist
+1. **Enable Email/Password Provider**:
+   - Go to **Firebase Console** &rarr; **Authentication** &rarr; **Sign-in method**.
+   - Enable **Email/Password**. Leave "Email link (passwordless sign-in)" disabled unless separately configured.
+2. **Authorized Domains**:
+   - Under **Authentication** &rarr; **Settings** &rarr; **Authorized domains**, add:
+     - `localhost`
+     - `127.0.0.1`
+     - `meshop.connect-hopepitome.workers.dev` (Production Cloudflare Worker)
+3. **Deploy Firestore Security Rules**:
+   - Deploy `firestore.rules` provided in the repository root:
+     - Enforces customer ownership (`request.auth.uid == uid`).
+     - Rejects client modification of `uid`, `isAdmin`, or `role`.
+     - Denies public access to administrative or sourcing data.
+
+

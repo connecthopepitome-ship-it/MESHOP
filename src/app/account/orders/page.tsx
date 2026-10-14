@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { OrderService } from '@/lib/services/OrderService';
-
+import { useAuth } from '@/context/AuthContext';
 import { CustomerOrder } from '@/types/customer';
 import { formatPrice } from '@/lib/utils';
 import { Search, Package, ChevronRight } from 'lucide-react';
@@ -11,6 +11,7 @@ import { Search, Package, ChevronRight } from 'lucide-react';
 const FILTERS = ['ALL', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
 
 export default function OrdersPage() {
+  const { currentUser, loading } = useAuth();
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<CustomerOrder[]>([]);
   const [activeFilter, setActiveFilter] = useState('ALL');
@@ -19,13 +20,25 @@ export default function OrdersPage() {
 
   useEffect(() => {
     async function fetchOrders() {
-      const data = await OrderService.getCustomerOrders();
-      setOrders(data);
-      setFilteredOrders(data);
-      setIsLoading(false);
+      if (!currentUser) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const data = await OrderService.getCustomerOrders(currentUser.email || undefined);
+        setOrders(data);
+        setFilteredOrders(data);
+      } catch (err) {
+        console.warn('Error fetching customer orders:', err);
+      } finally {
+        setIsLoading(false);
+      }
     }
-    fetchOrders();
-  }, []);
+
+    if (!loading) {
+      fetchOrders();
+    }
+  }, [currentUser, loading]);
 
   useEffect(() => {
     let result = orders;
