@@ -10,6 +10,10 @@ import {
   sendPasswordResetEmail,
   sendEmailVerification,
   updateProfile as updateFirebaseProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
 } from 'firebase/auth';
 import { getFirebaseAuth, isFirebaseConfigured, formatFirebaseAuthError } from '@/lib/firebase/config';
 import { CustomerService } from '@/lib/services/CustomerService';
@@ -23,6 +27,7 @@ export interface AuthContextType {
   isFirebaseReady: boolean;
   signIn: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   signUp: (name: string, email: string, pass: string, phone?: string) => Promise<{ success: boolean; error?: string; requiresVerification?: boolean }>;
+  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<{ success: boolean; error?: string }>;
   resendVerificationEmail: () => Promise<{ success: boolean; error?: string }>;
@@ -86,6 +91,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     isListenerAttached.current = true;
+
+    // Check for mobile redirect auth result
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result && result.user) {
+          const u = result.user;
+          await CustomerService.updateProfile(u.uid, {
+            name: u.displayName || u.email?.split('@')[0] || 'Valued Patron',
+            displayName: u.displayName || u.email?.split('@')[0] || 'Valued Patron',
+            email: u.email || '',
+            emailVerified: u.emailVerified,
+          });
+          await loadProfile(u);
+        }
+      })
+      .catch((err) => {
+        console.warn('Redirect auth resolution notice:', err);
+      });
 
     const unsubscribe = onAuthStateChanged(
       auth,
@@ -321,6 +344,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Sign In with Google
+  const signInWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
+    if (!isConfigured) {
+      return {
+        success: false,
+        error: 'Authentication is not yet configured on this server.',
+      };
+    }
+
+    const auth = getFirebaseAuth();
+    if (!auth) {
+      return { success: false, error: 'Firebase Auth is unavailable.' };
+    }
+
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      await CustomerService.updateProfile(user.uid, {
+        name: user.displayName || user.email?.split('@')[0] || 'Valued Patron',
+        displayName: user.displayName || user.email?.split('@')[0] || 'Valued Patron',
+        email: user.email || '',
+        emailVerified: user.emailVerified,
+      });
+
+      await loadProfile(user);
+      return { success: true };
+    } catch (err: any) {
+      if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/cancelled-popup-request') {
+        try {
+          await signInWithRedirect(auth, provider);
+          return { success: true };
+        } catch (redirectErr: any) {
+          return { success: false, error: formatFirebaseAuthError(redirectErr) };
+        }
+      }
+      if (err?.code === 'auth/popup-closed-by-user') {
+        return { success: false, error: 'Google sign-in window was closed before completing.' };
+      }
+      return { success: false, error: formatFirebaseAuthError(err) };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -331,6 +400,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isFirebaseReady: isConfigured,
         signIn,
         signUp,
+        signInWithGoogle,
         signOut,
         sendPasswordReset,
         resendVerificationEmail,

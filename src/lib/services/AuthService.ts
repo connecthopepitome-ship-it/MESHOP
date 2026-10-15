@@ -6,6 +6,9 @@ import {
   sendPasswordResetEmail,
   sendEmailVerification,
   updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
 } from 'firebase/auth';
 import { getFirebaseAuth, isFirebaseConfigured, formatFirebaseAuthError } from '@/lib/firebase/config';
 import { CustomerService } from './CustomerService';
@@ -160,4 +163,54 @@ export class AuthService {
       return { success: false, error: formatFirebaseAuthError(err) };
     }
   }
+
+  /**
+   * Authenticate customer with Google Sign-In
+   * Attempts popup flow with mobile redirect fallback
+   */
+  static async signInWithGoogle(): Promise<{ success: boolean; error?: string }> {
+    if (!isFirebaseConfigured()) {
+      return {
+        success: false,
+        error: 'Authentication is not yet configured. Please configure Firebase project credentials.',
+      };
+    }
+
+    const auth = getFirebaseAuth();
+    if (!auth) {
+      return { success: false, error: 'Authentication service unavailable.' };
+    }
+
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    try {
+      const res = await signInWithPopup(auth, provider);
+      const user = res.user;
+
+      await CustomerService.updateProfile(user.uid, {
+        name: user.displayName || user.email?.split('@')[0] || 'Valued Patron',
+        displayName: user.displayName || user.email?.split('@')[0] || 'Valued Patron',
+        email: user.email || '',
+        emailVerified: user.emailVerified,
+      });
+
+      return { success: true };
+    } catch (err: any) {
+      // Fallback to redirect flow if popup was blocked or denied
+      if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/cancelled-popup-request') {
+        try {
+          await signInWithRedirect(auth, provider);
+          return { success: true };
+        } catch (redirectErr: any) {
+          return { success: false, error: formatFirebaseAuthError(redirectErr) };
+        }
+      }
+      if (err?.code === 'auth/popup-closed-by-user') {
+        return { success: false, error: 'Google sign-in was closed before completing.' };
+      }
+      return { success: false, error: formatFirebaseAuthError(err) };
+    }
+  }
 }
+

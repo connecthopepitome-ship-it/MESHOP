@@ -111,8 +111,14 @@ export function formatFirebaseAuthError(error: any): string {
       return 'Invalid email or password. Please check your credentials and try again.';
     case 'auth/too-many-requests':
       return 'Too many consecutive login attempts. Access is temporarily restricted for security. Please try again in a few minutes or reset your password.';
-    case 'auth/network-request-failed':
-      return 'Network connection interrupted. Please check your internet connection.';
+    case 'auth/popup-closed-by-user':
+      return 'Google sign-in window was closed before completing.';
+    case 'auth/popup-blocked':
+      return 'Sign-in popup was blocked by your browser. Please enable popups or tap again.';
+    case 'auth/account-exists-with-different-credential':
+      return 'An account already exists with this email address using password login. Please sign in with email and password.';
+    case 'auth/cancelled-popup-request':
+      return 'Sign-in operation was cancelled.';
     case 'auth/requires-recent-login':
       return 'For your security, please sign in again before performing this sensitive action.';
     default:
